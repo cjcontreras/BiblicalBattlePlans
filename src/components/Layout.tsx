@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, Link } from 'react-router-dom'
 import { useState } from 'react'
 import { Settings, ChevronDown } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
@@ -70,13 +70,13 @@ export function Layout() {
                           </div>
                         </div>
 
-                        <a
-                          href="/profile"
+                        <Link
+                          to="/profile"
                           className="block px-4 py-2 text-sm text-terminal-gray-200 hover:bg-terminal-gray-600 hover:text-terminal-green"
                           onClick={() => setShowUserMenu(false)}
                         >
                           {'> Profile'}
-                        </a>
+                        </Link>
 
                         <button
                           onClick={handleSignOut}
