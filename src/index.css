@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+/* Google Fonts - Terminal/Pixel Fonts */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Press+Start+2P&display=swap');
+
+/* Custom Theme Configuration */
+@theme {
+  /* 8-Bit Terminal Color Palette */
+  --color-terminal-dark: #0D1117;
+  --color-terminal-darker: #1C1C1C;
+  --color-terminal-green: #33FF33;
+  --color-terminal-green-dim: #1A8A1A;
+  --color-military-green: #4A7C59;
+  --color-military-green-dark: #3A5C45;
+  --color-achievement-gold: #FFD700;
+  --color-alert-red: #FF0000;
+  --color-alert-red-dim: #8B0000;
+
+  /* Terminal Grays */
+  --color-terminal-gray-100: #E5E5E5;
+  --color-terminal-gray-200: #CCCCCC;
+  --color-terminal-gray-300: #999999;
+  --color-terminal-gray-400: #666666;
+  --color-terminal-gray-500: #444444;
+  --color-terminal-gray-600: #333333;
+
+  /* Typography */
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-pixel: 'Press Start 2P', cursive;
+
+  /* Pixel Border Radius */
+  --radius-pixel: 0px;
+  --radius-sm: 2px;
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-mono);
+  background-color: var(--color-terminal-dark);
+  color: var(--color-terminal-gray-100);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Pixel-style Scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-terminal-darker);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-terminal-gray-500);
+  border: 2px solid var(--color-terminal-darker);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-terminal-gray-400);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-military-green);
+  color: var(--color-terminal-gray-100);
+}
+
+/* 8-bit Animation Keyframes */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--color-terminal-green), 0 0 10px var(--color-terminal-green-dim);
+  }
+  50% {
+    box-shadow: 0 0 10px var(--color-terminal-green), 0 0 20px var(--color-terminal-green-dim);
+  }
+}
+
+@keyframes pixel-fade-in {
+  0% { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Utility Classes */
+.font-pixel {
+  font-family: var(--font-pixel);
+}
+
+.text-glow {
+  text-shadow: 0 0 10px currentColor;
+}
+
+.border-pixel {
+  border-style: solid;
+  border-width: 4px;
+  image-rendering: pixelated;
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-pixel-fade-in {
+  animation: pixel-fade-in 0.3s ease-out;
+}
+
+/* Terminal Cursor */
+.cursor-blink::after {
+  content: '█';
+  animation: blink 1s step-end infinite;
+  color: var(--color-terminal-green);
+}
