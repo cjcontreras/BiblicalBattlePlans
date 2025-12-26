@@ -95,11 +95,13 @@ export function Dashboard() {
             <div className="space-y-4">
               {activeCampaigns.map((userPlan) => {
                 const isCyclingPlan = userPlan.plan.daily_structure.type === 'cycling_lists'
+                const isFreeReading = userPlan.plan.daily_structure.type === 'free_reading'
                 const todaysReading = isCyclingPlan
                   ? getCurrentReadings(userPlan.plan, userPlan.list_positions || {})
                   : getTodaysReading(userPlan.plan, userPlan.current_day)
                 const progress = calculatePlanProgress(userPlan, userPlan.plan)
                 const chaptersRead = calculatePlanChapters(userPlan.id, userPlan.plan, allProgress || [])
+                const totalLogged = userPlan.list_positions?.['free'] || 0
 
                 return (
                   <Link
@@ -113,21 +115,27 @@ export function Dashboard() {
                           {userPlan.plan.name}
                         </h3>
                         <p className="text-terminal-gray-400 text-sm mt-1">
-                          {isCyclingPlan
+                          {isFreeReading
+                            ? `${totalLogged} chapters logged`
+                            : isCyclingPlan
                             ? `${todaysReading.length} lists to read • ${chaptersRead} chapters read`
                             : `Day ${userPlan.current_day} • ${todaysReading.length} readings • ${chaptersRead} chapters read`
                           }
                         </p>
                       </div>
-                      <div className="text-right">
-                        <div className="text-terminal-gray-200 text-sm">
-                          {progress}% complete
+                      {!isFreeReading && (
+                        <div className="text-right">
+                          <div className="text-terminal-gray-200 text-sm">
+                            {progress}% complete
+                          </div>
                         </div>
+                      )}
+                    </div>
+                    {!isFreeReading && (
+                      <div className="mt-3">
+                        <ProgressBar value={progress} max={100} size="sm" showBlocks={false} />
                       </div>
-                    </div>
-                    <div className="mt-3">
-                      <ProgressBar value={progress} max={100} size="sm" showBlocks={false} />
-                    </div>
+                    )}
                     <div className="mt-3 text-sm text-terminal-gray-400">
                       {'> Click to continue reading'}
                     </div>

@@ -195,26 +195,28 @@ export function ActivePlan() {
           </div>
         </CardHeader>
 
-        <CardContent>
-          <PlanProgress
-            currentDay={userPlan.current_day}
-            totalDays={plan.duration_days}
-            daysOnPlan={daysOnPlan}
-            completedToday={chaptersReadToday}
-            totalToday={
-              isCyclingPlan || isFreeReading
-                ? streakMinimum
-                : plan.daily_structure.type === 'sequential'
-                  ? (plan.daily_structure as any).chapters_per_day || 3
-                  : todaysReading.length
-            }
-            unit={
-              plan.daily_structure.type === 'sequential' || plan.daily_structure.type === 'cycling_lists' || isFreeReading
-                ? 'chapters'
-                : 'readings'
-            }
-          />
-        </CardContent>
+        {!isFreeReading && (
+          <CardContent>
+            <PlanProgress
+              currentDay={userPlan.current_day}
+              totalDays={plan.duration_days}
+              daysOnPlan={daysOnPlan}
+              completedToday={chaptersReadToday}
+              totalToday={
+                isCyclingPlan
+                  ? streakMinimum
+                  : plan.daily_structure.type === 'sequential'
+                    ? (plan.daily_structure as any).chapters_per_day || 3
+                    : todaysReading.length
+              }
+              unit={
+                plan.daily_structure.type === 'sequential' || plan.daily_structure.type === 'cycling_lists'
+                  ? 'chapters'
+                  : 'readings'
+              }
+            />
+          </CardContent>
+        )}
       </Card>
 
       {/* Today's Progress */}
@@ -341,82 +343,96 @@ export function ActivePlan() {
           </h2>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {/* Days on Campaign - Primary stat for non-cycling plans */}
-            {!isCyclingPlan && (
+          {isFreeReading ? (
+            /* Simplified stats for Free Reading */
+            <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
                 <div className="text-2xl font-pixel text-terminal-green">
-                  {daysOnPlan}
+                  {chaptersReadToday}
                 </div>
-                <div className="text-xs text-terminal-gray-400">Days on Campaign</div>
+                <div className="text-xs text-terminal-gray-400">Chapters Today</div>
               </div>
-            )}
-            
-            {/* Readings/Chapters Today */}
-            <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
-              <div className="text-2xl font-pixel text-terminal-green">
-                {chaptersReadToday}
-              </div>
-              <div className="text-xs text-terminal-gray-400">
-                {isCyclingPlan || isFreeReading ? 'Chapters Today' : 'Readings Today'}
+              <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
+                <div className="text-2xl font-pixel text-terminal-green">
+                  {userPlan.list_positions?.['free'] || 0}
+                </div>
+                <div className="text-xs text-terminal-gray-400">Total Logged</div>
               </div>
             </div>
-
-            {/* Overall Progress */}
-            <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
-              <div className="text-2xl font-pixel text-terminal-green">
-                {isFreeReading
-                  ? (userPlan.list_positions?.['free'] || 0)
-                  : `${overallProgress}%`}
-              </div>
-              <div className="text-xs text-terminal-gray-400">
-                {isFreeReading ? 'Total Logged' : 'Overall Progress'}
-              </div>
-            </div>
-
-            {isCyclingPlan ? (
-              <>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {/* Days on Campaign - Primary stat for non-cycling plans */}
+              {!isCyclingPlan && (
                 <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
                   <div className="text-2xl font-pixel text-terminal-green">
-                    {todaysReading.filter(s => s.isCompleted).length}
+                    {daysOnPlan}
                   </div>
-                  <div className="text-xs text-terminal-gray-400">Lists Done</div>
+                  <div className="text-xs text-terminal-gray-400">Days on Campaign</div>
                 </div>
-                <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
-                  <div className="text-2xl font-pixel text-terminal-green">
-                    {todaysReading.length - todaysReading.filter(s => s.isCompleted).length}
-                  </div>
-                  <div className="text-xs text-terminal-gray-400">Remaining</div>
-                </div>
-              </>
-            ) : isWeeklyPlan && weeklyInfo ? (
+              )}
+              
+              {/* Readings/Chapters Today */}
               <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
-                <div className="flex items-center justify-center gap-1">
-                  <div className="text-2xl font-pixel text-terminal-green">
-                    W{weeklyInfo.currentWeek}
-                  </div>
-                  <div className="text-lg font-mono text-terminal-gray-400">
-                    D{weeklyInfo.dayInWeek}
-                  </div>
+                <div className="text-2xl font-pixel text-terminal-green">
+                  {chaptersReadToday}
                 </div>
-                <div className="text-xs text-terminal-gray-400">Reading Position</div>
+                <div className="text-xs text-terminal-gray-400">
+                  {isCyclingPlan ? 'Chapters Today' : 'Readings Today'}
+                </div>
               </div>
-            ) : !isFreeReading && (
+
+              {/* Overall Progress */}
               <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
-                <div className="flex items-center justify-center gap-1">
-                  <div className="text-2xl font-pixel text-terminal-green">
-                    {userPlan.current_day}
-                  </div>
-                  {daysAheadBehind !== 0 && (
-                    <div className={`text-xs font-mono ${daysAheadBehind > 0 ? 'text-achievement-gold' : 'text-alert-red'}`}>
-                      {daysAheadBehind > 0 ? `+${daysAheadBehind}` : daysAheadBehind}
+                <div className="text-2xl font-pixel text-terminal-green">
+                  {overallProgress}%
+                </div>
+                <div className="text-xs text-terminal-gray-400">Overall Progress</div>
+              </div>
+
+              {isCyclingPlan ? (
+                <>
+                  <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
+                    <div className="text-2xl font-pixel text-terminal-green">
+                      {todaysReading.filter(s => s.isCompleted).length}
                     </div>
-                  )}
+                    <div className="text-xs text-terminal-gray-400">Lists Done</div>
+                  </div>
+                  <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
+                    <div className="text-2xl font-pixel text-terminal-green">
+                      {todaysReading.length - todaysReading.filter(s => s.isCompleted).length}
+                    </div>
+                    <div className="text-xs text-terminal-gray-400">Remaining</div>
+                  </div>
+                </>
+              ) : isWeeklyPlan && weeklyInfo ? (
+                <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
+                  <div className="flex items-center justify-center gap-1">
+                    <div className="text-2xl font-pixel text-terminal-green">
+                      W{weeklyInfo.currentWeek}
+                    </div>
+                    <div className="text-lg font-mono text-terminal-gray-400">
+                      D{weeklyInfo.dayInWeek}
+                    </div>
+                  </div>
+                  <div className="text-xs text-terminal-gray-400">Reading Position</div>
                 </div>
-                <div className="text-xs text-terminal-gray-400">Reading Position</div>
-              </div>
-            )}
-          </div>
+              ) : (
+                <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
+                  <div className="flex items-center justify-center gap-1">
+                    <div className="text-2xl font-pixel text-terminal-green">
+                      {userPlan.current_day}
+                    </div>
+                    {daysAheadBehind !== 0 && (
+                      <div className={`text-xs font-mono ${daysAheadBehind > 0 ? 'text-achievement-gold' : 'text-alert-red'}`}>
+                        {daysAheadBehind > 0 ? `+${daysAheadBehind}` : daysAheadBehind}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-xs text-terminal-gray-400">Reading Position</div>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
