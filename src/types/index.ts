@@ -27,6 +27,7 @@ export type DailyStructure =
   | SequentialStructure
   | SectionalStructure
   | WeeklySectionalStructure
+  | FreeReadingStructure
 
 export interface CyclingListsStructure {
   type: 'cycling_lists'
@@ -50,6 +51,12 @@ export interface WeeklySectionalStructure {
   readings_per_week: number
   categories: WeeklyCategory[]
   weeks: WeekReading[]
+}
+
+export interface FreeReadingStructure {
+  type: 'free_reading'
+  allow_notes: boolean
+  require_chapter_count: boolean
 }
 
 export interface WeeklyCategory {

@@ -1,13 +1,49 @@
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { useUserPlans, getCurrentReadings, getTodaysReading, calculatePlanProgress } from '../hooks/usePlans'
 import { useStats } from '../hooks/useStats'
+import { supabase } from '../lib/supabase'
 import { Card, CardHeader, CardContent, Button, StreakBadge, LoadingSpinner, ProgressBar } from '../components/ui'
+import type { ReadingPlan, DailyProgress } from '../types'
+
+function calculatePlanChapters(
+  userPlanId: string,
+  plan: ReadingPlan,
+  allProgress: DailyProgress[]
+): number {
+  const planProgress = allProgress.filter(p => p.user_plan_id === userPlanId)
+  const structure = plan.daily_structure
+
+  return planProgress.reduce((total, day) => {
+    const sectionsCount = day.completed_sections?.length || 0
+
+    if (structure.type === 'sequential') {
+      const seqStructure = structure as any
+      return total + (sectionsCount * (seqStructure.chapters_per_day || 3))
+    }
+
+    // For cycling, sectional, and free_reading: each section = 1 chapter
+    return total + sectionsCount
+  }, 0)
+}
 
 export function Dashboard() {
   const { profile, user } = useAuth()
   const { data: userPlans, isLoading: plansLoading } = useUserPlans()
   const { data: stats, isLoading: statsLoading } = useStats()
+  const { data: allProgress } = useQuery({
+    queryKey: ['allProgress', user?.id],
+    queryFn: async () => {
+      if (!user) return []
+      const { data } = await supabase
+        .from('daily_progress')
+        .select('*')
+        .eq('user_id', user.id)
+      return data as DailyProgress[]
+    },
+    enabled: !!user
+  })
 
   const isLoading = plansLoading || statsLoading
   const displayName = profile?.display_name || profile?.username || user?.email?.split('@')[0] || 'Soldier'
@@ -63,6 +99,7 @@ export function Dashboard() {
                   ? getCurrentReadings(userPlan.plan, userPlan.list_positions || {})
                   : getTodaysReading(userPlan.plan, userPlan.current_day)
                 const progress = calculatePlanProgress(userPlan, userPlan.plan)
+                const chaptersRead = calculatePlanChapters(userPlan.id, userPlan.plan, allProgress || [])
 
                 return (
                   <Link
@@ -77,8 +114,8 @@ export function Dashboard() {
                         </h3>
                         <p className="text-terminal-gray-400 text-sm mt-1">
                           {isCyclingPlan
-                            ? `${todaysReading.length} lists to read`
-                            : `Day ${userPlan.current_day} \u2022 ${todaysReading.length} readings`
+                            ? `${todaysReading.length} lists to read • ${chaptersRead} chapters read`
+                            : `Day ${userPlan.current_day} • ${todaysReading.length} readings • ${chaptersRead} chapters read`
                           }
                         </p>
                       </div>
@@ -141,32 +178,6 @@ export function Dashboard() {
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      {activeCampaigns.length > 0 && (
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-pixel text-terminal-green">
-              QUICK ACTIONS
-            </h2>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {activeCampaigns.slice(0, 2).map((userPlan) => (
-                <Link key={userPlan.id} to={`/campaign/${userPlan.id}`}>
-                  <Button variant="secondary" className="w-full justify-start">
-                    {'>'} Continue {userPlan.plan.name}
-                  </Button>
-                </Link>
-              ))}
-              <Link to="/plans">
-                <Button variant="ghost" className="w-full justify-start">
-                  {'>'} View All Plans
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

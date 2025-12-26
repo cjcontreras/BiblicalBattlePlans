@@ -348,6 +348,89 @@ export function useAdvanceDay() {
   })
 }
 
+// Log free reading entry (for free_reading plans)
+export function useLogFreeReading() {
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
+
+  return useMutation({
+    mutationFn: async ({
+      userPlanId,
+      chapters,
+      notes,
+      userPlan,
+    }: {
+      userPlanId: string
+      chapters: number
+      notes?: string
+      userPlan: UserPlan & { plan: ReadingPlan }
+    }) => {
+      if (!user) throw new Error('Not authenticated')
+      if (chapters <= 0) throw new Error('Must log at least 1 chapter')
+
+      const today = getLocalDate()
+
+      // Get today's progress
+      const { data: progressData } = await supabase
+        .from('daily_progress')
+        .select('*')
+        .eq('user_plan_id', userPlanId)
+        .eq('date', today)
+        .maybeSingle()
+
+      const existingProgress = progressData as DailyProgress | null
+
+      // Create entries: each chapter gets "free:N" identifier
+      const currentCount = existingProgress?.completed_sections.length || 0
+      const newEntries = Array.from({ length: chapters }, (_, i) => `free:${currentCount + i}`)
+
+      const completedSections = [
+        ...(existingProgress?.completed_sections || []),
+        ...newEntries
+      ]
+
+      // Update or create daily_progress
+      if (existingProgress) {
+        await (supabase.from('daily_progress') as ReturnType<typeof supabase.from>)
+          .update({
+            completed_sections: completedSections,
+            notes: notes || existingProgress.notes,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingProgress.id)
+      } else {
+        await (supabase.from('daily_progress') as ReturnType<typeof supabase.from>)
+          .insert({
+            user_id: user.id,
+            user_plan_id: userPlanId,
+            day_number: 1,
+            date: today,
+            completed_sections: completedSections,
+            notes: notes || null,
+            is_complete: false,
+          })
+      }
+
+      // Update running total
+      const totalLogged = (userPlan.list_positions?.['free'] || 0) + chapters
+      await (supabase.from('user_plans') as ReturnType<typeof supabase.from>)
+        .update({ list_positions: { free: totalLogged } })
+        .eq('id', userPlanId)
+
+      return { completedSections, totalLogged }
+    },
+    onSuccess: (_, variables) => {
+      const today = getLocalDate()
+      queryClient.invalidateQueries({ queryKey: planKeys.dailyProgress(variables.userPlanId, today) })
+      queryClient.invalidateQueries({ queryKey: planKeys.userPlan(variables.userPlanId) })
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: planKeys.userPlans(user.id) })
+        queryClient.invalidateQueries({ queryKey: ['stats', user.id] })
+      }
+    },
+  })
+}
+
 // Legacy: Mark a section complete (for non-cycling plans)
 export function useMarkSectionComplete() {
   const queryClient = useQueryClient()
@@ -470,6 +553,10 @@ export function getCurrentReadings(
 ): TodaySection[] {
   const structure = plan.daily_structure
 
+  if (structure.type === 'free_reading') {
+    return [] // No predefined readings for free reading
+  }
+
   if (structure.type !== 'cycling_lists') {
     return []
   }
@@ -500,6 +587,10 @@ export function getTodaysReading(
 ): TodaySection[] {
   const structure = plan.daily_structure
   const completedSections = progress?.completed_sections || []
+
+  if (structure.type === 'free_reading') {
+    return [] // No predefined readings for free reading
+  }
 
   if (structure.type === 'cycling_lists') {
     // For cycling plans, use getCurrentReadings with list positions instead
@@ -631,6 +722,11 @@ export function getTodaysReading(
 // Helper to calculate plan progress percentage
 export function calculatePlanProgress(userPlan: UserPlan, plan: ReadingPlan): number {
   const structure = plan.daily_structure
+
+  // For free reading, return total chapters logged (not a percentage)
+  if (structure.type === 'free_reading') {
+    return userPlan.list_positions?.['free'] || 0
+  }
 
   // For cycling plans, use the longest list as the completion target
   if (structure.type === 'cycling_lists') {

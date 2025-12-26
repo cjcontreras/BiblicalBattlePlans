@@ -38,29 +38,11 @@ export function Plans() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-pixel text-terminal-green">READING PLANS</h1>
+        <h1 className="text-2xl font-pixel text-terminal-green">START NEW CAMPAIGN</h1>
         <p className="text-terminal-gray-400 mt-2">
-          Choose a campaign to begin your journey through Scripture
+          Choose a reading plan to begin your journey through Scripture
         </p>
       </div>
-
-      {/* Active Campaigns */}
-      {activeCampaigns.length > 0 && (
-        <section>
-          <h2 className="text-lg font-pixel text-terminal-green mb-4">
-            ACTIVE CAMPAIGNS ({activeCampaigns.length})
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {activeCampaigns.map((userPlan) => (
-              <PlanCard
-                key={userPlan.id}
-                plan={userPlan.plan}
-                userPlan={userPlan}
-              />
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Available Plans */}
       <section>
@@ -87,11 +69,17 @@ export function Plans() {
       {/* Plan Types Legend */}
       <section className="border-t border-terminal-gray-600 pt-6">
         <h3 className="text-sm font-pixel text-terminal-gray-400 mb-3">PLAN TYPES</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
           <div>
             <span className="text-achievement-gold">CYCLING</span>
             <p className="text-terminal-gray-400 mt-1">
               Multiple independent reading lists that cycle at different rates (e.g., Horner's System)
+            </p>
+          </div>
+          <div>
+            <span className="text-terminal-green">FREE</span>
+            <p className="text-terminal-gray-400 mt-1">
+              Log your own reading without a fixed schedule. Perfect for flexible study.
             </p>
           </div>
           <div>

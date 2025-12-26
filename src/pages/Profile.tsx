@@ -9,11 +9,15 @@ export function Profile() {
   const { data: stats, isLoading: statsLoading } = useStats()
   const [isEditing, setIsEditing] = useState(false)
   const [displayName, setDisplayName] = useState(profile?.display_name || '')
+  const [streakMinimum, setStreakMinimum] = useState(profile?.streak_minimum || 3)
   const [isSaving, setIsSaving] = useState(false)
 
   const handleSave = async () => {
     setIsSaving(true)
-    await updateProfile({ display_name: displayName })
+    await updateProfile({
+      display_name: displayName,
+      streak_minimum: streakMinimum
+    })
     setIsSaving(false)
     setIsEditing(false)
   }
@@ -64,6 +68,15 @@ export function Profile() {
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your display name"
             />
+            <Input
+              label="Streak Minimum (Chapters/Day)"
+              type="number"
+              min="1"
+              max="20"
+              value={streakMinimum}
+              onChange={(e) => setStreakMinimum(parseInt(e.target.value) || 3)}
+              placeholder="Minimum chapters per day for streak"
+            />
           </CardContent>
           <CardFooter className="flex gap-3">
             <Button
@@ -78,6 +91,7 @@ export function Profile() {
               onClick={() => {
                 setIsEditing(false)
                 setDisplayName(profile?.display_name || '')
+                setStreakMinimum(profile?.streak_minimum || 3)
               }}
             >
               CANCEL

@@ -63,6 +63,12 @@ export function PlanDetail() {
           variant: 'warning' as const,
           description: `${cyclingStructure.lists.length} independent reading lists that cycle at different rates`,
         }
+      case 'free_reading':
+        return {
+          badge: 'FREE',
+          variant: 'success' as const,
+          description: 'Log your own reading - no fixed schedule required',
+        }
       case 'sequential':
         return {
           badge: 'SEQUENTIAL',
@@ -115,18 +121,25 @@ export function PlanDetail() {
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 bg-terminal-dark border border-terminal-gray-600">
               <div className="text-2xl font-pixel text-terminal-green flex items-center justify-center">
-                {plan.duration_days > 0 ? plan.duration_days : <Infinity className="w-6 h-6" />}
+                {plan.daily_structure.type === 'free_reading' ? (
+                  <Infinity className="w-6 h-6" />
+                ) : plan.duration_days > 0 ? (
+                  plan.duration_days
+                ) : (
+                  <Infinity className="w-6 h-6" />
+                )}
               </div>
               <div className="text-sm text-terminal-gray-400">
-                {plan.duration_days > 0 ? 'Days' : 'Ongoing'}
+                {plan.daily_structure.type === 'free_reading' ? 'Self-Paced' :
+                 plan.duration_days > 0 ? 'Days' : 'Ongoing'}
               </div>
             </div>
             <div className="p-4 bg-terminal-dark border border-terminal-gray-600">
               <div className="text-2xl font-pixel text-terminal-green">
-                {sampleReading.length}
+                {plan.daily_structure.type === 'free_reading' ? '-' : sampleReading.length}
               </div>
               <div className="text-sm text-terminal-gray-400">
-                Readings/Day
+                {plan.daily_structure.type === 'free_reading' ? 'Your Choice' : 'Readings/Day'}
               </div>
             </div>
           </div>
@@ -138,27 +151,29 @@ export function PlanDetail() {
           </div>
 
           {/* Sample Day Preview */}
-          <div>
-            <h3 className="text-sm font-pixel text-terminal-gray-400 mb-3">
-              DAY 1 PREVIEW
-            </h3>
-            <div className="space-y-2">
-              {sampleReading.map((section, index) => (
-                <div
-                  key={section.id || index}
-                  className="p-3 bg-terminal-dark border border-terminal-gray-600 flex justify-between items-center"
-                >
-                  <div>
-                    <div className="text-xs text-terminal-gray-500">{section.label}</div>
-                    <div className="text-terminal-gray-200">
-                      {section.passage}
+          {plan.daily_structure.type !== 'free_reading' && (
+            <div>
+              <h3 className="text-sm font-pixel text-terminal-gray-400 mb-3">
+                DAY 1 PREVIEW
+              </h3>
+              <div className="space-y-2">
+                {sampleReading.map((section, index) => (
+                  <div
+                    key={section.id || index}
+                    className="p-3 bg-terminal-dark border border-terminal-gray-600 flex justify-between items-center"
+                  >
+                    <div>
+                      <div className="text-xs text-terminal-gray-500">{section.label}</div>
+                      <div className="text-terminal-gray-200">
+                        {section.passage}
+                      </div>
                     </div>
+                    <div className="text-terminal-gray-500">[  ]</div>
                   </div>
-                  <div className="text-terminal-gray-500">[  ]</div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
 
         <CardFooter>

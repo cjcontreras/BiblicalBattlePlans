@@ -7,13 +7,14 @@ import {
   useMarkSectionComplete,
   useAdvanceList,
   useAdvanceDay,
+  useLogFreeReading,
   getCurrentReadings,
   getTodaysReading,
   calculatePlanProgress,
   getChaptersReadToday,
 } from '../hooks/usePlans'
 import { useAuth } from '../hooks/useAuth'
-import { ReadingSection, PlanProgress } from '../components/plans'
+import { ReadingSection, PlanProgress, FreeReadingInput } from '../components/plans'
 import { Card, CardHeader, CardContent, CardFooter, Button, LoadingSpinner, Badge } from '../components/ui'
 
 export function ActivePlan() {
@@ -27,9 +28,12 @@ export function ActivePlan() {
   const markSectionComplete = useMarkSectionComplete()
   const advanceList = useAdvanceList()
   const advanceDay = useAdvanceDay()
+  const logFreeReading = useLogFreeReading()
 
   const isLoading = planLoading || progressLoading
-  const isMutating = markChapterRead.isPending || markSectionComplete.isPending || advanceList.isPending || advanceDay.isPending
+  const isMutating = markChapterRead.isPending || markSectionComplete.isPending ||
+                     advanceList.isPending || advanceDay.isPending ||
+                     logFreeReading.isPending
 
   if (isLoading) {
     return (
@@ -54,6 +58,7 @@ export function ActivePlan() {
 
   const { plan } = userPlan
   const isCyclingPlan = plan.daily_structure.type === 'cycling_lists'
+  const isFreeReading = plan.daily_structure.type === 'free_reading'
   const isWeeklyPlan = plan.daily_structure.type === 'weekly_sectional'
 
   // Get readings based on plan type
@@ -134,6 +139,17 @@ export function ActivePlan() {
     }
   }
 
+  const handleLogFreeReading = async (chapters: number, notes?: string) => {
+    if (!id || !userPlan) return
+
+    await logFreeReading.mutateAsync({
+      userPlanId: id,
+      chapters,
+      notes,
+      userPlan,
+    })
+  }
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Back button */}
@@ -153,8 +169,9 @@ export function ActivePlan() {
                 {plan.name}
               </h1>
               <p className="text-terminal-gray-400 mt-1">
-                {isCyclingPlan ? 'Continuous Reading Plan' : 
-                  `Day ${daysOnPlan} on this campaign`}
+                {isCyclingPlan ? 'Continuous Reading Plan' :
+                 isFreeReading ? 'Free Reading - Log as you go' :
+                 `Day ${daysOnPlan} on this campaign`}
               </p>
             </div>
             {streakMet && (
@@ -170,14 +187,14 @@ export function ActivePlan() {
             daysOnPlan={daysOnPlan}
             completedToday={chaptersReadToday}
             totalToday={
-              isCyclingPlan
+              isCyclingPlan || isFreeReading
                 ? streakMinimum
                 : plan.daily_structure.type === 'sequential'
                   ? (plan.daily_structure as any).chapters_per_day || 3
                   : todaysReading.length
             }
             unit={
-              plan.daily_structure.type === 'sequential' || plan.daily_structure.type === 'cycling_lists'
+              plan.daily_structure.type === 'sequential' || plan.daily_structure.type === 'cycling_lists' || isFreeReading
                 ? 'chapters'
                 : 'readings'
             }
@@ -214,18 +231,25 @@ export function ActivePlan() {
         </CardHeader>
       </Card>
 
-      {/* Current Readings */}
-      <Card>
-        <CardHeader>
-          <h2 className="text-lg font-pixel text-terminal-green">
-            {isCyclingPlan ? 'CONTINUE READING' : "TODAY'S MISSION"}
-          </h2>
-          <p className="text-terminal-gray-400 text-sm mt-1">
-            {isCyclingPlan
-              ? 'Mark chapters as you read. Each list progresses independently.'
-              : 'Complete all readings to conquer this day'}
-          </p>
-        </CardHeader>
+      {/* Current Readings or Free Reading Input */}
+      {isFreeReading ? (
+        <FreeReadingInput
+          onSubmit={handleLogFreeReading}
+          isLoading={isMutating}
+          chaptersReadToday={chaptersReadToday}
+        />
+      ) : (
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-pixel text-terminal-green">
+              {isCyclingPlan ? 'CONTINUE READING' : "TODAY'S MISSION"}
+            </h2>
+            <p className="text-terminal-gray-400 text-sm mt-1">
+              {isCyclingPlan
+                ? 'Mark chapters as you read. Each list progresses independently.'
+                : 'Complete all readings to conquer this day'}
+            </p>
+          </CardHeader>
 
         <CardContent className="space-y-2">
           {todaysReading.length > 0 ? (
@@ -291,7 +315,8 @@ export function ActivePlan() {
             </div>
           </CardFooter>
         )}
-      </Card>
+        </Card>
+      )}
 
       {/* Campaign Stats */}
       <Card>
@@ -318,16 +343,20 @@ export function ActivePlan() {
                 {chaptersReadToday}
               </div>
               <div className="text-xs text-terminal-gray-400">
-                {isCyclingPlan ? 'Chapters Today' : 'Readings Today'}
+                {isCyclingPlan || isFreeReading ? 'Chapters Today' : 'Readings Today'}
               </div>
             </div>
 
             {/* Overall Progress */}
             <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
               <div className="text-2xl font-pixel text-terminal-green">
-                {overallProgress}%
+                {isFreeReading
+                  ? (userPlan.list_positions?.['free'] || 0)
+                  : `${overallProgress}%`}
               </div>
-              <div className="text-xs text-terminal-gray-400">Overall Progress</div>
+              <div className="text-xs text-terminal-gray-400">
+                {isFreeReading ? 'Total Logged' : 'Overall Progress'}
+              </div>
             </div>
 
             {isCyclingPlan ? (
@@ -357,7 +386,7 @@ export function ActivePlan() {
                 </div>
                 <div className="text-xs text-terminal-gray-400">Reading Position</div>
               </div>
-            ) : (
+            ) : !isFreeReading && (
               <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
                 <div className="flex items-center justify-center gap-1">
                   <div className="text-2xl font-pixel text-terminal-green">
@@ -421,6 +450,35 @@ export function ActivePlan() {
             <div className="flex items-start gap-3">
               <ChevronRight className="w-4 h-4 text-terminal-green flex-shrink-0 mt-0.5" />
               <p>Complete all 52 weeks to read through the entire Bible with balanced daily variety.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Reading Tips for Free Reading */}
+      {isFreeReading && (
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-pixel text-terminal-green">
+              HOW IT WORKS
+            </h2>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-terminal-gray-300">
+            <div className="flex items-start gap-3">
+              <ChevronRight className="w-4 h-4 text-terminal-green flex-shrink-0 mt-0.5" />
+              <p>Log chapters as you read them. There's no predetermined schedule - read what you want, when you want.</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <ChevronRight className="w-4 h-4 text-terminal-green flex-shrink-0 mt-0.5" />
+              <p>Your entries count toward your daily goal of {streakMinimum} chapters to maintain your streak.</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <ChevronRight className="w-4 h-4 text-terminal-green flex-shrink-0 mt-0.5" />
+              <p>Use the notes field to track what you read (e.g., "Psalms 23-25, Romans 8").</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <ChevronRight className="w-4 h-4 text-terminal-green flex-shrink-0 mt-0.5" />
+              <p>Entries are for today only - you cannot backdate reading to maintain streak integrity.</p>
             </div>
           </CardContent>
         </Card>

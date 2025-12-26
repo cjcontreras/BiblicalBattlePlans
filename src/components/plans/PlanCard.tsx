@@ -13,6 +13,8 @@ function getPlanTypeBadge(type: string) {
   switch (type) {
     case 'cycling_lists':
       return { label: 'CYCLING', variant: 'warning' as const }
+    case 'free_reading':
+      return { label: 'FREE', variant: 'success' as const }
     case 'sequential':
       return { label: 'SEQUENTIAL', variant: 'default' as const }
     case 'weekly_sectional':
@@ -57,22 +59,33 @@ export function PlanCard({ plan, userPlan, showStartButton = true }: PlanCardPro
 
           {isActive && (
             <>
-              <div className="flex justify-between text-terminal-gray-400">
-                <span>Current Day:</span>
-                <span className="text-terminal-green">{userPlan.current_day}</span>
-              </div>
-              <div className="mt-3">
-                <div className="flex justify-between text-xs text-terminal-gray-400 mb-1">
-                  <span>Progress</span>
-                  <span>{progress}%</span>
+              {plan.daily_structure.type === 'free_reading' ? (
+                <div className="flex justify-between text-terminal-gray-400">
+                  <span>Total Logged:</span>
+                  <span className="text-terminal-green">
+                    {userPlan.list_positions?.['free'] || 0} chapters
+                  </span>
                 </div>
-                <div className="h-2 bg-terminal-gray-600 overflow-hidden">
-                  <div
-                    className="h-full bg-terminal-green transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
+              ) : (
+                <>
+                  <div className="flex justify-between text-terminal-gray-400">
+                    <span>Current Day:</span>
+                    <span className="text-terminal-green">{userPlan.current_day}</span>
+                  </div>
+                  <div className="mt-3">
+                    <div className="flex justify-between text-xs text-terminal-gray-400 mb-1">
+                      <span>Progress</span>
+                      <span>{progress}%</span>
+                    </div>
+                    <div className="h-2 bg-terminal-gray-600 overflow-hidden">
+                      <div
+                        className="h-full bg-terminal-green transition-all duration-300"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>

@@ -214,6 +214,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
         username: data.username,
         display_name: data.display_name,
         avatar_url: data.avatar_url,
+        streak_minimum: data.streak_minimum,
       })
       .eq('id', user.id)
 
