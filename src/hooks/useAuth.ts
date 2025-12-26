@@ -111,7 +111,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
 
   signIn: async (email: string, password: string) => {
     set({ isLoading: true })
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
@@ -119,6 +119,17 @@ export const useAuth = create<AuthStore>((set, get) => ({
     if (error) {
       set({ isLoading: false })
       return { error }
+    }
+
+    // Immediately update auth state instead of waiting for onAuthStateChange
+    if (data.session?.user) {
+      const profile = await fetchProfile(data.session.user.id)
+      set({
+        user: data.session.user,
+        session: data.session,
+        profile,
+        isLoading: false,
+      })
     }
 
     return { error: null }

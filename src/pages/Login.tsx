@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { AuthForm, GoogleAuthButton, type AuthFormData } from '../components/auth'
@@ -7,12 +7,19 @@ import { Card, CardHeader, CardContent, CardFooter } from '../components/ui'
 export function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { signIn } = useAuth()
+  const { signIn, user } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Get the redirect path from location state, or default to dashboard
   const from = (location.state as { from?: Location })?.from?.pathname || '/'
+
+  // Auto-redirect when user becomes authenticated
+  useEffect(() => {
+    if (user && !error) {
+      navigate(from, { replace: true })
+    }
+  }, [user, error, navigate, from])
 
   const handleSubmit = async (data: AuthFormData) => {
     setIsLoading(true)
@@ -32,9 +39,8 @@ export function Login() {
 
       setError(errorMessage)
       setIsLoading(false)
-    } else {
-      navigate(from, { replace: true })
     }
+    // Don't navigate here - let the useEffect handle it when user state updates
   }
 
   return (
