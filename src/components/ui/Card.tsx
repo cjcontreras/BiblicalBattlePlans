@@ -20,17 +20,18 @@ interface CardFooterProps extends HTMLAttributes<HTMLDivElement> {
 
 const variantStyles = {
   default: `
-    bg-terminal-darker
-    border-2 border-terminal-gray-500
+    bg-gradient-to-br from-parchment to-parchment-light
+    border-2 border-border-subtle
+    shadow-[0_4px_12px_var(--shadow-color),0_2px_4px_var(--shadow-color)]
   `,
   elevated: `
-    bg-terminal-darker
-    border-2 border-terminal-green
-    shadow-[0_0_10px_rgba(51,255,51,0.2)]
+    bg-gradient-to-br from-parchment to-parchment-light
+    border-2 border-border
+    shadow-[0_8px_24px_var(--shadow-color-strong),0_4px_8px_var(--shadow-color)]
   `,
   outlined: `
     bg-transparent
-    border-2 border-terminal-gray-400
+    border-2 border-border-subtle
   `,
 }
 
@@ -60,7 +61,9 @@ export function CardHeader({ children, className = '', ...props }: CardHeaderPro
     <div
       className={`
         pb-3 mb-3
-        border-b border-terminal-gray-500
+        bg-gradient-to-r from-parchment-dark/30 to-transparent
+        -mx-4 -mt-4 px-4 pt-3
+        border-b border-border-subtle
         ${className}
       `}
       {...props}
@@ -83,8 +86,7 @@ export function CardFooter({ children, className = '', ...props }: CardFooterPro
     <div
       className={`
         pt-3 mt-3
-        border-t border-terminal-gray-500
-        ${className}
+        border-t border-border-subtle
       `}
       {...props}
     >

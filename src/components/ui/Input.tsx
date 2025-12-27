@@ -29,14 +29,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block mb-1.5 text-sm font-medium text-terminal-gray-200"
+            className="block mb-1.5 text-[0.625rem] font-pixel text-ink-muted uppercase tracking-wide"
           >
-            {`> ${label}`}
+            {label}
           </label>
         )}
         <div className="relative">
           {leftElement && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-terminal-gray-400">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted">
               {leftElement}
             </div>
           )}
@@ -45,16 +45,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             className={`
               w-full
-              bg-terminal-dark
-              border-2 ${error ? 'border-alert-red' : 'border-terminal-gray-500'}
-              text-terminal-gray-100
-              placeholder:text-terminal-gray-400
-              font-mono
-              px-3 py-2
+              bg-parchment-light
+              border-2 ${error ? 'border-danger' : 'border-border-subtle'}
+              text-ink
+              placeholder:text-ink-faint
+              font-pixel
+              text-[0.75rem]
+              px-3 py-2.5
               ${leftElement ? 'pl-10' : ''}
               ${rightElement ? 'pr-10' : ''}
-              focus:outline-none focus:border-terminal-green
-              focus:shadow-[0_0_5px_var(--color-terminal-green)]
+              focus:outline-none focus:border-sage
+              focus:shadow-[0_0_0_3px_rgba(93,138,102,0.2)]
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-all duration-150
               ${className}
@@ -62,18 +63,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {rightElement && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-terminal-gray-400">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted">
               {rightElement}
             </div>
           )}
         </div>
         {error && (
-          <p className="mt-1.5 text-sm text-alert-red">
-            {`! ${error}`}
+          <p className="mt-1.5 text-[0.625rem] text-danger font-pixel">
+            {error}
           </p>
         )}
         {hint && !error && (
-          <p className="mt-1.5 text-sm text-terminal-gray-400">
+          <p className="mt-1.5 text-[0.625rem] text-ink-muted">
             {hint}
           </p>
         )}

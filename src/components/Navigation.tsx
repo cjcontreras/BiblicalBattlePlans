@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Home, Swords, type LucideIcon } from 'lucide-react'
+import { Home, Shield, type LucideIcon } from 'lucide-react'
 
 interface NavItem {
   path: string
@@ -7,14 +7,15 @@ interface NavItem {
   icon: LucideIcon
 }
 
+// Removed QUESTS from nav - users access it via "NEW QUEST" button
 const navItems: NavItem[] = [
-  { path: '/', label: 'Dashboard', icon: Home },
-  { path: '/profile', label: 'Profile', icon: Swords },
+  { path: '/', label: 'HOME', icon: Home },
+  { path: '/profile', label: 'HERO', icon: Shield },
 ]
 
 export function Navigation() {
   return (
-    <nav className="flex items-center gap-1">
+    <nav className="flex items-center gap-2">
       {navItems.map((item) => {
         const Icon = item.icon
         return (
@@ -22,15 +23,15 @@ export function Navigation() {
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `px-4 py-2 font-mono text-sm transition-all duration-150 flex items-center gap-2 ${
+              `px-4 py-2 font-pixel text-[0.625rem] transition-all duration-150 flex items-center gap-2 border-2 ${
                 isActive
-                  ? 'text-terminal-green bg-terminal-gray-600 border-b-2 border-terminal-green'
-                  : 'text-terminal-gray-300 hover:text-terminal-green hover:bg-terminal-gray-600'
+                  ? 'bg-gradient-to-b from-gold to-gold-dark border-gold-dark text-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]'
+                  : 'bg-gradient-to-b from-parchment-light to-parchment border-border-subtle text-ink hover:border-gold hover:from-parchment-lightest hover:to-parchment-light'
               }`
             }
           >
-            <Icon className="hidden sm:inline w-4 h-4" />
-            {item.label}
+            <Icon className="w-4 h-4" />
+            <span className="hidden lg:inline">{item.label}</span>
           </NavLink>
         )
       })}
@@ -40,7 +41,7 @@ export function Navigation() {
 
 export function MobileNavigation() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-terminal-darker border-t border-terminal-gray-500 md:hidden z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-parchment to-parchment-light border-t-2 border-border-subtle md:hidden z-50 shadow-[0_-4px_12px_var(--shadow-color)]">
       <div className="flex justify-around">
         {navItems.map((item) => {
           const Icon = item.icon
@@ -51,13 +52,13 @@ export function MobileNavigation() {
               className={({ isActive }) =>
                 `flex flex-col items-center py-3 px-4 flex-1 transition-all duration-150 ${
                   isActive
-                    ? 'text-terminal-green bg-terminal-gray-600'
-                    : 'text-terminal-gray-400 hover:text-terminal-green'
+                    ? 'text-gold bg-parchment-dark/20'
+                    : 'text-ink-muted hover:text-gold'
                 }`
               }
             >
               <Icon className="w-5 h-5 mb-1" />
-              <span className="text-xs">{item.label}</span>
+              <span className="font-pixel text-[0.5rem]">{item.label}</span>
             </NavLink>
           )
         })}

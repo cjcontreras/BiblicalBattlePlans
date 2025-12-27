@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Trophy } from 'lucide-react'
-import { Card, CardHeader, CardContent, Badge, Button } from '../ui'
+import { Card, Badge, Button, LoadingSpinner } from '../ui'
 import { useUserPlans, calculatePlanProgress } from '../../hooks/usePlans'
-import { LoadingSpinner } from '../ui'
 
 export function CampaignHistory() {
   const { data: userPlans, isLoading } = useUserPlans()
@@ -10,29 +9,27 @@ export function CampaignHistory() {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="flex justify-center py-8">
+        <div className="flex justify-center py-8">
           <LoadingSpinner />
-        </CardContent>
+        </div>
       </Card>
     )
   }
 
-  const activePlans = userPlans?.filter((up) => !up.is_completed) || []
+  const activePlans = userPlans?.filter((up) => !up.is_completed && !up.is_archived) || []
   const completedPlans = userPlans?.filter((up) => up.is_completed) || []
 
   return (
     <div className="space-y-6">
       {/* Active Campaigns */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-pixel text-terminal-green">
-              ACTIVE CAMPAIGNS
-            </h3>
-            <Badge variant="success">{activePlans.length}</Badge>
+      <Card noPadding>
+        <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent px-4 py-3 border-b border-border-subtle flex items-center justify-between">
+          <div className="font-pixel text-[0.625rem] text-ink">
+            ACTIVE QUESTS
           </div>
-        </CardHeader>
-        <CardContent>
+          <Badge variant="success">{activePlans.length}</Badge>
+        </div>
+        <div className="p-4">
           {activePlans.length > 0 ? (
             <div className="space-y-3">
               {activePlans.map((userPlan) => {
@@ -41,79 +38,77 @@ export function CampaignHistory() {
                   <Link
                     key={userPlan.id}
                     to={`/campaign/${userPlan.id}`}
-                    className="block p-3 border-2 border-terminal-gray-500 hover:border-terminal-green transition-colors"
+                    className="block p-4 bg-parchment-light border border-border-subtle hover:border-gold transition-all shadow-[0_2px_4px_var(--shadow-color)]"
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-terminal-green font-medium">
-                          {userPlan.plan.name}
+                        <div className="font-pixel text-[0.625rem] text-ink">
+                          {userPlan.plan.name.toUpperCase()}
                         </div>
-                        <div className="text-terminal-gray-400 text-sm">
+                        <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">
                           Day {userPlan.current_day} • Started{' '}
                           {new Date(userPlan.start_date).toLocaleDateString()}
                         </div>
                       </div>
-                      <div className="text-terminal-gray-300">{progress}%</div>
+                      <div className="font-pixel text-[0.625rem] text-gold">{progress}%</div>
                     </div>
                   </Link>
                 )
               })}
             </div>
           ) : (
-            <div className="text-center py-6 text-terminal-gray-400">
-              <p>No active campaigns</p>
+            <div className="text-center py-6">
+              <p className="font-pixel text-[0.625rem] text-ink-muted">No active quests</p>
               <Link to="/plans">
                 <Button variant="secondary" className="mt-3">
-                  Start a Campaign
+                  START A QUEST
                 </Button>
               </Link>
             </div>
           )}
-        </CardContent>
+        </div>
       </Card>
 
       {/* Completed Campaigns */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-pixel text-terminal-green">
-              COMPLETED CAMPAIGNS
-            </h3>
-            <Badge variant="gold">{completedPlans.length}</Badge>
+      <Card noPadding>
+        <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent px-4 py-3 border-b border-border-subtle flex items-center justify-between">
+          <div className="font-pixel text-[0.625rem] text-ink">
+            COMPLETED QUESTS
           </div>
-        </CardHeader>
-        <CardContent>
+          <Badge variant="gold">{completedPlans.length}</Badge>
+        </div>
+        <div className="p-4">
           {completedPlans.length > 0 ? (
             <div className="space-y-3">
               {completedPlans.map((userPlan) => (
                 <div
                   key={userPlan.id}
-                  className="p-3 border-2 border-achievement-gold/30 bg-achievement-gold/5"
+                  className="p-4 bg-gold/10 border border-gold"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-achievement-gold font-medium">
-                        {userPlan.plan.name}
+                      <div className="font-pixel text-[0.625rem] text-gold">
+                        {userPlan.plan.name.toUpperCase()}
                       </div>
-                      <div className="text-terminal-gray-400 text-sm">
+                      <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">
                         Completed{' '}
                         {userPlan.completed_at
                           ? new Date(userPlan.completed_at).toLocaleDateString()
                           : 'Unknown'}
                       </div>
                     </div>
-                    <Trophy className="w-5 h-5 text-achievement-gold" />
+                    <Trophy className="w-5 h-5 text-gold" />
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-6 text-terminal-gray-400">
-              <p>No completed campaigns yet</p>
-              <p className="text-sm mt-1">Keep reading to complete your first!</p>
+            <div className="text-center py-6">
+              <p className="font-pixel text-[0.625rem] text-ink-muted">No completed quests yet</p>
+              <p className="font-pixel text-[0.5rem] text-ink-faint mt-1">Keep reading to complete your first!</p>
             </div>
           )}
-        </CardContent>
+        </div>
       </Card>
     </div>
   )

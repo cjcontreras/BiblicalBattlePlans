@@ -20,7 +20,7 @@ function getPlanTypeBadge(type: string) {
     case 'weekly_sectional':
       return { label: 'SEQUENTIAL', variant: 'default' as const }
     case 'sectional':
-      return { label: 'SECTIONAL', variant: 'success' as const }
+      return { label: 'SECTIONAL', variant: 'gold' as const }
     default:
       return { label: 'STANDARD', variant: 'default' as const }
   }
@@ -35,8 +35,8 @@ export function PlanCard({ plan, userPlan, showStartButton = true }: PlanCardPro
     <Card className="h-full flex flex-col">
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-lg font-pixel text-terminal-green leading-tight">
-            {plan.name}
+          <h3 className="font-pixel text-[0.625rem] text-ink leading-tight">
+            {plan.name.toUpperCase()}
           </h3>
           <Badge variant={typeBadge.variant} size="sm">
             {typeBadge.label}
@@ -45,14 +45,14 @@ export function PlanCard({ plan, userPlan, showStartButton = true }: PlanCardPro
       </CardHeader>
 
       <CardContent className="flex-1">
-        <p className="text-terminal-gray-300 text-sm mb-4 line-clamp-3">
+        <p className="font-pixel text-[0.5rem] text-ink-muted mb-4 line-clamp-3 leading-relaxed">
           {plan.description}
         </p>
 
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between text-terminal-gray-400">
-            <span>Duration:</span>
-            <span className="text-terminal-gray-200">
+        <div className="space-y-2">
+          <div className="flex justify-between font-pixel text-[0.5rem]">
+            <span className="text-ink-muted">Duration:</span>
+            <span className="text-ink">
               {plan.duration_days > 0 ? `${plan.duration_days} days` : 'Ongoing'}
             </span>
           </div>
@@ -60,26 +60,26 @@ export function PlanCard({ plan, userPlan, showStartButton = true }: PlanCardPro
           {isActive && (
             <>
               {plan.daily_structure.type === 'free_reading' ? (
-                <div className="flex justify-between text-terminal-gray-400">
-                  <span>Total Logged:</span>
-                  <span className="text-terminal-green">
+                <div className="flex justify-between font-pixel text-[0.5rem]">
+                  <span className="text-ink-muted">Total Logged:</span>
+                  <span className="text-gold">
                     {userPlan.list_positions?.['free'] || 0} chapters
                   </span>
                 </div>
               ) : (
                 <>
-                  <div className="flex justify-between text-terminal-gray-400">
-                    <span>Current Day:</span>
-                    <span className="text-terminal-green">{userPlan.current_day}</span>
+                  <div className="flex justify-between font-pixel text-[0.5rem]">
+                    <span className="text-ink-muted">Current Day:</span>
+                    <span className="text-gold">{userPlan.current_day}</span>
                   </div>
                   <div className="mt-3">
-                    <div className="flex justify-between text-xs text-terminal-gray-400 mb-1">
+                    <div className="flex justify-between font-pixel text-[0.5rem] text-ink-muted mb-1">
                       <span>Progress</span>
                       <span>{progress}%</span>
                     </div>
-                    <div className="h-2 bg-terminal-gray-600 overflow-hidden">
+                    <div className="h-2 bg-parchment-light border border-border-subtle overflow-hidden">
                       <div
-                        className="h-full bg-terminal-green transition-all duration-300"
+                        className="h-full bg-gradient-to-r from-gold to-bronze transition-all duration-300"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
@@ -95,7 +95,7 @@ export function PlanCard({ plan, userPlan, showStartButton = true }: PlanCardPro
         {isActive ? (
           <Link to={`/campaign/${userPlan.id}`} className="w-full">
             <Button variant="primary" className="w-full">
-              CONTINUE CAMPAIGN
+              CONTINUE QUEST
             </Button>
           </Link>
         ) : showStartButton ? (

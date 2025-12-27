@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Infinity } from 'lucide-react'
+import { Infinity, ChevronLeft } from 'lucide-react'
 import { useReadingPlan, useStartPlan, useUserPlans, getTodaysReading } from '../hooks/usePlans'
 import { Card, CardHeader, CardContent, CardFooter, Button, Badge, LoadingSpinner, Input } from '../components/ui'
 import type { CyclingListsStructure } from '../types'
@@ -42,9 +42,9 @@ export function PlanDetail() {
     return (
       <Card>
         <CardContent className="text-center py-8">
-          <p className="text-alert-red">! ERROR: Failed to load plan details</p>
+          <p className="font-pixel text-[0.625rem] text-danger">ERROR: Failed to load quest details</p>
           <Button variant="secondary" onClick={() => navigate('/plans')} className="mt-4">
-            Back to Plans
+            Back to Quests
           </Button>
         </CardContent>
       </Card>
@@ -78,7 +78,7 @@ export function PlanDetail() {
       case 'sectional':
         return {
           badge: 'SECTIONAL',
-          variant: 'success' as const,
+          variant: 'gold' as const,
           description: 'Daily readings from multiple sections of Scripture',
         }
       default:
@@ -97,20 +97,21 @@ export function PlanDetail() {
       {/* Back button */}
       <button
         onClick={() => navigate('/plans')}
-        className="text-terminal-gray-400 hover:text-terminal-green transition-colors"
+        className="inline-flex items-center gap-1 font-pixel text-[0.625rem] text-ink-muted hover:text-gold transition-colors"
       >
-        {'< Back to Plans'}
+        <ChevronLeft className="w-4 h-4" />
+        BACK TO QUESTS
       </button>
 
       {/* Plan Header */}
-      <Card>
+      <Card variant="elevated">
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-pixel text-terminal-green">
-                {plan.name}
+              <h1 className="font-pixel text-sm text-ink">
+                {plan.name.toUpperCase()}
               </h1>
-              <p className="text-terminal-gray-400 mt-2">{plan.description}</p>
+              <p className="font-pixel text-[0.5rem] text-ink-muted mt-2 leading-relaxed">{plan.description}</p>
             </div>
             <Badge variant={typeInfo.variant}>{typeInfo.badge}</Badge>
           </div>
@@ -119,8 +120,8 @@ export function PlanDetail() {
         <CardContent className="space-y-6">
           {/* Plan Stats */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-terminal-dark border border-terminal-gray-600">
-              <div className="text-2xl font-pixel text-terminal-green flex items-center justify-center">
+            <div className="p-4 bg-parchment-light border border-border-subtle text-center">
+              <div className="font-pixel text-xl text-ink flex items-center justify-center">
                 {plan.daily_structure.type === 'free_reading' ? (
                   <Infinity className="w-6 h-6" />
                 ) : plan.duration_days > 0 ? (
@@ -129,46 +130,46 @@ export function PlanDetail() {
                   <Infinity className="w-6 h-6" />
                 )}
               </div>
-              <div className="text-sm text-terminal-gray-400">
+              <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">
                 {plan.daily_structure.type === 'free_reading' ? 'Self-Paced' :
                  plan.duration_days > 0 ? 'Days' : 'Ongoing'}
               </div>
             </div>
-            <div className="p-4 bg-terminal-dark border border-terminal-gray-600">
-              <div className="text-2xl font-pixel text-terminal-green">
+            <div className="p-4 bg-parchment-light border border-border-subtle text-center">
+              <div className="font-pixel text-xl text-ink">
                 {plan.daily_structure.type === 'free_reading' ? '-' : sampleReading.length}
               </div>
-              <div className="text-sm text-terminal-gray-400">
+              <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">
                 {plan.daily_structure.type === 'free_reading' ? 'Your Choice' : 'Readings/Day'}
               </div>
             </div>
           </div>
 
           {/* Plan Type Description */}
-          <div className="p-4 bg-terminal-dark border border-terminal-gray-600">
-            <div className="text-sm text-terminal-gray-400 mb-1">Plan Type</div>
-            <div className="text-terminal-gray-200">{typeInfo.description}</div>
+          <div className="p-4 bg-parchment-light border border-border-subtle">
+            <div className="font-pixel text-[0.5rem] text-ink-muted mb-1">Quest Type</div>
+            <div className="font-pixel text-[0.625rem] text-ink">{typeInfo.description}</div>
           </div>
 
           {/* Sample Day Preview */}
           {plan.daily_structure.type !== 'free_reading' && (
             <div>
-              <h3 className="text-sm font-pixel text-terminal-gray-400 mb-3">
+              <h3 className="font-pixel text-[0.5rem] text-ink-muted mb-3">
                 DAY 1 PREVIEW
               </h3>
               <div className="space-y-2">
                 {sampleReading.map((section, index) => (
                   <div
                     key={section.id || index}
-                    className="p-3 bg-terminal-dark border border-terminal-gray-600 flex justify-between items-center"
+                    className="p-3 bg-parchment-light border border-border-subtle flex justify-between items-center"
                   >
                     <div>
-                      <div className="text-xs text-terminal-gray-500">{section.label}</div>
-                      <div className="text-terminal-gray-200">
+                      <div className="font-pixel text-[0.5rem] text-ink-muted">{section.label}</div>
+                      <div className="font-pixel text-[0.625rem] text-ink">
                         {section.passage}
                       </div>
                     </div>
-                    <div className="text-terminal-gray-500">[  ]</div>
+                    <div className="font-pixel text-[0.5rem] text-ink-faint">○</div>
                   </div>
                 ))}
               </div>
@@ -179,15 +180,15 @@ export function PlanDetail() {
         <CardFooter>
           {existingUserPlan ? (
             <div className="w-full space-y-3">
-              <p className="text-terminal-gray-400 text-center text-sm">
-                You already have this campaign active
+              <p className="font-pixel text-[0.5rem] text-ink-muted text-center">
+                You already have this quest active
               </p>
               <Button
                 variant="primary"
                 className="w-full"
                 onClick={() => navigate(`/campaign/${existingUserPlan.id}`)}
               >
-                CONTINUE CAMPAIGN
+                CONTINUE QUEST
               </Button>
             </div>
           ) : (
@@ -204,7 +205,7 @@ export function PlanDetail() {
                 onClick={handleStartPlan}
                 isLoading={startPlan.isPending}
               >
-                BEGIN CAMPAIGN
+                BEGIN QUEST
               </Button>
             </div>
           )}
@@ -213,39 +214,37 @@ export function PlanDetail() {
 
       {/* Additional Info for Cycling Plans */}
       {plan.daily_structure.type === 'cycling_lists' && (
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-pixel text-terminal-green">
+        <Card noPadding>
+          <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent px-4 py-3 border-b border-border-subtle">
+            <h2 className="font-pixel text-[0.625rem] text-ink">
               READING LISTS
             </h2>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {(plan.daily_structure as CyclingListsStructure).lists.map((list, index) => (
-                <div
-                  key={list.id}
-                  className="p-3 bg-terminal-dark border border-terminal-gray-600"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="text-terminal-green">
-                        List {index + 1}: {list.label}
-                      </div>
-                      <div className="text-sm text-terminal-gray-400 mt-1">
-                        {list.books.map((b) => b.book).join(', ')}
-                      </div>
+          </div>
+          <div className="p-4 space-y-3">
+            {(plan.daily_structure as CyclingListsStructure).lists.map((list, index) => (
+              <div
+                key={list.id}
+                className="p-3 bg-parchment-light border border-border-subtle"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="font-pixel text-[0.625rem] text-gold">
+                      List {index + 1}: {list.label}
                     </div>
-                    <div className="text-right">
-                      <div className="text-terminal-gray-200">{list.total_chapters} chapters</div>
-                      <div className="text-xs text-terminal-gray-500">
-                        Cycles every {list.total_chapters} days
-                      </div>
+                    <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">
+                      {list.books.map((b) => b.book).join(', ')}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-pixel text-[0.625rem] text-ink">{list.total_chapters} chapters</div>
+                    <div className="font-pixel text-[0.5rem] text-ink-muted">
+                      Cycles every {list.total_chapters} days
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
+              </div>
+            ))}
+          </div>
         </Card>
       )}
     </div>

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Flame } from 'lucide-react'
 import type { BadgeVariant } from '../../types'
 
 interface BadgeProps {
@@ -10,36 +11,35 @@ interface BadgeProps {
 
 const variantStyles: Record<BadgeVariant, string> = {
   default: `
-    bg-terminal-gray-600
-    text-terminal-gray-200
-    border-terminal-gray-500
+    bg-parchment-light
+    text-ink
+    border-border-subtle
   `,
   success: `
-    bg-military-green
-    text-terminal-gray-100
-    border-terminal-green
+    bg-sage
+    text-white
+    border-sage-dark
   `,
   warning: `
-    bg-achievement-gold/20
-    text-achievement-gold
-    border-achievement-gold
+    bg-warning
+    text-ink
+    border-gold-dark
   `,
   danger: `
-    bg-alert-red-dim
-    text-terminal-gray-100
-    border-alert-red
+    bg-danger
+    text-white
+    border-danger-dark
   `,
   gold: `
-    bg-achievement-gold
-    text-terminal-dark
-    border-achievement-gold
-    shadow-[0_0_10px_var(--color-achievement-gold)]
+    bg-gradient-to-r from-sage to-sage-light
+    text-white
+    border-sage-dark
   `,
 }
 
 const sizeStyles = {
-  sm: 'px-1.5 py-0.5 text-xs',
-  md: 'px-2 py-1 text-sm',
+  sm: 'px-2 py-1 text-[0.5rem]',
+  md: 'px-3 py-1.5 text-[0.75rem]',
 }
 
 export function Badge({
@@ -52,7 +52,7 @@ export function Badge({
     <span
       className={`
         inline-flex items-center
-        font-mono font-medium
+        font-pixel
         border
         ${variantStyles[variant]}
         ${sizeStyles[size]}
@@ -88,11 +88,11 @@ export function StreakBadge({ days, className = '' }: StreakBadgeProps) {
   }
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div className={`flex items-center gap-3 ${className}`}>
       <Badge variant={getVariant()} size="md">
-        {days} DAY{days !== 1 ? 'S' : ''}
+        <Flame className="w-4 h-4 text-orange-500" /> {days} DAY{days !== 1 ? 'S' : ''}
       </Badge>
-      <span className="text-xs font-mono text-terminal-gray-400">
+      <span className="text-[0.625rem] font-pixel text-ink-muted">
         [{getLabel()}]
       </span>
     </div>

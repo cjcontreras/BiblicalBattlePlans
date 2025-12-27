@@ -27,9 +27,9 @@ export function PlanProgress({
     <div className={`space-y-4 ${className}`}>
       {/* Today's Progress */}
       <div>
-        <div className="flex justify-between text-sm mb-2">
-          <span className="text-terminal-gray-400">Today's Progress</span>
-          <span className="text-terminal-green">
+        <div className="flex justify-between font-pixel text-[0.5rem] mb-2">
+          <span className="text-ink-muted">Today's Progress</span>
+          <span className="text-gold">
             {completedToday}/{totalToday} {unit}
           </span>
         </div>
@@ -43,12 +43,12 @@ export function PlanProgress({
       {/* Overall Progress */}
       {totalDays > 0 && (
         <div>
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-terminal-gray-400">Campaign Progress</span>
-            <span className="text-terminal-gray-200 flex items-center gap-2">
+          <div className="flex justify-between font-pixel text-[0.5rem] mb-2">
+            <span className="text-ink-muted">Quest Progress</span>
+            <span className="text-ink flex items-center gap-2">
               <span>Reading {currentDay} of {totalDays}</span>
               {readingsAhead !== 0 && (
-                <span className={`text-xs font-mono ${readingsAhead > 0 ? 'text-achievement-gold' : 'text-alert-red'}`}>
+                <span className={`${readingsAhead > 0 ? 'text-warning' : 'text-danger'}`}>
                   ({readingsAhead > 0 ? `+${readingsAhead} ahead` : `${readingsAhead} behind`})
                 </span>
               )}

@@ -97,7 +97,7 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="soldier_name"
+          placeholder="hero_name"
           disabled={isLoading}
           autoComplete="username"
           hint="Letters, numbers, and underscores only"
@@ -110,7 +110,7 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="soldier@biblicalbattleplans.com"
+          placeholder="hero@biblicalbattleplans.com"
           disabled={isLoading}
           autoComplete="email"
         />
@@ -141,8 +141,10 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
       )}
 
       {displayError && (
-        <div className="p-3 bg-alert-red/10 border-2 border-alert-red text-alert-red text-sm">
-          ! ERROR: {displayError}
+        <div className="p-3 bg-danger/10 border border-danger">
+          <p className="font-pixel text-[0.5rem] text-danger">
+            ERROR: {displayError}
+          </p>
         </div>
       )}
 
@@ -152,10 +154,10 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
         isLoading={isLoading}
         className="w-full"
       >
-        {mode === 'login' && '[ LOGIN ]'}
-        {mode === 'signup' && '[ ENLIST ]'}
-        {mode === 'forgot-password' && '[ SEND RESET LINK ]'}
-        {mode === 'reset-password' && '[ RESET PASSWORD ]'}
+        {mode === 'login' && 'LOGIN'}
+        {mode === 'signup' && 'ENLIST'}
+        {mode === 'forgot-password' && 'SEND RESET LINK'}
+        {mode === 'reset-password' && 'RESET PASSWORD'}
       </Button>
     </form>
   )

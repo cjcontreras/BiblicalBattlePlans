@@ -12,35 +12,49 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary: `
-    bg-military-green hover:bg-military-green-dark
-    text-terminal-gray-100
-    border-2 border-terminal-green
-    hover:shadow-[0_0_10px_var(--color-terminal-green)]
+    bg-gradient-to-b from-sage to-sage-dark
+    text-white
+    border-2 border-sage-dark
+    shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_2px_4px_var(--shadow-color)]
+    hover:from-sage-light hover:to-sage
+    hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_3px_6px_var(--shadow-color)]
+    active:from-sage active:to-sage-dark
+    active:shadow-[inset_0_2px_4px_var(--shadow-color)]
   `,
   secondary: `
-    bg-terminal-darker hover:bg-terminal-gray-600
-    text-terminal-gray-100
-    border-2 border-terminal-gray-400
-    hover:border-terminal-gray-300
+    bg-gradient-to-b from-parchment-light to-parchment
+    text-ink
+    border-2 border-border
+    shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_2px_4px_var(--shadow-color)]
+    hover:from-parchment-lightest hover:to-parchment-light
+    hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_3px_6px_var(--shadow-color)]
+    active:from-parchment active:to-parchment-dark
+    active:shadow-[inset_0_2px_4px_var(--shadow-color)]
   `,
   danger: `
-    bg-alert-red-dim hover:bg-alert-red
-    text-terminal-gray-100
-    border-2 border-alert-red
-    hover:shadow-[0_0_10px_var(--color-alert-red)]
+    bg-gradient-to-b from-danger to-danger-dark
+    text-white
+    border-2 border-danger-dark
+    shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_2px_4px_var(--shadow-color)]
+    hover:from-[#d85050] hover:to-danger
+    hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_3px_6px_var(--shadow-color)]
+    active:from-danger active:to-danger-dark
+    active:shadow-[inset_0_2px_4px_var(--shadow-color)]
   `,
   ghost: `
-    bg-transparent hover:bg-terminal-gray-600
-    text-terminal-gray-200
+    bg-transparent
+    text-ink
     border-2 border-transparent
-    hover:border-terminal-gray-500
+    hover:bg-parchment-light
+    hover:border-border-subtle
+    active:bg-parchment
   `,
 }
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-base',
-  lg: 'px-6 py-3 text-lg',
+  sm: 'px-3 py-1.5 text-[0.625rem]',
+  md: 'px-4 py-2 text-[0.75rem]',
+  lg: 'px-6 py-3 text-[0.875rem]',
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -66,9 +80,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         className={`
           inline-flex items-center justify-center gap-2
-          font-mono font-medium
+          font-pixel
           transition-all duration-150
-          focus:outline-none focus:ring-2 focus:ring-terminal-green focus:ring-offset-2 focus:ring-offset-terminal-dark
+          focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2 focus:ring-offset-parchment-dark
           disabled:opacity-50 disabled:cursor-not-allowed
           ${variantStyles[variant]}
           ${sizeStyles[size]}
@@ -77,7 +91,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {isLoading ? (
-          <span className="animate-pulse">[ LOADING... ]</span>
+          <span className="animate-pulse-subtle">LOADING...</span>
         ) : (
           <>
             {leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}

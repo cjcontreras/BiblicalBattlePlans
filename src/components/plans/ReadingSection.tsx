@@ -25,11 +25,11 @@ export function ReadingSection({
   return (
     <div
       className={`
-        border-2 transition-all duration-150
+        border transition-all duration-150
         ${
           isCompleted
-            ? 'border-terminal-green bg-terminal-green/10'
-            : 'border-terminal-gray-500 bg-terminal-darker'
+            ? 'border-sage bg-sage/10'
+            : 'border-border-subtle bg-parchment-light'
         }
       `}
     >
@@ -38,7 +38,7 @@ export function ReadingSection({
         disabled={disabled}
         className={`
           w-full text-left p-3
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-terminal-gray-600/30'}
+          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-parchment-dark/10'}
         `}
       >
         <div className="flex items-center gap-3">
@@ -46,20 +46,20 @@ export function ReadingSection({
           <div
             className={`
               w-5 h-5 border-2 flex items-center justify-center flex-shrink-0
-              ${isCompleted ? 'border-terminal-green bg-terminal-green' : 'border-terminal-gray-400'}
+              ${isCompleted ? 'border-sage-dark bg-sage' : 'border-border bg-parchment-lightest'}
             `}
           >
             {isCompleted && (
-              <Check className="w-3 h-3 text-terminal-dark" strokeWidth={3} />
+              <Check className="w-3 h-3 text-white" strokeWidth={3} />
             )}
           </div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="text-xs text-terminal-gray-400 mb-0.5">{label}</div>
+            <div className="font-pixel text-[0.5rem] text-ink-muted mb-0.5">{label}</div>
             <div
-              className={`font-mono ${
-                isCompleted ? 'text-terminal-gray-400' : 'text-terminal-gray-100'
+              className={`font-pixel text-[0.625rem] ${
+                isCompleted ? 'text-ink-muted line-through' : 'text-ink'
               }`}
             >
               {passage}
@@ -69,9 +69,9 @@ export function ReadingSection({
           {/* Status indicator */}
           <div className="flex-shrink-0">
             {isCompleted ? (
-              <span className="text-terminal-green text-xs">[DONE]</span>
+              <span className="font-pixel text-[0.5rem] text-sage">DONE</span>
             ) : (
-              <span className="text-terminal-gray-500 text-xs">[    ]</span>
+              <span className="font-pixel text-[0.5rem] text-ink-faint">○</span>
             )}
           </div>
         </div>
@@ -86,13 +86,13 @@ export function ReadingSection({
           }}
           disabled={disabled}
           className={`
-            w-full text-left px-3 py-2 border-t border-terminal-green/30
+            w-full text-left px-3 py-2 border-t border-sage/30
             flex items-center justify-between
-            text-terminal-green text-sm hover:bg-terminal-green/20 transition-colors
+            font-pixel text-[0.5rem] text-sage hover:bg-sage/20 transition-colors
             ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
           `}
         >
-          <span className="font-mono">{continueLabel}</span>
+          <span>{continueLabel}</span>
           <ChevronRight className="w-4 h-4" />
         </button>
       )}

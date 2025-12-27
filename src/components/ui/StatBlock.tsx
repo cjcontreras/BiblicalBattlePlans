@@ -1,95 +1,67 @@
 import type { ReactNode } from 'react'
-import { ArrowUp, ArrowDown, ArrowRight } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 interface StatBlockProps {
-  label: string
   value: string | number
-  icon?: ReactNode
-  trend?: 'up' | 'down' | 'neutral'
-  trendValue?: string
+  label: string
+  icon?: LucideIcon
   className?: string
 }
 
-interface StatGridProps {
-  children: ReactNode
-  columns?: 2 | 3 | 4
-  className?: string
-}
-
-export function StatBlock({
-  label,
-  value,
-  icon,
-  trend,
-  trendValue,
-  className = '',
-}: StatBlockProps) {
-  const trendColors = {
-    up: 'text-terminal-green',
-    down: 'text-alert-red',
-    neutral: 'text-terminal-gray-400',
-  }
-
-  const trendIcons = {
-    up: <ArrowUp className="w-3 h-3 inline" />,
-    down: <ArrowDown className="w-3 h-3 inline" />,
-    neutral: <ArrowRight className="w-3 h-3 inline" />,
-  }
-
+export function StatBlock({ value, label, icon: Icon, className = '' }: StatBlockProps) {
   return (
     <div
       className={`
-        bg-terminal-darker
-        border-2 border-terminal-gray-500
+        bg-parchment-light
+        border border-border-subtle
         p-4
+        text-center
+        shadow-[0_2px_4px_var(--shadow-color)]
         ${className}
       `}
     >
-      <div className="flex items-start justify-between mb-2">
-        <span className="text-xs font-mono text-terminal-gray-400 uppercase tracking-wider">
-          {label}
-        </span>
-        {icon && (
-          <span className="text-terminal-green">{icon}</span>
-        )}
+      {Icon && (
+        <div className="flex justify-center mb-2">
+          <Icon className="w-5 h-5 text-ink-muted" />
+        </div>
+      )}
+      <div className="font-pixel text-xl text-ink mb-1">
+        {value}
       </div>
-      <div className="flex items-end gap-2">
-        <span className="text-2xl font-pixel text-terminal-green">
-          {value}
-        </span>
-        {trend && trendValue && (
-          <span className={`text-sm font-mono flex items-center gap-1 ${trendColors[trend]}`}>
-            {trendIcons[trend]} {trendValue}
-          </span>
-        )}
+      <div className="text-[0.5rem] font-pixel text-ink-muted uppercase tracking-wide">
+        {label}
       </div>
     </div>
   )
 }
 
-export function StatGrid({
-  children,
-  columns = 2,
-  className = '',
-}: StatGridProps) {
-  const columnClasses = {
+// Grid wrapper for multiple stats
+interface StatGridProps {
+  children: ReactNode
+  columns?: 2 | 3 | 4 | 6
+  className?: string
+}
+
+export function StatGrid({ children, columns = 3, className = '' }: StatGridProps) {
+  const colsClass = {
     2: 'grid-cols-2',
     3: 'grid-cols-3',
-    4: 'grid-cols-2 md:grid-cols-4',
+    4: 'grid-cols-2 sm:grid-cols-4',
+    6: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6',
   }
 
   return (
-    <div className={`grid gap-4 ${columnClasses[columns]} ${className}`}>
+    <div className={`grid ${colsClass[columns]} gap-3 ${className}`}>
       {children}
     </div>
   )
 }
 
-// RPG-style character stat display
+// Character-style stats display (like RPG character sheet)
 interface CharacterStatsProps {
   stats: {
     label: string
-    value: number
+    value: number | string
     max?: number
   }[]
   className?: string
@@ -97,21 +69,27 @@ interface CharacterStatsProps {
 
 export function CharacterStats({ stats, className = '' }: CharacterStatsProps) {
   return (
-    <div className={`space-y-2 font-mono ${className}`}>
-      {stats.map(({ label, value, max }) => (
-        <div key={label} className="flex items-center gap-2">
-          <span className="w-24 text-terminal-gray-300 text-sm uppercase">
-            {label}
+    <div className={`space-y-2 ${className}`}>
+      {stats.map((stat, index) => (
+        <div key={index} className="flex items-center gap-3">
+          <span className="text-[0.625rem] font-pixel text-ink-muted w-24 uppercase">
+            {stat.label}
           </span>
-          <span className="text-terminal-green font-bold min-w-[3ch] text-right">
-            {value}
-          </span>
-          {max !== undefined && (
-            <>
-              <span className="text-terminal-gray-500">/</span>
-              <span className="text-terminal-gray-400">{max}</span>
-            </>
-          )}
+          <div className="flex-1 flex items-center gap-2">
+            <div className="flex-1 h-2 bg-parchment-light border border-border-subtle">
+              {stat.max && (
+                <div
+                  className="h-full bg-gradient-to-r from-gold to-bronze"
+                  style={{
+                    width: `${(Number(stat.value) / stat.max) * 100}%`,
+                  }}
+                />
+              )}
+            </div>
+            <span className="text-[0.625rem] font-pixel text-ink w-12 text-right">
+              {stat.value}{stat.max ? `/${stat.max}` : ''}
+            </span>
+          </div>
         </div>
       ))}
     </div>

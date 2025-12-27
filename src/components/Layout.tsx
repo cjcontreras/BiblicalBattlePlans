@@ -1,6 +1,6 @@
 import { Outlet, Link } from 'react-router-dom'
 import { useState } from 'react'
-import { Settings, ChevronDown } from 'lucide-react'
+import { ChevronDown, User, LogOut } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useStats } from '../hooks/useStats'
 import { Navigation, MobileNavigation } from './Navigation'
@@ -19,23 +19,35 @@ export function Layout() {
   }
 
   return (
-    <div className="min-h-screen bg-terminal-dark text-terminal-gray-100">
+    <div className="min-h-screen bg-parchment-dark">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-terminal-darker border-b border-terminal-gray-500">
+      <header className="sticky top-0 z-40 bg-gradient-to-br from-parchment to-parchment-light border-b-2 border-border-subtle shadow-[0_4px_12px_var(--shadow-color)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center gap-4">
-              <h1 className="font-pixel text-terminal-green text-sm sm:text-base">
-                BBP
-              </h1>
-              <div className="hidden md:block">
+              {/* Logo Placeholder - Replace with actual logo */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-gold to-bronze border-2 border-gold-dark flex items-center justify-center shadow-[0_2px_4px_var(--shadow-color)]">
+                  <span className="font-pixel text-[0.5rem] text-ink">BBP</span>
+                </div>
+                <div className="hidden md:block">
+                  <h1 className="font-pixel text-[0.625rem] text-ink leading-tight">
+                    BIBLICAL BATTLE
+                  </h1>
+                  <p className="font-pixel text-[0.5rem] text-ink-muted leading-tight">
+                    PLANS
+                  </p>
+                </div>
+              </div>
+              
+              <div className="hidden md:block ml-4">
                 <Navigation />
               </div>
             </div>
 
             {/* Right side */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               {/* Streak indicator */}
               <div className="hidden sm:block">
                 <StreakBadge days={currentStreak} />
@@ -45,11 +57,12 @@ export function Layout() {
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-mono text-terminal-gray-200 hover:text-terminal-green transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 bg-parchment-light border border-border-subtle hover:border-gold transition-colors"
                 >
-                  <span className="hidden sm:inline">@{displayName}</span>
-                  <Settings className="sm:hidden w-4 h-4" />
-                  <ChevronDown className="w-3 h-3" />
+                  <span className="font-pixel text-[0.625rem] text-ink">
+                    @{displayName.toUpperCase()}
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-ink-muted" />
                 </button>
 
                 {showUserMenu && (
@@ -61,28 +74,32 @@ export function Layout() {
                     />
 
                     {/* Menu */}
-                    <div className="absolute right-0 mt-2 w-48 bg-terminal-darker border-2 border-terminal-gray-500 z-20">
+                    <div className="absolute right-0 mt-2 w-56 bg-parchment border-2 border-border-subtle shadow-[0_8px_24px_var(--shadow-color-strong)] z-20">
                       <div className="py-1">
-                        <div className="px-4 py-2 text-sm text-terminal-gray-400 border-b border-terminal-gray-500">
-                          Signed in as
-                          <div className="text-terminal-green truncate">
+                        <div className="px-4 py-3 border-b border-border-subtle">
+                          <p className="font-pixel text-[0.5rem] text-ink-muted">
+                            SIGNED IN AS
+                          </p>
+                          <p className="font-pixel text-[0.625rem] text-ink truncate mt-1">
                             {user?.email}
-                          </div>
+                          </p>
                         </div>
 
                         <Link
                           to="/profile"
-                          className="block px-4 py-2 text-sm text-terminal-gray-200 hover:bg-terminal-gray-600 hover:text-terminal-green"
+                          className="flex items-center gap-2 px-4 py-3 font-pixel text-[0.625rem] text-ink hover:bg-parchment-light transition-colors"
                           onClick={() => setShowUserMenu(false)}
                         >
-                          {'> Profile'}
+                          <User className="w-4 h-4" />
+                          PROFILE
                         </Link>
 
                         <button
                           onClick={handleSignOut}
-                          className="w-full text-left px-4 py-2 text-sm text-alert-red hover:bg-terminal-gray-600"
+                          className="w-full flex items-center gap-2 px-4 py-3 font-pixel text-[0.625rem] text-danger hover:bg-parchment-light transition-colors"
                         >
-                          {'> Sign Out'}
+                          <LogOut className="w-4 h-4" />
+                          SIGN OUT
                         </button>
                       </div>
                     </div>

@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { Swords, BookOpen, ChevronRight, Archive } from 'lucide-react'
+import { Swords, BookOpen, ChevronRight, Archive, ChevronLeft } from 'lucide-react'
 import {
   useUserPlan,
   useDailyProgress,
@@ -16,7 +16,7 @@ import {
 } from '../hooks/usePlans'
 import { useAuth } from '../hooks/useAuth'
 import { ReadingSection, PlanProgress, FreeReadingInput } from '../components/plans'
-import { Card, CardHeader, CardContent, CardFooter, Button, LoadingSpinner, Badge } from '../components/ui'
+import { Card, CardHeader, CardContent, Button, LoadingSpinner, Badge } from '../components/ui'
 
 export function ActivePlan() {
   const { id } = useParams<{ id: string }>()
@@ -49,7 +49,7 @@ export function ActivePlan() {
     return (
       <Card>
         <CardContent className="text-center py-8">
-          <p className="text-alert-red">! ERROR: Campaign not found</p>
+          <p className="font-pixel text-[0.625rem] text-danger">ERROR: Quest not found</p>
           <Button variant="secondary" onClick={() => navigate('/')} className="mt-4">
             Back to Dashboard
           </Button>
@@ -103,7 +103,7 @@ export function ActivePlan() {
     if (!id) return
 
     const confirmed = window.confirm(
-      'Archive this campaign? It will be hidden from Today\'s Missions but all progress will be preserved. You can restore it later from the Plans page.'
+      'Archive this quest? It will be hidden from Today\'s Quests but all progress will be preserved. You can restore it later from the Quests page.'
     )
 
     if (confirmed) {
@@ -170,23 +170,24 @@ export function ActivePlan() {
       {/* Back button */}
       <Link
         to="/"
-        className="text-terminal-gray-400 hover:text-terminal-green transition-colors inline-block"
+        className="inline-flex items-center gap-1 font-pixel text-[0.625rem] text-ink-muted hover:text-sage transition-colors"
       >
-        {'< Back to Dashboard'}
+        <ChevronLeft className="w-4 h-4" />
+        BACK TO DASHBOARD
       </Link>
 
       {/* Campaign Header */}
-      <Card>
+      <Card variant="elevated">
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-xl font-pixel text-terminal-green">
-                {plan.name}
+              <h1 className="font-pixel text-sm text-ink">
+                {plan.name.toUpperCase()}
               </h1>
-              <p className="text-terminal-gray-400 mt-1">
+              <p className="font-pixel text-[0.5rem] text-ink-muted mt-2">
                 {isCyclingPlan ? 'Continuous Reading Plan' :
                  isFreeReading ? 'Free Reading - Log as you go' :
-                 `Day ${daysOnPlan} on this campaign`}
+                 `Day ${daysOnPlan} on this quest`}
               </p>
             </div>
             {streakMet && (
@@ -220,32 +221,32 @@ export function ActivePlan() {
       </Card>
 
       {/* Today's Progress */}
-      <Card>
-        <CardHeader>
+      <Card noPadding>
+        <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent px-4 py-3 border-b border-border-subtle">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-pixel text-terminal-green">
-              {"TODAY'S PROGRESS"}
+            <h2 className="font-pixel text-[0.625rem] text-ink">
+              TODAY'S PROGRESS
             </h2>
             <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-terminal-gray-400" />
-              <span className="text-terminal-gray-300 font-mono">
+              <BookOpen className="w-4 h-4 text-ink-muted" />
+              <span className="font-pixel text-[0.5rem] text-ink">
                 {chaptersReadToday} chapter{chaptersReadToday !== 1 ? 's' : ''} read
               </span>
             </div>
           </div>
-          <div className="mt-2">
-            <div className="flex items-center justify-between text-sm text-terminal-gray-400 mb-1">
-              <span>Daily goal: {streakMinimum} chapters</span>
-              <span>{streakProgress}/{streakMinimum}</span>
-            </div>
-            <div className="h-2 bg-terminal-gray-600 border border-terminal-gray-500">
-              <div
-                className={`h-full transition-all duration-300 ${streakMet ? 'bg-terminal-green' : 'bg-achievement-gold'}`}
-                style={{ width: `${(streakProgress / streakMinimum) * 100}%` }}
-              />
-            </div>
+        </div>
+        <div className="p-4">
+          <div className="flex items-center justify-between font-pixel text-[0.5rem] text-ink-muted mb-2">
+            <span>Daily goal: {streakMinimum} chapters</span>
+            <span>{streakProgress}/{streakMinimum}</span>
           </div>
-        </CardHeader>
+          <div className="h-3 bg-parchment-light border border-border-subtle overflow-hidden">
+            <div
+              className={`h-full transition-all duration-300 ${streakMet ? 'bg-gradient-to-r from-sage to-sage-light' : 'bg-gradient-to-r from-sage to-sage-light'}`}
+              style={{ width: `${(streakProgress / streakMinimum) * 100}%` }}
+            />
+          </div>
+        </div>
       </Card>
 
       {/* Current Readings or Free Reading Input */}
@@ -256,273 +257,271 @@ export function ActivePlan() {
           chaptersReadToday={chaptersReadToday}
         />
       ) : (
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-pixel text-terminal-green">
+        <Card noPadding>
+          <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent px-4 py-3 border-b border-border-subtle">
+            <h2 className="font-pixel text-[0.625rem] text-ink">
               {isCyclingPlan ? 'CONTINUE READING' : "TODAY'S MISSION"}
             </h2>
-            <p className="text-terminal-gray-400 text-sm mt-1">
+            <p className="font-pixel text-[0.5rem] text-ink-muted mt-1">
               {isCyclingPlan
                 ? 'Mark chapters as you read. Each list progresses independently.'
                 : 'Complete all readings to conquer this day'}
             </p>
-          </CardHeader>
+          </div>
 
-        <CardContent className="space-y-2">
-          {todaysReading.length > 0 ? (
-            todaysReading.map((section) => (
-              <ReadingSection
-                key={section.id}
-                id={section.id}
-                label={section.label}
-                passage={section.passage}
-                isCompleted={section.isCompleted}
-                onToggle={() => handleToggleSection(section)}
-                onContinue={() => handleContinue(section)}
-                // For cycling plans, show continue on each section (each list advances independently)
-                // For sectional plans, don't show continue on each section - use the button below instead
-                showContinue={isCyclingPlan}
-                continueLabel="Continue to next chapter"
+          <div className="p-4 space-y-2">
+            {todaysReading.length > 0 ? (
+              todaysReading.map((section) => (
+                <ReadingSection
+                  key={section.id}
+                  id={section.id}
+                  label={section.label}
+                  passage={section.passage}
+                  isCompleted={section.isCompleted}
+                  onToggle={() => handleToggleSection(section)}
+                  onContinue={() => handleContinue(section)}
+                  showContinue={isCyclingPlan}
+                  continueLabel="Continue to next chapter"
+                  disabled={isMutating}
+                />
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="font-pixel text-[0.625rem] text-ink-muted">No readings configured for this plan</p>
+              </div>
+            )}
+            
+            {/* For non-cycling plans, show a single "Continue to next day" button when all sections are done */}
+            {!isCyclingPlan && todaysReading.length > 0 && todaysReading.every(s => s.isCompleted) && (
+              <button
+                onClick={() => handleContinue(todaysReading[0])}
                 disabled={isMutating}
-              />
-            ))
-          ) : (
-            <div className="text-center py-8 text-terminal-gray-400">
-              <p>No readings configured for this plan</p>
-            </div>
-          )}
-          
-          {/* For non-cycling plans, show a single "Continue to next day" button when all sections are done */}
-          {!isCyclingPlan && todaysReading.length > 0 && todaysReading.every(s => s.isCompleted) && (
-            <button
-              onClick={() => handleContinue(todaysReading[0])}
-              disabled={isMutating}
-              className={`
-                w-full mt-4 py-3 px-4 border-2 border-terminal-green
-                bg-terminal-green/20 text-terminal-green font-pixel
-                flex items-center justify-center gap-2
-                hover:bg-terminal-green/30 transition-colors
-                ${isMutating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-              `}
-            >
-              <span>CONTINUE TO NEXT DAY</span>
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          )}
-        </CardContent>
+                className={`
+                  w-full mt-4 py-3 px-4 border-2 border-sage
+                  bg-sage/20 font-pixel text-[0.625rem] text-sage
+                  flex items-center justify-center gap-2
+                  hover:bg-sage/30 transition-colors
+                  ${isMutating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                `}
+              >
+                <span>CONTINUE TO NEXT DAY</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
 
-        {isCyclingPlan && chaptersReadToday > 0 && (
-          <CardFooter>
-            <div className="w-full text-center">
-              {streakMet ? (
-                <div className="text-terminal-green">
-                  <div className="flex justify-center mb-1">
-                    <Swords className="w-6 h-6" />
+          {isCyclingPlan && chaptersReadToday > 0 && (
+            <div className="border-t border-border-subtle p-4">
+              <div className="w-full text-center">
+                {streakMet ? (
+                  <div className="text-success">
+                    <div className="flex justify-center mb-2">
+                      <Swords className="w-6 h-6" />
+                    </div>
+                    <p className="font-pixel text-[0.625rem]">DAILY GOAL ACHIEVED!</p>
+                    <p className="font-pixel text-[0.5rem] text-ink-muted mt-1">
+                      Keep reading or come back tomorrow
+                    </p>
                   </div>
-                  <p className="font-pixel text-sm">DAILY GOAL ACHIEVED!</p>
-                  <p className="text-terminal-gray-400 text-sm mt-1">
-                    Keep reading or come back tomorrow
+                ) : (
+                  <p className="font-pixel text-[0.5rem] text-ink-muted">
+                    {streakMinimum - chaptersReadToday} more chapter{streakMinimum - chaptersReadToday !== 1 ? 's' : ''} to reach your daily goal
                   </p>
-                </div>
-              ) : (
-                <p className="text-terminal-gray-400 text-sm">
-                  {streakMinimum - chaptersReadToday} more chapter{streakMinimum - chaptersReadToday !== 1 ? 's' : ''} to reach your daily goal
-                </p>
-              )}
+                )}
+              </div>
             </div>
-          </CardFooter>
-        )}
+          )}
         </Card>
       )}
 
       {/* Campaign Stats */}
-      <Card>
-        <CardHeader>
-          <h2 className="text-lg font-pixel text-terminal-green">
-            CAMPAIGN STATS
+      <Card noPadding>
+        <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent px-4 py-3 border-b border-border-subtle">
+          <h2 className="font-pixel text-[0.625rem] text-ink">
+            QUEST STATS
           </h2>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="p-4">
           {isFreeReading ? (
             /* Simplified stats for Free Reading */
             <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
-                <div className="text-2xl font-pixel text-terminal-green">
+              <div className="text-center p-4 bg-parchment-light border border-border-subtle">
+                <div className="font-pixel text-xl text-ink">
                   {chaptersReadToday}
                 </div>
-                <div className="text-xs text-terminal-gray-400">Chapters Today</div>
+                <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">Chapters Today</div>
               </div>
-              <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
-                <div className="text-2xl font-pixel text-terminal-green">
+              <div className="text-center p-4 bg-parchment-light border border-border-subtle">
+                <div className="font-pixel text-xl text-ink">
                   {userPlan.list_positions?.['free'] || 0}
                 </div>
-                <div className="text-xs text-terminal-gray-400">Total Logged</div>
+                <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">Total Logged</div>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {/* Days on Campaign - Primary stat for non-cycling plans */}
               {!isCyclingPlan && (
-                <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
-                  <div className="text-2xl font-pixel text-terminal-green">
+                <div className="text-center p-4 bg-parchment-light border border-border-subtle">
+                  <div className="font-pixel text-xl text-ink">
                     {daysOnPlan}
                   </div>
-                  <div className="text-xs text-terminal-gray-400">Days on Campaign</div>
+                  <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">Days on Quest</div>
                 </div>
               )}
               
               {/* Readings/Chapters Today */}
-              <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
-                <div className="text-2xl font-pixel text-terminal-green">
+              <div className="text-center p-4 bg-parchment-light border border-border-subtle">
+                <div className="font-pixel text-xl text-ink">
                   {chaptersReadToday}
                 </div>
-                <div className="text-xs text-terminal-gray-400">
+                <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">
                   {isCyclingPlan ? 'Chapters Today' : 'Readings Today'}
                 </div>
               </div>
 
               {/* Overall Progress */}
-              <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
-                <div className="text-2xl font-pixel text-terminal-green">
+              <div className="text-center p-4 bg-parchment-light border border-border-subtle">
+                <div className="font-pixel text-xl text-ink">
                   {overallProgress}%
                 </div>
-                <div className="text-xs text-terminal-gray-400">Overall Progress</div>
+                <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">Overall Progress</div>
               </div>
 
               {isCyclingPlan ? (
                 <>
-                  <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
-                    <div className="text-2xl font-pixel text-terminal-green">
+                  <div className="text-center p-4 bg-parchment-light border border-border-subtle">
+                    <div className="font-pixel text-xl text-ink">
                       {todaysReading.filter(s => s.isCompleted).length}
                     </div>
-                    <div className="text-xs text-terminal-gray-400">Lists Done</div>
+                    <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">Lists Done</div>
                   </div>
-                  <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
-                    <div className="text-2xl font-pixel text-terminal-green">
+                  <div className="text-center p-4 bg-parchment-light border border-border-subtle">
+                    <div className="font-pixel text-xl text-ink">
                       {todaysReading.length - todaysReading.filter(s => s.isCompleted).length}
                     </div>
-                    <div className="text-xs text-terminal-gray-400">Remaining</div>
+                    <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">Remaining</div>
                   </div>
                 </>
               ) : isWeeklyPlan && weeklyInfo ? (
-                <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
+                <div className="text-center p-4 bg-parchment-light border border-border-subtle">
                   <div className="flex items-center justify-center gap-1">
-                    <div className="text-2xl font-pixel text-terminal-green">
+                    <span className="font-pixel text-xl text-ink">
                       W{weeklyInfo.currentWeek}
-                    </div>
-                    <div className="text-lg font-mono text-terminal-gray-400">
+                    </span>
+                    <span className="font-pixel text-sm text-ink-muted">
                       D{weeklyInfo.dayInWeek}
-                    </div>
+                    </span>
                   </div>
-                  <div className="text-xs text-terminal-gray-400">Reading Position</div>
+                  <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">Reading Position</div>
                 </div>
               ) : (
-                <div className="text-center p-3 bg-terminal-dark border border-terminal-gray-600">
+                <div className="text-center p-4 bg-parchment-light border border-border-subtle">
                   <div className="flex items-center justify-center gap-1">
-                    <div className="text-2xl font-pixel text-terminal-green">
+                    <span className="font-pixel text-xl text-ink">
                       {userPlan.current_day}
-                    </div>
+                    </span>
                     {daysAheadBehind !== 0 && (
-                      <div className={`text-xs font-mono ${daysAheadBehind > 0 ? 'text-achievement-gold' : 'text-alert-red'}`}>
+                      <span className={`font-pixel text-[0.625rem] ${daysAheadBehind > 0 ? 'text-warning' : 'text-danger'}`}>
                         {daysAheadBehind > 0 ? `+${daysAheadBehind}` : daysAheadBehind}
-                      </div>
+                      </span>
                     )}
                   </div>
-                  <div className="text-xs text-terminal-gray-400">Reading Position</div>
+                  <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">Reading Position</div>
                 </div>
               )}
             </div>
           )}
-        </CardContent>
+        </div>
       </Card>
 
       {/* Reading Tips for Cycling Plans */}
       {isCyclingPlan && (
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-pixel text-terminal-green">
+        <Card noPadding>
+          <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent px-4 py-3 border-b border-border-subtle">
+            <h2 className="font-pixel text-[0.625rem] text-ink">
               HOW IT WORKS
             </h2>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-terminal-gray-300">
+          </div>
+          <div className="p-4 space-y-3">
             <div className="flex items-start gap-3">
-              <ChevronRight className="w-4 h-4 text-terminal-green flex-shrink-0 mt-0.5" />
-              <p>Each list tracks your position independently. Read as many chapters as you want from any list.</p>
+              <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
+              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">Each list tracks your position independently. Read as many chapters as you want from any list.</p>
             </div>
             <div className="flex items-start gap-3">
-              <ChevronRight className="w-4 h-4 text-terminal-green flex-shrink-0 mt-0.5" />
-              <p>When you finish a list, it cycles back to the beginning. Lists repeat at different rates.</p>
+              <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
+              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">When you finish a list, it cycles back to the beginning. Lists repeat at different rates.</p>
             </div>
             <div className="flex items-start gap-3">
-              <ChevronRight className="w-4 h-4 text-terminal-green flex-shrink-0 mt-0.5" />
-              <p>Your daily goal is {streakMinimum} chapters (configurable in your profile) to maintain your streak.</p>
+              <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
+              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">Your daily goal is {streakMinimum} chapters (configurable in your profile) to maintain your streak.</p>
             </div>
-          </CardContent>
+          </div>
         </Card>
       )}
 
       {/* Reading Tips for Weekly Plans */}
       {isWeeklyPlan && (
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-pixel text-terminal-green">
+        <Card noPadding>
+          <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent px-4 py-3 border-b border-border-subtle">
+            <h2 className="font-pixel text-[0.625rem] text-ink">
               HOW IT WORKS
             </h2>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-terminal-gray-300">
+          </div>
+          <div className="p-4 space-y-3">
             <div className="flex items-start gap-3">
-              <ChevronRight className="w-4 h-4 text-terminal-green flex-shrink-0 mt-0.5" />
-              <p>Complete one reading per day from different parts of Scripture: Epistles, Law, History, Psalms, Poetry, Prophecy, and Gospels.</p>
+              <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
+              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">Complete one reading per day from different parts of Scripture: Epistles, Law, History, Psalms, Poetry, Prophecy, and Gospels.</p>
             </div>
             <div className="flex items-start gap-3">
-              <ChevronRight className="w-4 h-4 text-terminal-green flex-shrink-0 mt-0.5" />
-              <p>Each week has 7 readings. Go at your own pace—the plan progresses when you mark readings complete.</p>
+              <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
+              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">Each week has 7 readings. Go at your own pace—the plan progresses when you mark readings complete.</p>
             </div>
             <div className="flex items-start gap-3">
-              <ChevronRight className="w-4 h-4 text-terminal-green flex-shrink-0 mt-0.5" />
-              <p>Complete all 52 weeks to read through the entire Bible with balanced daily variety.</p>
+              <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
+              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">Complete all 52 weeks to read through the entire Bible with balanced daily variety.</p>
             </div>
-          </CardContent>
+          </div>
         </Card>
       )}
 
       {/* Reading Tips for Free Reading */}
       {isFreeReading && (
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-pixel text-terminal-green">
+        <Card noPadding>
+          <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent px-4 py-3 border-b border-border-subtle">
+            <h2 className="font-pixel text-[0.625rem] text-ink">
               HOW IT WORKS
             </h2>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-terminal-gray-300">
+          </div>
+          <div className="p-4 space-y-3">
             <div className="flex items-start gap-3">
-              <ChevronRight className="w-4 h-4 text-terminal-green flex-shrink-0 mt-0.5" />
-              <p>Log chapters as you read them. There's no predetermined schedule - read what you want, when you want.</p>
+              <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
+              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">Log chapters as you read them. There's no predetermined schedule - read what you want, when you want.</p>
             </div>
             <div className="flex items-start gap-3">
-              <ChevronRight className="w-4 h-4 text-terminal-green flex-shrink-0 mt-0.5" />
-              <p>Your entries count toward your daily goal of {streakMinimum} chapters to maintain your streak.</p>
+              <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
+              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">Your entries count toward your daily goal of {streakMinimum} chapters to maintain your streak.</p>
             </div>
             <div className="flex items-start gap-3">
-              <ChevronRight className="w-4 h-4 text-terminal-green flex-shrink-0 mt-0.5" />
-              <p>Use the notes field to track what you read (e.g., "Psalms 23-25, Romans 8").</p>
+              <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
+              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">Use the notes field to track what you read (e.g., "Psalms 23-25, Romans 8").</p>
             </div>
             <div className="flex items-start gap-3">
-              <ChevronRight className="w-4 h-4 text-terminal-green flex-shrink-0 mt-0.5" />
-              <p>Entries are for today only - you cannot backdate reading to maintain streak integrity.</p>
+              <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
+              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">Entries are for today only - you cannot backdate reading to maintain streak integrity.</p>
             </div>
-          </CardContent>
+          </div>
         </Card>
       )}
 
       {/* Archive Action */}
       <Card>
-        <CardContent className="py-4">
+        <CardContent>
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <h3 className="text-terminal-gray-300 font-medium">Archive Campaign</h3>
-              <p className="text-terminal-gray-500 text-sm mt-1">
-                Hide from Today's Missions while preserving all progress
+              <h3 className="font-pixel text-[0.625rem] text-ink">Archive Quest</h3>
+              <p className="font-pixel text-[0.5rem] text-ink-muted mt-1">
+                Hide from Today's Quests while preserving all progress
               </p>
             </div>
             <Button
@@ -542,7 +541,7 @@ export function ActivePlan() {
       <div className="flex gap-4">
         <Link to={`/plans/${plan.id}`} className="flex-1">
           <Button variant="ghost" className="w-full">
-            View Plan Details
+            View Quest Details
           </Button>
         </Link>
         <Link to="/" className="flex-1">

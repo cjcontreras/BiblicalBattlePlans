@@ -3,82 +3,73 @@ interface LoadingSpinnerProps {
   className?: string
 }
 
-interface LoadingOverlayProps {
-  message?: string
+const sizeStyles = {
+  sm: 'w-4 h-4',
+  md: 'w-8 h-8',
+  lg: 'w-12 h-12',
 }
 
 export function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerProps) {
-  const sizeClasses = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-xl',
-  }
-
   return (
     <div
-      className={`font-mono text-terminal-green ${sizeClasses[size]} ${className}`}
-      role="status"
-      aria-label="Loading"
-    >
-      <span className="animate-pulse">
-        {'['}
-        <span className="inline-block animate-spin" style={{ animationDuration: '1s' }}>
-          |
-        </span>
-        {']'}
-      </span>
-    </div>
+      className={`
+        ${sizeStyles[size]}
+        border-4 border-parchment-light
+        border-t-gold
+        animate-spin
+        ${className}
+      `}
+      style={{ borderRadius: '0' }}
+    />
   )
 }
 
-// Alternative ASCII-style spinner
+// Pixel-style ASCII spinner
 export function AsciiSpinner({ className = '' }: { className?: string }) {
   return (
-    <div className={`font-mono text-terminal-green ${className}`}>
-      <div className="flex items-center gap-1">
-        <span>[</span>
-        <span className="animate-pulse">LOADING</span>
-        <span className="cursor-blink"></span>
-        <span>]</span>
-      </div>
+    <div className={`font-pixel text-gold animate-spin-pixel ${className}`}>
+      ◢
     </div>
   )
 }
 
 // Full-screen loading overlay
-export function LoadingOverlay({ message = 'INITIALIZING...' }: LoadingOverlayProps) {
+interface LoadingOverlayProps {
+  message?: string
+}
+
+export function LoadingOverlay({ message = 'LOADING...' }: LoadingOverlayProps) {
   return (
-    <div className="fixed inset-0 bg-terminal-dark/90 flex flex-col items-center justify-center z-50">
-      <div className="text-center space-y-4">
-        <div className="font-pixel text-terminal-green text-lg animate-pulse">
-          {message}
-        </div>
-        <div className="font-mono text-terminal-green text-sm">
-          {'['}
-          {Array.from({ length: 10 }).map((_, i) => (
-            <span
+    <div className="fixed inset-0 bg-parchment-dark flex flex-col items-center justify-center z-50">
+      <div className="flex flex-col items-center gap-6">
+        {/* Pixel-style loading animation */}
+        <div className="flex gap-1">
+          {[0, 1, 2].map((i) => (
+            <div
               key={i}
-              className="inline-block"
+              className="w-4 h-4 bg-gold"
               style={{
-                animation: `pulse 1s ease-in-out ${i * 0.1}s infinite`,
+                animation: `pulse-subtle 1s ease-in-out ${i * 0.2}s infinite`,
               }}
-            >
-              ░
-            </span>
+            />
           ))}
-          {']'}
         </div>
+        
+        <p className="font-pixel text-[0.75rem] text-ink animate-pulse-subtle">
+          {message}
+        </p>
       </div>
     </div>
   )
 }
 
-// Inline loading state for buttons/text
-export function InlineLoading({ text = 'Processing' }: { text?: string }) {
+// Inline loading indicator
+export function InlineLoading({ className = '' }: { className?: string }) {
   return (
-    <span className="font-mono text-terminal-green">
-      {text}
-      <span className="animate-pulse">...</span>
+    <span className={`inline-flex items-center gap-1 font-pixel text-[0.625rem] text-ink-muted ${className}`}>
+      <span className="animate-pulse-subtle">●</span>
+      <span className="animate-pulse-subtle" style={{ animationDelay: '0.2s' }}>●</span>
+      <span className="animate-pulse-subtle" style={{ animationDelay: '0.4s' }}>●</span>
     </span>
   )
 }

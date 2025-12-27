@@ -1,136 +1,445 @@
 @import "tailwindcss";
 
-/* Google Fonts - Terminal/Pixel Fonts */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Press+Start+2P&display=swap');
+/* Google Fonts - Pixel Font for RPG Theme */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* ============================================
+   BIBLICAL BATTLE PLANS - RPG PARCHMENT THEME
+   ============================================
+   A warm, retro RPG aesthetic with soft parchment tones,
+   subtle tonal borders, and soft shadows for depth.
+   
+   See docs/THEMING.md for complete documentation.
+   ============================================ */
 
 /* Custom Theme Configuration */
 @theme {
-  /* 8-Bit Terminal Color Palette */
-  --color-terminal-dark: #0D1117;
-  --color-terminal-darker: #1C1C1C;
-  --color-terminal-green: #33FF33;
-  --color-terminal-green-dim: #1A8A1A;
-  --color-military-green: #4A7C59;
-  --color-military-green-dark: #3A5C45;
-  --color-achievement-gold: #FFD700;
-  --color-alert-red: #FF0000;
-  --color-alert-red-dim: #8B0000;
-
-  /* Terminal Grays */
-  --color-terminal-gray-100: #E5E5E5;
-  --color-terminal-gray-200: #CCCCCC;
-  --color-terminal-gray-300: #999999;
-  --color-terminal-gray-400: #666666;
-  --color-terminal-gray-500: #444444;
-  --color-terminal-gray-600: #333333;
-
+  /* ===================
+     CORE COLOR PALETTE
+     =================== */
+  
+  /* Background Colors */
+  --color-parchment-dark: #d0b888;      /* Main background */
+  --color-parchment: #e8d4a0;           /* Card/panel background */
+  --color-parchment-light: #f0e8d0;     /* Secondary/input backgrounds */
+  --color-parchment-lightest: #f8f4e8;  /* Highlights */
+  
+  /* Foreground Colors */
+  --color-ink: #2a2416;                 /* Primary text - dark brown */
+  --color-ink-muted: #6b5c47;           /* Secondary/muted text */
+  --color-ink-faint: #8a7a62;           /* Disabled/placeholder text */
+  
+  /* Accent Colors - Gold (Neutral/Default) */
+  --color-gold: #c8a060;                /* Progress bars, highlights */
+  --color-gold-dark: #a07840;           /* Hover states for gold */
+  --color-bronze: #b89050;              /* Secondary accent */
+  --color-copper: #a08060;              /* Borders, subtle accents */
+  
+  /* Accent Colors - Sage Green (Primary Actions) */
+  --color-sage: #5d8a66;                /* Primary buttons, CTAs */
+  --color-sage-dark: #4a7053;           /* Hover state */
+  --color-sage-light: #7aa883;          /* Light variant */
+  --color-sage-bg: #d8e8da;             /* Background tint */
+  --color-sage-bg-light: #e8f2ea;       /* Lighter background */
+  
+  /* Accent Colors - Dusty Blue (Verse/Spiritual sections) */
+  --color-blue: #5a7a9a;                /* Verse sections, calm elements */
+  --color-blue-dark: #4a6a88;           /* Hover state */
+  --color-blue-light: #7a9ab8;          /* Light variant */
+  --color-blue-bg: #d0dce8;             /* Background tint */
+  --color-blue-bg-light: #e4ecf4;       /* Lighter background */
+  
+  /* Semantic Colors */
+  --color-success: #5d8a66;             /* Completed, positive (matches sage) */
+  --color-success-light: #7aa883;       /* Hover state */
+  --color-warning: #d4a020;             /* Warnings, streaks */
+  --color-danger: #c84040;              /* Errors, destructive actions */
+  --color-danger-dark: #a83030;         /* Hover state */
+  
+  /* Border Colors */
+  --color-border: #a08060;              /* Standard borders */
+  --color-border-subtle: #c4a878;       /* Subtle borders */
+  --color-border-strong: #806040;       /* Emphasized borders */
+  --color-border-sage: #8ab093;         /* Green-tinted border */
+  --color-border-blue: #8aa8c4;         /* Blue-tinted border */
+  
+  /* Shadow Colors */
+  --shadow-color: rgba(90, 70, 50, 0.15);
+  --shadow-color-strong: rgba(90, 70, 50, 0.25);
+  
   /* Typography */
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --font-pixel: 'Press Start 2P', cursive;
-
-  /* Pixel Border Radius */
-  --radius-pixel: 0px;
+  --font-body: 'Press Start 2P', system-ui, sans-serif;
+  
+  /* Spacing & Sizing */
+  --radius-none: 0px;
   --radius-sm: 2px;
 }
 
-/* Base Styles */
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
 * {
   box-sizing: border-box;
 }
 
 html {
-  font-family: var(--font-mono);
-  background-color: var(--color-terminal-dark);
-  color: var(--color-terminal-gray-100);
+  font-family: var(--font-body);
+  font-size: 14px;
+  background-color: var(--color-parchment-dark);
+  color: var(--color-ink);
+  image-rendering: pixelated;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.8;
+  background: linear-gradient(135deg, var(--color-parchment-dark) 0%, #c8a878 100%);
 }
 
 #root {
   min-height: 100vh;
 }
 
-/* Pixel-style Scrollbar */
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
 ::-webkit-scrollbar {
   width: 12px;
   height: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-terminal-darker);
+  background: var(--color-parchment);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-terminal-gray-500);
-  border: 2px solid var(--color-terminal-darker);
+  background: var(--color-copper);
+  border: 2px solid var(--color-parchment);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-terminal-gray-400);
+  background: var(--color-border-strong);
 }
 
 /* Selection */
 ::selection {
-  background-color: var(--color-military-green);
-  color: var(--color-terminal-gray-100);
+  background-color: var(--color-gold);
+  color: var(--color-ink);
 }
 
-/* 8-bit Animation Keyframes */
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
-}
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
 
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 5px var(--color-terminal-green), 0 0 10px var(--color-terminal-green-dim);
-  }
-  50% {
-    box-shadow: 0 0 10px var(--color-terminal-green), 0 0 20px var(--color-terminal-green-dim);
-  }
-}
-
-@keyframes pixel-fade-in {
-  0% { opacity: 0; transform: translateY(-4px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-/* Utility Classes */
+/* Pixel Font */
 .font-pixel {
   font-family: var(--font-pixel);
 }
 
-.text-glow {
-  text-shadow: 0 0 10px currentColor;
+/* Parchment Panel - Primary card/container styling */
+.parchment-panel {
+  background: linear-gradient(145deg, var(--color-parchment) 0%, var(--color-parchment-light) 100%);
+  border: 2px solid var(--color-border-subtle);
+  box-shadow: 
+    0 4px 12px var(--shadow-color),
+    0 2px 4px var(--shadow-color);
 }
 
-.border-pixel {
-  border-style: solid;
-  border-width: 4px;
-  image-rendering: pixelated;
+.parchment-panel-elevated {
+  background: linear-gradient(145deg, var(--color-parchment) 0%, var(--color-parchment-light) 100%);
+  border: 2px solid var(--color-border);
+  box-shadow: 
+    0 8px 24px var(--shadow-color-strong),
+    0 4px 8px var(--shadow-color);
 }
 
-.animate-blink {
-  animation: blink 1s step-end infinite;
+/* Section Header - Subtle accent background */
+.section-header {
+  background: linear-gradient(90deg, var(--color-parchment-dark) 0%, transparent 100%);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+/* Retro Button Styling */
+.retro-button {
+  background: linear-gradient(180deg, var(--color-parchment-light) 0%, var(--color-parchment) 100%);
+  border: 2px solid var(--color-border);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 2px 4px var(--shadow-color);
+  transition: all 0.15s ease;
 }
 
-.animate-pixel-fade-in {
-  animation: pixel-fade-in 0.3s ease-out;
+.retro-button:hover {
+  background: linear-gradient(180deg, var(--color-parchment-lightest) 0%, var(--color-parchment-light) 100%);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 3px 6px var(--shadow-color);
 }
 
-/* Terminal Cursor */
-.cursor-blink::after {
-  content: '█';
-  animation: blink 1s step-end infinite;
-  color: var(--color-terminal-green);
+.retro-button:active {
+  background: linear-gradient(180deg, var(--color-parchment) 0%, var(--color-parchment-dark) 100%);
+  box-shadow: 
+    inset 0 2px 4px var(--shadow-color);
+}
+
+.retro-button-primary {
+  background: linear-gradient(180deg, var(--color-sage) 0%, var(--color-sage-dark) 100%);
+  border: 2px solid var(--color-sage-dark);
+  color: white;
+}
+
+.retro-button-primary:hover {
+  background: linear-gradient(180deg, var(--color-sage-light) 0%, var(--color-sage) 100%);
+}
+
+.retro-button-gold {
+  background: linear-gradient(180deg, var(--color-gold) 0%, var(--color-gold-dark) 100%);
+  border: 2px solid var(--color-gold-dark);
+  color: var(--color-ink);
+}
+
+.retro-button-gold:hover {
+  background: linear-gradient(180deg, #d4ac70 0%, var(--color-gold) 100%);
+}
+
+.retro-button-danger {
+  background: linear-gradient(180deg, var(--color-danger) 0%, var(--color-danger-dark) 100%);
+  border: 2px solid var(--color-danger-dark);
+  color: white;
+}
+
+.retro-button-danger:hover {
+  background: linear-gradient(180deg, #d85050 0%, var(--color-danger) 100%);
+}
+
+/* Blue Panel - for Daily Verse / spiritual sections */
+.blue-panel {
+  background: linear-gradient(145deg, var(--color-blue-bg) 0%, var(--color-blue-bg-light) 100%);
+  border: 2px solid var(--color-border-blue);
+  box-shadow: 
+    0 4px 12px var(--shadow-color),
+    0 2px 4px var(--shadow-color);
+}
+
+.blue-panel-header {
+  background: linear-gradient(90deg, var(--color-blue) 0%, var(--color-blue-light) 100%);
+  color: white;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 2px solid var(--color-blue-dark);
+}
+
+/* Sage Panel - for quests / action sections */
+.sage-panel {
+  background: linear-gradient(145deg, var(--color-sage-bg) 0%, var(--color-sage-bg-light) 100%);
+  border: 2px solid var(--color-border-sage);
+  box-shadow: 
+    0 4px 12px var(--shadow-color),
+    0 2px 4px var(--shadow-color);
+}
+
+.sage-panel-header {
+  background: linear-gradient(90deg, var(--color-sage) 0%, var(--color-sage-light) 100%);
+  color: white;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 2px solid var(--color-sage-dark);
+}
+
+/* Quest Checkbox */
+.quest-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-border);
+  background: var(--color-parchment-light);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.quest-checkbox:hover {
+  border-color: var(--color-sage);
+  background: var(--color-parchment-lightest);
+}
+
+.quest-checkbox.checked {
+  background: var(--color-sage);
+  border-color: var(--color-sage-dark);
+}
+
+.quest-checkbox.checked::before {
+  content: '✓';
+  font-size: 10px;
+  color: white;
+  font-weight: bold;
+}
+
+/* Progress Bar */
+.progress-bar {
+  height: 8px;
+  background: var(--color-parchment-light);
+  border: 1px solid var(--color-border-subtle);
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-sage) 0%, var(--color-sage-light) 100%);
+  transition: width 0.3s ease;
+}
+
+.progress-bar-success .progress-bar-fill {
+  background: linear-gradient(90deg, var(--color-sage) 0%, var(--color-sage-light) 100%);
+}
+
+/* Input Field */
+.parchment-input {
+  background: var(--color-parchment-light);
+  border: 2px solid var(--color-border-subtle);
+  color: var(--color-ink);
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  transition: all 0.15s ease;
+}
+
+.parchment-input::placeholder {
+  color: var(--color-ink-faint);
+}
+
+.parchment-input:focus {
+  outline: none;
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(200, 160, 96, 0.2);
+}
+
+.parchment-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Badge */
+.parchment-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.625rem;
+  background: var(--color-parchment-light);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-ink);
+}
+
+.parchment-badge-gold {
+  background: linear-gradient(135deg, var(--color-sage) 0%, var(--color-sage-light) 100%);
+  border-color: var(--color-sage-dark);
+  color: white;
+}
+
+.parchment-badge-success {
+  background: var(--color-sage);
+  border-color: var(--color-sage-dark);
+  color: white;
+}
+
+.parchment-badge-warning {
+  background: var(--color-warning);
+  border-color: var(--color-gold-dark);
+  color: var(--color-ink);
+}
+
+.parchment-badge-danger {
+  background: var(--color-danger);
+  border-color: var(--color-danger-dark);
+  color: white;
+}
+
+/* Stat Block */
+.stat-block {
+  background: var(--color-parchment-light);
+  border: 1px solid var(--color-border-subtle);
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.stat-block-value {
+  font-family: var(--font-pixel);
+  font-size: 1.5rem;
+  color: var(--color-ink);
+  margin-bottom: 0.25rem;
+}
+
+.stat-block-label {
+  font-size: 0.5rem;
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes spin-pixel {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(90deg); }
+  50% { transform: rotate(180deg); }
+  75% { transform: rotate(270deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+.animate-spin-pixel {
+  animation: spin-pixel 1s steps(4) infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* ============================================
+   RESPONSIVE TYPOGRAPHY
+   ============================================ */
+
+@media (max-width: 640px) {
+  html {
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 14px;
+  }
 }

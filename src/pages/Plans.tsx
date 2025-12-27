@@ -20,8 +20,8 @@ export function Plans() {
     return (
       <Card>
         <CardContent className="text-center py-8">
-          <p className="text-alert-red">! ERROR: Failed to load reading plans</p>
-          <p className="text-terminal-gray-400 text-sm mt-2">{plansError.message}</p>
+          <p className="font-pixel text-[0.625rem] text-danger">ERROR: Failed to load reading plans</p>
+          <p className="font-pixel text-[0.5rem] text-ink-muted mt-2">{plansError.message}</p>
         </CardContent>
       </Card>
     )
@@ -41,17 +41,19 @@ export function Plans() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-pixel text-terminal-green">START NEW CAMPAIGN</h1>
-        <p className="text-terminal-gray-400 mt-2">
+        <h1 className="font-pixel text-sm text-ink mb-2">START NEW QUEST</h1>
+        <p className="font-pixel text-[0.5rem] text-ink-muted">
           Choose a reading plan to begin your journey through Scripture
         </p>
       </div>
 
       {/* Available Plans */}
       <section>
-        <h2 className="text-lg font-pixel text-terminal-green mb-4">
-          AVAILABLE PLANS ({availablePlans.length})
-        </h2>
+        <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent -mx-4 px-4 py-3 mb-4 border-b border-border-subtle">
+          <h2 className="font-pixel text-[0.625rem] text-ink">
+            AVAILABLE QUESTS ({availablePlans.length})
+          </h2>
+        </div>
         {availablePlans.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {availablePlans.map((plan) => (
@@ -61,8 +63,8 @@ export function Plans() {
         ) : (
           <Card>
             <CardContent className="text-center py-8">
-              <p className="text-terminal-gray-400">
-                You're enrolled in all available plans!
+              <p className="font-pixel text-[0.625rem] text-ink-muted">
+                You're enrolled in all available quests!
               </p>
             </CardContent>
           </Card>
@@ -71,10 +73,12 @@ export function Plans() {
 
       {/* Archived Plans */}
       {archivedPlans.length > 0 && (
-        <section className="border-t border-terminal-gray-600 pt-6">
-          <h2 className="text-lg font-pixel text-terminal-green mb-4">
-            ARCHIVED CAMPAIGNS ({archivedPlans.length})
-          </h2>
+        <section>
+          <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent -mx-4 px-4 py-3 mb-4 border-t border-b border-border-subtle">
+            <h2 className="font-pixel text-[0.625rem] text-ink">
+              ARCHIVED QUESTS ({archivedPlans.length})
+            </h2>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {archivedPlans.map((userPlan) => (
               <ArchivedPlanCard key={userPlan.id} userPlan={userPlan} />
@@ -84,30 +88,32 @@ export function Plans() {
       )}
 
       {/* Plan Types Legend */}
-      <section className="border-t border-terminal-gray-600 pt-6">
-        <h3 className="text-sm font-pixel text-terminal-gray-400 mb-3">PLAN TYPES</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-          <div>
-            <span className="text-achievement-gold">CYCLING</span>
-            <p className="text-terminal-gray-400 mt-1">
+      <section>
+        <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent -mx-4 px-4 py-3 mb-4 border-t border-b border-border-subtle">
+          <h3 className="font-pixel text-[0.5rem] text-ink-muted">QUEST TYPES</h3>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-3 bg-parchment-light border border-border-subtle">
+            <span className="font-pixel text-[0.625rem] text-warning">CYCLING</span>
+            <p className="font-pixel text-[0.5rem] text-ink-muted mt-2 leading-relaxed">
               Multiple independent reading lists that cycle at different rates (e.g., Horner's System)
             </p>
           </div>
-          <div>
-            <span className="text-terminal-green">FREE</span>
-            <p className="text-terminal-gray-400 mt-1">
+          <div className="p-3 bg-parchment-light border border-border-subtle">
+            <span className="font-pixel text-[0.625rem] text-sage">FREE</span>
+            <p className="font-pixel text-[0.5rem] text-ink-muted mt-2 leading-relaxed">
               Log your own reading without a fixed schedule. Perfect for flexible study.
             </p>
           </div>
-          <div>
-            <span className="text-terminal-gray-200">SEQUENTIAL</span>
-            <p className="text-terminal-gray-400 mt-1">
+          <div className="p-3 bg-parchment-light border border-border-subtle">
+            <span className="font-pixel text-[0.625rem] text-ink">SEQUENTIAL</span>
+            <p className="font-pixel text-[0.5rem] text-ink-muted mt-2 leading-relaxed">
               Read through the Bible in order from Genesis to Revelation
             </p>
           </div>
-          <div>
-            <span className="text-terminal-green">SECTIONAL</span>
-            <p className="text-terminal-gray-400 mt-1">
+          <div className="p-3 bg-parchment-light border border-border-subtle">
+            <span className="font-pixel text-[0.625rem] text-blue">SECTIONAL</span>
+            <p className="font-pixel text-[0.5rem] text-ink-muted mt-2 leading-relaxed">
               Daily readings from multiple sections (OT, NT, Psalms, Proverbs)
             </p>
           </div>

@@ -45,20 +45,20 @@ export function ResetPassword() {
   // Show error if not in recovery mode (user navigated directly without reset link)
   if (!isRecoveryMode && !success) {
     return (
-      <div className="min-h-screen bg-terminal-dark flex items-center justify-center p-4">
+      <div className="min-h-screen bg-parchment-dark flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <Card>
+          <Card variant="elevated">
             <CardHeader>
-              <h1 className="text-xl font-pixel text-terminal-green text-center">
+              <h1 className="font-pixel text-sm text-ink text-center">
                 INVALID SESSION
               </h1>
             </CardHeader>
 
             <CardContent className="text-center space-y-4">
-              <p className="text-terminal-gray-200">
+              <p className="font-pixel text-[0.625rem] text-ink">
                 No valid password reset session found.
               </p>
-              <p className="text-terminal-gray-400 text-sm">
+              <p className="font-pixel text-[0.5rem] text-ink-muted">
                 Please request a new password reset link from the login page.
               </p>
             </CardContent>
@@ -66,9 +66,9 @@ export function ResetPassword() {
             <CardFooter className="text-center">
               <Link
                 to="/forgot-password"
-                className="text-terminal-green hover:underline"
+                className="font-pixel text-[0.625rem] text-gold hover:underline"
               >
-                {'> Request Password Reset'}
+                Request Password Reset
               </Link>
             </CardFooter>
           </Card>
@@ -79,23 +79,25 @@ export function ResetPassword() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-terminal-dark flex items-center justify-center p-4">
+      <div className="min-h-screen bg-parchment-dark flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <Card>
+          <Card variant="elevated">
             <CardHeader>
-              <h1 className="text-xl font-pixel text-terminal-green text-center">
+              <h1 className="font-pixel text-sm text-ink text-center">
                 PASSWORD RESET
               </h1>
             </CardHeader>
 
             <CardContent className="text-center space-y-4">
               <div className="flex justify-center">
-                <CheckCircle className="w-16 h-16 text-terminal-green" />
+                <div className="w-16 h-16 bg-success/20 border-2 border-success flex items-center justify-center">
+                  <CheckCircle className="w-8 h-8 text-success" />
+                </div>
               </div>
-              <p className="text-terminal-gray-200">
+              <p className="font-pixel text-[0.625rem] text-ink">
                 Your password has been reset successfully!
               </p>
-              <p className="text-terminal-gray-400 text-sm">
+              <p className="font-pixel text-[0.5rem] text-ink-muted">
                 Redirecting to login...
               </p>
             </CardContent>
@@ -106,25 +108,23 @@ export function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-terminal-dark flex items-center justify-center p-4">
+    <div className="min-h-screen bg-parchment-dark flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* ASCII Art Logo */}
-        <pre className="text-terminal-green text-xs mb-6 text-center font-mono overflow-hidden">
-{`
- ╔══════════════════════════════════╗
- ║   BIBLICAL BATTLE PLANS          ║
- ║   ━━━━━━━━━━━━━━━━━━━━           ║
- ║   "The sword of the Spirit"      ║
- ╚══════════════════════════════════╝
-`}
-        </pre>
+        {/* Logo Placeholder */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-20 h-20 bg-gradient-to-br from-gold to-bronze border-2 border-gold-dark flex items-center justify-center shadow-[0_4px_12px_var(--shadow-color)] mb-4">
+            <span className="font-pixel text-sm text-ink">BBP</span>
+          </div>
+          <h1 className="font-pixel text-[0.75rem] text-ink text-center">BIBLICAL BATTLE PLANS</h1>
+          <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-1">"The sword of the Spirit"</p>
+        </div>
 
-        <Card>
+        <Card variant="elevated">
           <CardHeader>
-            <h1 className="text-xl font-pixel text-terminal-green text-center">
+            <h1 className="font-pixel text-sm text-ink text-center">
               SET NEW PASSWORD
             </h1>
-            <p className="text-terminal-gray-400 text-sm text-center mt-2">
+            <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-2">
               Enter your new password below
             </p>
           </CardHeader>
@@ -138,12 +138,12 @@ export function ResetPassword() {
             />
           </CardContent>
 
-          <CardFooter className="text-center text-sm">
+          <CardFooter className="text-center">
             <Link
               to="/login"
-              className="text-terminal-gray-400 hover:text-terminal-green transition-colors"
+              className="font-pixel text-[0.5rem] text-ink-muted hover:text-gold transition-colors"
             >
-              {'< Back to Login'}
+              ← Back to Login
             </Link>
           </CardFooter>
         </Card>

@@ -51,6 +51,10 @@ export const useAuth = create<AuthStore>((set, get) => ({
 
   initialize: async () => {
     try {
+      // Check if this is a recovery flow from URL hash BEFORE getting session
+      const hash = window.location.hash
+      const isRecoveryFromUrl = hash && hash.includes('type=recovery')
+
       // Get initial session
       const { data: { session } } = await supabase.auth.getSession()
 
@@ -62,6 +66,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
           profile,
           isLoading: false,
           isInitialized: true,
+          isRecoveryMode: isRecoveryFromUrl, // Set recovery mode if URL indicates recovery
         })
       } else {
         set({
@@ -70,6 +75,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
           profile: null,
           isLoading: false,
           isInitialized: true,
+          isRecoveryMode: false,
         })
       }
 
@@ -77,7 +83,11 @@ export const useAuth = create<AuthStore>((set, get) => ({
       supabase.auth.onAuthStateChange(async (event, session) => {
         console.log('Auth event:', event, 'Session:', !!session)
 
-        if (event === 'PASSWORD_RECOVERY' && session?.user) {
+        // Check URL hash for recovery token (handles INITIAL_SESSION with recovery)
+        const currentHash = window.location.hash
+        const isRecoveryFromHash = currentHash && currentHash.includes('type=recovery')
+
+        if ((event === 'PASSWORD_RECOVERY' || (event === 'INITIAL_SESSION' && isRecoveryFromHash)) && session?.user) {
           // User clicked a password reset link - set recovery mode
           console.log('Password recovery mode activated')
           set({

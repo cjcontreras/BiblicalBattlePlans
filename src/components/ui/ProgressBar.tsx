@@ -1,5 +1,3 @@
-import { Check } from 'lucide-react'
-
 interface ProgressBarProps {
   value: number // 0-100
   max?: number
@@ -12,16 +10,16 @@ interface ProgressBarProps {
 }
 
 const variantColors = {
-  default: 'bg-terminal-green',
-  success: 'bg-military-green',
-  warning: 'bg-achievement-gold',
-  danger: 'bg-alert-red',
+  default: 'bg-gradient-to-r from-sage to-sage-light',
+  success: 'bg-gradient-to-r from-sage to-sage-light',
+  warning: 'bg-gradient-to-r from-warning to-gold',
+  danger: 'bg-gradient-to-r from-danger to-danger-dark',
 }
 
 const sizeStyles = {
   sm: 'h-2',
-  md: 'h-4',
-  lg: 'h-6',
+  md: 'h-3',
+  lg: 'h-4',
 }
 
 export function ProgressBar({
@@ -31,65 +29,82 @@ export function ProgressBar({
   label,
   variant = 'default',
   size = 'md',
-  showBlocks = true,
+  showBlocks = false,
   className = '',
 }: ProgressBarProps) {
   const percentage = Math.min(Math.max((value / max) * 100, 0), 100)
-  const blockCount = 20 // Number of blocks in the bar
-  const filledBlocks = Math.round((percentage / 100) * blockCount)
 
+  // Block-style progress (optional retro look)
+  if (showBlocks) {
+    const blockCount = 10
+    const filledBlocks = Math.round((percentage / 100) * blockCount)
+
+    return (
+      <div className={`w-full ${className}`}>
+        {(showLabel || label) && (
+          <div className="flex justify-between mb-1 text-[0.5rem] font-pixel">
+            <span className="text-ink-muted">{label || 'PROGRESS'}</span>
+            <span className="text-sage">{Math.round(percentage)}%</span>
+          </div>
+        )}
+        <div className="flex gap-0.5">
+          {Array.from({ length: blockCount }).map((_, i) => (
+            <div
+              key={i}
+              className={`
+                flex-1 h-3
+                border border-border-subtle
+                transition-colors duration-150
+                ${i < filledBlocks 
+                  ? variant === 'success' 
+                    ? 'bg-sage' 
+                    : variant === 'warning'
+                    ? 'bg-warning'
+                    : variant === 'danger'
+                    ? 'bg-danger'
+                    : 'bg-sage'
+                  : 'bg-parchment-light'
+                }
+              `}
+            />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // Smooth progress bar (default)
   return (
     <div className={`w-full ${className}`}>
       {(showLabel || label) && (
-        <div className="flex justify-between mb-1 text-sm font-mono">
-          <span className="text-terminal-gray-200">{label || 'Progress'}</span>
-          <span className="text-terminal-green">{Math.round(percentage)}%</span>
+        <div className="flex justify-between mb-1 text-[0.5rem] font-pixel">
+          <span className="text-ink-muted">{label || 'PROGRESS'}</span>
+          <span className="text-sage">{Math.round(percentage)}%</span>
         </div>
       )}
-
-      {showBlocks ? (
-        // Pixel/Block style progress bar
-        <div className="flex gap-0.5 font-mono text-xs">
-          <span className="text-terminal-gray-400">[</span>
-          {Array.from({ length: blockCount }).map((_, i) => (
-            <span
-              key={i}
-              className={`
-                ${i < filledBlocks ? 'text-terminal-green' : 'text-terminal-gray-600'}
-                transition-colors duration-100
-              `}
-            >
-              {i < filledBlocks ? '█' : '░'}
-            </span>
-          ))}
-          <span className="text-terminal-gray-400">]</span>
-        </div>
-      ) : (
-        // Smooth progress bar
+      <div
+        className={`
+          w-full
+          bg-parchment-light
+          border border-border-subtle
+          overflow-hidden
+          ${sizeStyles[size]}
+        `}
+      >
         <div
           className={`
-            w-full
-            bg-terminal-gray-600
-            border border-terminal-gray-500
-            overflow-hidden
-            ${sizeStyles[size]}
+            h-full
+            ${variantColors[variant]}
+            transition-all duration-300 ease-out
           `}
-        >
-          <div
-            className={`
-              h-full
-              ${variantColors[variant]}
-              transition-all duration-300 ease-out
-            `}
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-      )}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
     </div>
   )
 }
 
-// Alternative: Individual block progress for Horner's 10-list tracking
+// Block Progress for multi-item tracking (like reading lists)
 interface BlockProgressProps {
   completed: number
   total: number
@@ -111,18 +126,18 @@ export function BlockProgress({
           className={`
             w-6 h-6
             flex items-center justify-center
-            text-xs font-mono
-            border-2
+            text-[0.5rem] font-pixel
+            border
             transition-all duration-150
             ${
               i < completed
-                ? 'bg-terminal-green border-terminal-green text-terminal-dark'
-                : 'bg-transparent border-terminal-gray-500 text-terminal-gray-400'
+                ? 'bg-sage border-sage-dark text-white'
+                : 'bg-parchment-light border-border-subtle text-ink-muted'
             }
           `}
           title={labels?.[i]}
         >
-          {i < completed ? <Check className="w-3 h-3" /> : i + 1}
+          {i < completed ? '✓' : i + 1}
         </div>
       ))}
     </div>

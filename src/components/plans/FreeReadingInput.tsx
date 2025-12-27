@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { BookOpen, Plus } from 'lucide-react'
-import { Card, CardHeader, CardContent, Button, Input } from '../ui'
+import { Card, Button, Input } from '../ui'
 
 interface FreeReadingInputProps {
   onSubmit: (chapters: number, notes?: string) => void
@@ -34,22 +34,22 @@ export function FreeReadingInput({
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card noPadding>
+      <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent px-4 py-3 border-b border-border-subtle">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-pixel text-terminal-green">
+          <h3 className="font-pixel text-[0.625rem] text-ink">
             LOG READING
           </h3>
-          <div className="flex items-center gap-2 text-terminal-gray-400">
-            <BookOpen className="w-4 h-4" />
-            <span className="text-sm font-mono">
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-ink-muted" />
+            <span className="font-pixel text-[0.5rem] text-ink">
               {chaptersReadToday} today
             </span>
           </div>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="space-y-4">
+      <div className="p-4 space-y-4">
         <div className="grid grid-cols-1 gap-4">
           <Input
             type="number"
@@ -63,8 +63,8 @@ export function FreeReadingInput({
           />
 
           <div className="w-full">
-            <label className="block mb-1.5 text-sm font-medium text-terminal-gray-200">
-              {"> Notes (optional)"}
+            <label className="block mb-1.5 font-pixel text-[0.625rem] text-ink-muted uppercase tracking-wide">
+              Notes (optional)
             </label>
             <textarea
               value={notes}
@@ -75,14 +75,14 @@ export function FreeReadingInput({
               onKeyDown={handleKeyDown}
               className="
                 w-full
-                bg-terminal-dark
-                border-2 border-terminal-gray-500
-                text-terminal-gray-100
-                placeholder:text-terminal-gray-400
-                font-mono text-sm
-                px-3 py-2
-                focus:outline-none focus:border-terminal-green
-                focus:shadow-[0_0_5px_var(--color-terminal-green)]
+                bg-parchment-light
+                border-2 border-border-subtle
+                text-ink
+                placeholder:text-ink-faint
+                font-pixel text-[0.75rem]
+                px-3 py-2.5
+                focus:outline-none focus:border-gold
+                focus:shadow-[0_0_0_3px_rgba(200,160,96,0.2)]
                 disabled:opacity-50 disabled:cursor-not-allowed
                 transition-all duration-150
                 resize-none
@@ -101,10 +101,10 @@ export function FreeReadingInput({
           <span>LOG CHAPTERS</span>
         </Button>
 
-        <p className="text-xs text-terminal-gray-400 text-center">
+        <p className="font-pixel text-[0.5rem] text-ink-muted text-center">
           Press Enter to submit
         </p>
-      </CardContent>
+      </div>
     </Card>
   )
 }

@@ -28,31 +28,33 @@ export function Signup() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-terminal-dark flex items-center justify-center p-4">
+      <div className="min-h-screen bg-parchment-dark flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <Card>
+          <Card variant="elevated">
             <CardHeader>
-              <h1 className="text-xl font-pixel text-terminal-green text-center">
+              <h1 className="font-pixel text-sm text-ink text-center">
                 ENLISTMENT RECEIVED
               </h1>
             </CardHeader>
 
             <CardContent className="text-center space-y-4">
               <div className="flex justify-center">
-                <Mail className="w-16 h-16 text-terminal-green" />
+                <div className="w-16 h-16 bg-success/20 border-2 border-success flex items-center justify-center">
+                  <Mail className="w-8 h-8 text-success" />
+                </div>
               </div>
-              <p className="text-terminal-gray-200 font-medium">
+              <p className="font-pixel text-[0.625rem] text-ink">
                 Check your email to confirm your account!
               </p>
 
-              <div className="p-4 bg-achievement-gold/10 border-2 border-achievement-gold text-left space-y-2">
-                <p className="text-achievement-gold font-pixel text-sm">
-                  ! IMPORTANT
+              <div className="p-4 bg-warning/10 border border-warning text-left space-y-2">
+                <p className="font-pixel text-[0.625rem] text-warning">
+                  IMPORTANT
                 </p>
-                <p className="text-terminal-gray-200 text-sm">
+                <p className="font-pixel text-[0.5rem] text-ink">
                   You must click the confirmation link in your email before you can login.
                 </p>
-                <p className="text-terminal-gray-400 text-sm">
+                <p className="font-pixel text-[0.5rem] text-ink-muted">
                   Check your spam folder if you don't see it within a few minutes.
                 </p>
               </div>
@@ -61,11 +63,11 @@ export function Signup() {
             <CardFooter className="flex flex-col gap-3 text-center">
               <Link
                 to="/login"
-                className="text-terminal-green hover:underline"
+                className="font-pixel text-[0.625rem] text-gold hover:underline"
               >
-                {'> I\'ve confirmed my email - Go to Login'}
+                I've confirmed my email — Go to Login
               </Link>
-              <p className="text-terminal-gray-500 text-xs">
+              <p className="font-pixel text-[0.5rem] text-ink-muted">
                 Didn't receive an email? Check spam or try signing up again.
               </p>
             </CardFooter>
@@ -76,26 +78,24 @@ export function Signup() {
   }
 
   return (
-    <div className="min-h-screen bg-terminal-dark flex items-center justify-center p-4">
+    <div className="min-h-screen bg-parchment-dark flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* ASCII Art Logo */}
-        <pre className="text-terminal-green text-xs mb-6 text-center font-mono overflow-hidden">
-{`
- ╔══════════════════════════════════╗
- ║   BIBLICAL BATTLE PLANS          ║
- ║   ━━━━━━━━━━━━━━━━━━━━           ║
- ║   "The sword of the Spirit"      ║
- ╚══════════════════════════════════╝
-`}
-        </pre>
+        {/* Logo Placeholder */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-20 h-20 bg-gradient-to-br from-gold to-bronze border-2 border-gold-dark flex items-center justify-center shadow-[0_4px_12px_var(--shadow-color)] mb-4">
+            <span className="font-pixel text-sm text-ink">BBP</span>
+          </div>
+          <h1 className="font-pixel text-[0.75rem] text-ink text-center">BIBLICAL BATTLE PLANS</h1>
+          <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-1">"The sword of the Spirit"</p>
+        </div>
 
-        <Card>
+        <Card variant="elevated">
           <CardHeader>
-            <h1 className="text-xl font-pixel text-terminal-green text-center">
+            <h1 className="font-pixel text-sm text-ink text-center">
               ENLIST NOW
             </h1>
-            <p className="text-terminal-gray-400 text-sm text-center mt-2">
-              Join the ranks and begin your campaign
+            <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-2">
+              Join the ranks and begin your quest
             </p>
           </CardHeader>
 
@@ -109,10 +109,10 @@ export function Signup() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-terminal-gray-500" />
+                <div className="w-full border-t border-border-subtle" />
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-terminal-darker text-terminal-gray-400">
+              <div className="relative flex justify-center">
+                <span className="px-3 bg-parchment font-pixel text-[0.5rem] text-ink-muted">
                   OR
                 </span>
               </div>
@@ -121,12 +121,12 @@ export function Signup() {
             <GoogleAuthButton />
           </CardContent>
 
-          <CardFooter className="text-center text-sm">
-            <p className="text-terminal-gray-400">
+          <CardFooter className="text-center">
+            <p className="font-pixel text-[0.5rem] text-ink-muted">
               Already enlisted?{' '}
               <Link
                 to="/login"
-                className="text-terminal-green hover:underline"
+                className="text-gold hover:underline"
               >
                 Login here
               </Link>
@@ -134,8 +134,8 @@ export function Signup() {
           </CardFooter>
         </Card>
 
-        <p className="text-terminal-gray-500 text-xs text-center mt-6">
-          "Fight the good fight of faith" - 1 Timothy 6:12
+        <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-6">
+          "Fight the good fight of faith" — 1 Timothy 6:12
         </p>
       </div>
     </div>

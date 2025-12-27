@@ -28,31 +28,25 @@ export function Login() {
     try {
       const { error } = await signIn(data.email, data.password!)
 
-      // Always stop loading after sign in attempt
-      setIsLoading(false)
-
       if (error) {
-        console.error('Login error:', error)
-
         // Provide helpful error messages
-        let errorMessage = error.message || 'An error occurred during login'
+        let errorMessage = error.message
 
-        if (error.message?.includes('Invalid login credentials')) {
+        if (error.message.includes('Invalid login credentials')) {
           errorMessage = 'Invalid email or password. Please check your credentials and try again.'
-        } else if (error.message?.includes('Email not confirmed')) {
+        } else if (error.message.includes('Email not confirmed')) {
           errorMessage = 'Email not confirmed. Please check your inbox and click the confirmation link before logging in.'
-        } else if (error.message?.includes('Email not verified')) {
+        } else if (error.message.includes('Email not verified')) {
           errorMessage = 'Email not verified. Please check your inbox and click the verification link before logging in.'
-        } else if (('status' in error && error.status === 400) || error.message?.includes('400')) {
+        } else if ('status' in error && error.status === 400 || error.message.includes('400')) {
           errorMessage = 'Unable to sign in. This may be because your email is not confirmed yet. Please check your inbox for a confirmation link.'
         }
 
-        console.log('Setting error message:', errorMessage)
         setError(errorMessage)
+        setIsLoading(false)
       }
     } catch (err) {
       // Catch any unexpected errors
-      console.error('Unexpected error:', err)
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
       setError(errorMessage)
       setIsLoading(false)
@@ -61,25 +55,23 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-terminal-dark flex items-center justify-center p-4">
+    <div className="min-h-screen bg-parchment-dark flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* ASCII Art Logo */}
-        <pre className="text-terminal-green text-xs mb-6 text-center font-mono overflow-hidden">
-{`
- ╔══════════════════════════════════╗
- ║   BIBLICAL BATTLE PLANS          ║
- ║   ━━━━━━━━━━━━━━━━━━━━           ║
- ║   "The sword of the Spirit"      ║
- ╚══════════════════════════════════╝
-`}
-        </pre>
+        {/* Logo Placeholder */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-20 h-20 bg-gradient-to-br from-gold to-bronze border-2 border-gold-dark flex items-center justify-center shadow-[0_4px_12px_var(--shadow-color)] mb-4">
+            <span className="font-pixel text-sm text-ink">BBP</span>
+          </div>
+          <h1 className="font-pixel text-[0.75rem] text-ink text-center">BIBLICAL BATTLE PLANS</h1>
+          <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-1">"The sword of the Spirit"</p>
+        </div>
 
-        <Card>
+        <Card variant="elevated">
           <CardHeader>
-            <h1 className="text-xl font-pixel text-terminal-green text-center">
-              SOLDIER LOGIN
+            <h1 className="font-pixel text-sm text-ink text-center">
+              HERO LOGIN
             </h1>
-            <p className="text-terminal-gray-400 text-sm text-center mt-2">
+            <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-2">
               Enter your credentials to continue
             </p>
           </CardHeader>
@@ -94,10 +86,10 @@ export function Login() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-terminal-gray-500" />
+                <div className="w-full border-t border-border-subtle" />
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-terminal-darker text-terminal-gray-400">
+              <div className="relative flex justify-center">
+                <span className="px-3 bg-parchment font-pixel text-[0.5rem] text-ink-muted">
                   OR
                 </span>
               </div>
@@ -106,18 +98,18 @@ export function Login() {
             <GoogleAuthButton />
           </CardContent>
 
-          <CardFooter className="flex flex-col gap-3 text-center text-sm">
+          <CardFooter className="flex flex-col gap-3 text-center">
             <Link
               to="/forgot-password"
-              className="text-terminal-gray-400 hover:text-terminal-green transition-colors"
+              className="font-pixel text-[0.5rem] text-ink-muted hover:text-gold transition-colors"
             >
-              {'> Forgot password?'}
+              Forgot password?
             </Link>
-            <p className="text-terminal-gray-400">
-              New recruit?{' '}
+            <p className="font-pixel text-[0.5rem] text-ink-muted">
+              New hero?{' '}
               <Link
                 to="/signup"
-                className="text-terminal-green hover:underline"
+                className="text-gold hover:underline"
               >
                 Enlist here
               </Link>
@@ -125,8 +117,8 @@ export function Login() {
           </CardFooter>
         </Card>
 
-        <p className="text-terminal-gray-500 text-xs text-center mt-6">
-          "Put on the full armor of God" - Ephesians 6:11
+        <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-6">
+          "Put on the full armor of God" — Ephesians 6:11
         </p>
       </div>
     </div>
