@@ -38,7 +38,7 @@ export function Login() {
           errorMessage = 'Email not confirmed. Please check your inbox and click the confirmation link before logging in.'
         } else if (error.message.includes('Email not verified')) {
           errorMessage = 'Email not verified. Please check your inbox and click the verification link before logging in.'
-        } else if (error.status === 400 || error.message.includes('400')) {
+        } else if ('status' in error && error.status === 400 || error.message.includes('400')) {
           errorMessage = 'Unable to sign in. This may be because your email is not confirmed yet. Please check your inbox for a confirmation link.'
         }
 
