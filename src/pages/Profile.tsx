@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { useAuth } from '../hooks/useAuth'
 import { useStats } from '../hooks/useStats'
 import { ProfileHeader, ProfileStats, CampaignHistory } from '../components/profile'
@@ -43,10 +44,15 @@ export function Profile() {
 
   const handleSave = async () => {
     setIsSaving(true)
-    await updateProfile({
-      display_name: displayName,
-      streak_minimum: streakMinimum
-    })
+    try {
+      await updateProfile({
+        display_name: displayName,
+        streak_minimum: streakMinimum
+      })
+      toast.success('Profile updated successfully!')
+    } catch (error) {
+      toast.error('Failed to update profile. Please try again.')
+    }
     setIsSaving(false)
     setIsEditing(false)
   }

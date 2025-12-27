@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { Card, CardHeader, CardContent, CardFooter, Button, Badge } from '../ui'
 import { useUnarchivePlan, calculatePlanProgress } from '../../hooks/usePlans'
 import type { UserPlan, ReadingPlan } from '../../types'
@@ -12,7 +13,12 @@ export function ArchivedPlanCard({ userPlan }: ArchivedPlanCardProps) {
   const progress = calculatePlanProgress(userPlan, plan)
 
   const handleUnarchive = async () => {
-    await unarchivePlan.mutateAsync(userPlan.id)
+    try {
+      await unarchivePlan.mutateAsync(userPlan.id)
+      toast.success('Quest restored! It will appear in Today\'s Quests.')
+    } catch (error) {
+      toast.error('Failed to restore quest. Please try again.')
+    }
   }
 
   return (

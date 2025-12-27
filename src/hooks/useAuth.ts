@@ -53,7 +53,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
     try {
       // Check if this is a recovery flow from URL hash BEFORE getting session
       const hash = window.location.hash
-      const isRecoveryFromUrl = hash && hash.includes('type=recovery')
+      const isRecoveryFromUrl = !!(hash && hash.includes('type=recovery'))
 
       // Get initial session
       const { data: { session } } = await supabase.auth.getSession()

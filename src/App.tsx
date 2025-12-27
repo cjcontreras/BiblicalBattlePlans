@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import { useAuth } from './hooks/useAuth'
 import { ProtectedRoute } from './components/auth'
 import { Layout } from './components/Layout'
@@ -20,6 +21,18 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Toaster
+        position="bottom-center"
+        toastOptions={{
+          className: 'font-pixel text-[0.625rem]',
+          style: {
+            background: 'var(--color-parchment)',
+            border: '2px solid var(--color-border)',
+            color: 'var(--color-ink)',
+            fontFamily: 'var(--font-pixel)',
+          },
+        }}
+      />
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />

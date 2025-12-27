@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Infinity, ChevronLeft } from 'lucide-react'
+import { toast } from 'sonner'
 import { useReadingPlan, useStartPlan, useUserPlans, getTodaysReading } from '../hooks/usePlans'
 import { Card, CardHeader, CardContent, CardFooter, Button, Badge, LoadingSpinner, Input } from '../components/ui'
 import type { CyclingListsStructure } from '../types'
@@ -24,9 +25,11 @@ export function PlanDetail() {
 
     try {
       const newPlan = await startPlan.mutateAsync({ planId: id, startDate })
+      toast.success('Quest started! Your journey begins.')
       navigate(`/campaign/${newPlan.id}`)
     } catch (error) {
       console.error('Failed to start plan:', error)
+      toast.error('Failed to start quest. Please try again.')
     }
   }
 

@@ -1,5 +1,6 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Swords, BookOpen, ChevronRight, Archive, ChevronLeft } from 'lucide-react'
+import { toast } from 'sonner'
 import {
   useUserPlan,
   useDailyProgress,
@@ -107,8 +108,13 @@ export function ActivePlan() {
     )
 
     if (confirmed) {
-      await archivePlan.mutateAsync(id)
-      navigate('/plans')
+      try {
+        await archivePlan.mutateAsync(id)
+        toast.success('Quest archived. Restore it under the "New Quest" page.')
+        navigate('/plans')
+      } catch (error) {
+        toast.error('Failed to archive quest. Please try again.')
+      }
     }
   }
 
