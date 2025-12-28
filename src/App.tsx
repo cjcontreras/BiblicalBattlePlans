@@ -20,8 +20,23 @@ function ScrollToTop() {
   }, [])
 
   useEffect(() => {
-    // Scroll to top on route change
-    window.scrollTo(0, 0)
+    // On mobile, the keyboard may have just closed, affecting viewport.
+    // Use multiple scroll attempts to ensure it works after DOM settles.
+    const scrollToTop = () => {
+      window.scrollTo(0, 0)
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+    }
+
+    // Immediate scroll
+    scrollToTop()
+
+    // Delayed scroll for mobile keyboard close timing
+    const timeoutId = setTimeout(() => {
+      requestAnimationFrame(scrollToTop)
+    }, 100)
+
+    return () => clearTimeout(timeoutId)
   }, [pathname])
 
   return null

@@ -19,8 +19,10 @@ export function Login() {
   // Auto-redirect when user becomes authenticated
   useEffect(() => {
     if (user && !error) {
-      // Scroll to top before navigating
-      window.scrollTo(0, 0)
+      // Blur active element to close mobile keyboard before navigating
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur()
+      }
       navigate(from, { replace: true })
     }
   }, [user, error, navigate, from])

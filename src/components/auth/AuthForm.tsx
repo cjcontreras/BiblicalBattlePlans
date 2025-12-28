@@ -90,7 +90,9 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
   const displayError = validationError || error
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" autoComplete="on">
+    <form onSubmit={handleSubmit} className="space-y-4" autoComplete="on" action="#">
+      {/* Hidden submit for iOS autofill detection */}
+      <input type="submit" hidden />
       {mode === 'signup' && (
         <Input
           label="Full Name"
@@ -118,9 +120,9 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
           spellCheck={false}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="hero@biblicalbattleplans.com"
+          placeholder="Enter your email"
           disabled={isLoading}
-          autoComplete={mode === 'login' ? 'username' : 'email'}
+          autoComplete="email"
         />
       )}
 
