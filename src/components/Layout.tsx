@@ -117,7 +117,7 @@ export function Layout() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border-subtle bg-parchment-light pb-24 md:pb-0">
+      <footer className="border-t border-border-subtle bg-parchment-light pb-32 md:pb-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="font-pixel text-[0.625rem] text-ink-muted">

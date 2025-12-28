@@ -41,7 +41,7 @@ export function Navigation() {
 
 export function MobileNavigation() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-parchment to-parchment-light border-t-2 border-border-subtle md:hidden z-50 shadow-[0_-4px_12px_var(--shadow-color)]">
+    <nav className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-parchment to-parchment-light border-t-2 border-border-subtle md:hidden z-50 shadow-[0_-4px_12px_var(--shadow-color)] pb-safe">
       <div className="flex justify-around">
         {navItems.map((item) => {
           const Icon = item.icon
@@ -50,15 +50,15 @@ export function MobileNavigation() {
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `flex flex-col items-center py-3 px-4 flex-1 transition-all duration-150 ${
+                `flex flex-col items-center py-4 px-6 flex-1 transition-all duration-150 ${
                   isActive
                     ? 'text-gold bg-parchment-dark/20'
                     : 'text-ink-muted hover:text-gold'
                 }`
               }
             >
-              <Icon className="w-5 h-5 mb-1" />
-              <span className="font-pixel text-[0.5rem]">{item.label}</span>
+              <Icon className="w-7 h-7 mb-1.5" />
+              <span className="font-pixel text-[0.625rem]">{item.label}</span>
             </NavLink>
           )
         })}
