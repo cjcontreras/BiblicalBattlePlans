@@ -129,12 +129,17 @@ export function Layout() {
                 ShirePath Solutions
               </Link>
             </p>
-            <Link
-              to="/acknowledgements"
-              className="font-pixel text-[0.625rem] text-sage hover:text-sage-dark transition-colors"
-            >
-              Acknowledgements
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/acknowledgements"
+                className="font-pixel text-[0.625rem] text-sage hover:text-sage-dark transition-colors"
+              >
+                Acknowledgements
+              </Link>
+              <span className="font-pixel text-[0.5rem] text-ink-muted/50">
+                v{__APP_VERSION__}
+              </span>
+            </div>
           </div>
         </div>
       </footer>

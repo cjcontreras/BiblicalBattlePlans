@@ -1,0 +1,89 @@
+name: Version Bump
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'package.json' # Avoid infinite loop when we update version
+
+jobs:
+  version-bump:
+    runs-on: ubuntu-latest
+    # Skip if commit message contains [skip-version] or is a version bump commit
+    if: "!contains(github.event.head_commit.message, '[skip-version]') && !startsWith(github.event.head_commit.message, 'chore: bump version')"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine version bump type
+        id: bump-type
+        run: |
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+
+          # Check for major version indicators
+          if echo "$COMMIT_MSG" | grep -iqE "(^|\s)(BREAKING|major:)"; then
+            echo "type=major" >> $GITHUB_OUTPUT
+            echo "Detected MAJOR version bump"
+          # Check if this is a PR merge (contains "Merge pull request")
+          elif echo "$COMMIT_MSG" | grep -iq "Merge pull request"; then
+            echo "type=minor" >> $GITHUB_OUTPUT
+            echo "Detected PR merge - MINOR version bump"
+          # Direct commits get patch bumps
+          else
+            echo "type=patch" >> $GITHUB_OUTPUT
+            echo "Detected direct commit - PATCH version bump"
+          fi
+
+      - name: Bump version
+        run: |
+          # Get current version
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+
+          # Parse version parts
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+
+          # Bump based on type
+          case "${{ steps.bump-type.outputs.type }}" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          echo "New version: $NEW_VERSION"
+
+          # Update package.json
+          npm version $NEW_VERSION --no-git-tag-version
+
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Commit and push
+        run: |
+          git add package.json
+          git commit -m "chore: bump version to ${{ env.NEW_VERSION }} [skip-version]"
+          git push

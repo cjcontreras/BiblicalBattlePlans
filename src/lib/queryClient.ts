@@ -49,3 +49,7 @@ export const persister = createSyncStoragePersister({
   storage: getStorage(),
   key: 'biblical-battle-plans-cache',
 })
+
+// Cache version - increment this to invalidate all user caches on deploy
+// Changed: v2 - Fixed chapter counting for sectional/weekly plans
+export const CACHE_BUSTER = 'v2'
