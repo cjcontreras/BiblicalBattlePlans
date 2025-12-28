@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '../hooks/useAuth'
 import { useStats } from '../hooks/useStats'
@@ -41,6 +41,11 @@ export function Profile() {
   const [displayName, setDisplayName] = useState(profile?.display_name || '')
   const [streakMinimumInput, setStreakMinimumInput] = useState(String(profile?.streak_minimum || 3))
   const [isSaving, setIsSaving] = useState(false)
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   // Parse streak minimum with validation, clamping between 1-20
   const getValidStreakMinimum = (value: string): number => {
