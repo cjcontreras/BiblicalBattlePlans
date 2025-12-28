@@ -18,8 +18,34 @@ export const queryClient = new QueryClient({
   },
 })
 
+// No-op storage fallback for environments without localStorage
+const noopStorage: Storage = {
+  length: 0,
+  clear: () => {},
+  getItem: () => null,
+  key: () => null,
+  removeItem: () => {},
+  setItem: () => {},
+}
+
+// Safe storage getter for environments where localStorage might not be available
+const getStorage = (): Storage => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      // Test that localStorage actually works (can fail in private browsing)
+      const testKey = '__storage_test__'
+      window.localStorage.setItem(testKey, testKey)
+      window.localStorage.removeItem(testKey)
+      return window.localStorage
+    }
+  } catch {
+    // localStorage not available or blocked
+  }
+  return noopStorage
+}
+
 // Persister to save cache to localStorage
 export const persister = createSyncStoragePersister({
-  storage: window.localStorage,
+  storage: getStorage(),
   key: 'biblical-battle-plans-cache',
 })

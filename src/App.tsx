@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Toaster } from 'sonner'
 import { useAuth } from './hooks/useAuth'
 import { ProtectedRoute } from './components/auth'
@@ -21,6 +22,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <SpeedInsights />
       <Toaster
         position="bottom-center"
         toastOptions={{
