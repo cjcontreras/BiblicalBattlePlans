@@ -39,16 +39,26 @@ export function Profile() {
   const { data: stats, isLoading: statsLoading } = useStats()
   const [isEditing, setIsEditing] = useState(false)
   const [displayName, setDisplayName] = useState(profile?.display_name || '')
-  const [streakMinimum, setStreakMinimum] = useState(profile?.streak_minimum || 3)
+  const [streakMinimumInput, setStreakMinimumInput] = useState(String(profile?.streak_minimum || 3))
   const [isSaving, setIsSaving] = useState(false)
+
+  // Parse streak minimum with validation, clamping between 1-20
+  const getValidStreakMinimum = (value: string): number => {
+    const parsed = parseInt(value, 10)
+    if (isNaN(parsed) || parsed < 1) return 1
+    if (parsed > 20) return 20
+    return parsed
+  }
 
   const handleSave = async () => {
     setIsSaving(true)
+    const validStreakMinimum = getValidStreakMinimum(streakMinimumInput)
     try {
       await updateProfile({
         display_name: displayName,
-        streak_minimum: streakMinimum
+        streak_minimum: validStreakMinimum
       })
+      setStreakMinimumInput(String(validStreakMinimum))
       toast.success('Profile updated successfully!')
     } catch (error) {
       toast.error('Failed to update profile. Please try again.')
@@ -115,10 +125,18 @@ export function Profile() {
             <Input
               label="Streak Minimum (Chapters/Day)"
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               min="1"
               max="20"
-              value={streakMinimum}
-              onChange={(e) => setStreakMinimum(parseInt(e.target.value) || 3)}
+              value={streakMinimumInput}
+              onChange={(e) => setStreakMinimumInput(e.target.value)}
+              onFocus={(e) => e.target.select()}
+              onBlur={() => {
+                // Validate and correct on blur
+                const valid = getValidStreakMinimum(streakMinimumInput)
+                setStreakMinimumInput(String(valid))
+              }}
               placeholder="Minimum chapters per day for streak"
             />
           </CardContent>
@@ -135,7 +153,7 @@ export function Profile() {
               onClick={() => {
                 setIsEditing(false)
                 setDisplayName(profile?.display_name || '')
-                setStreakMinimum(profile?.streak_minimum || 3)
+                setStreakMinimumInput(String(profile?.streak_minimum || 3))
               }}
             >
               CANCEL
