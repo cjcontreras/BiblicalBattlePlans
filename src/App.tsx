@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Toaster } from 'sonner'
 import { useAuth } from './hooks/useAuth'
@@ -7,6 +7,17 @@ import { ProtectedRoute } from './components/auth'
 import { Layout } from './components/Layout'
 import { Landing, Login, Signup, ForgotPassword, ResetPassword, Dashboard, Plans, PlanDetail, ActivePlan, Profile, Acknowledgements } from './pages'
 import { LoadingOverlay } from './components/ui'
+
+// Scroll to top on route change
+function ScrollToTop() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+
+  return null
+}
 
 function App() {
   const { initialize, isInitialized, user } = useAuth()
@@ -22,6 +33,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <SpeedInsights />
       <Toaster
         position="bottom-center"

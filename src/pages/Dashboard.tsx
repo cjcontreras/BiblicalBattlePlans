@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { BookOpen, Swords, Trophy, Plus, Book } from 'lucide-react'
+import { BookOpen, Swords, Trophy, Plus, Book, Play } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useUserPlans, getCurrentReadings, getTodaysReading, calculatePlanProgress } from '../hooks/usePlans'
 import { useStats } from '../hooks/useStats'
@@ -214,9 +214,10 @@ export function Dashboard() {
                     {/* Continue Link */}
                     <Link
                       to={`/campaign/${userPlan.id}`}
-                      className="inline-block font-pixel text-[0.625rem] text-sage hover:text-sage-dark hover:underline"
+                      className="inline-flex items-center gap-1.5 font-pixel text-[0.625rem] text-sage hover:text-sage-dark hover:underline"
                     >
-                      ▶ CONTINUE
+                      <Play className="w-3 h-3 fill-current" />
+                      CONTINUE
                     </Link>
                   </div>
                 )
