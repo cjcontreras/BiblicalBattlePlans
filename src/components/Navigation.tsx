@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Home, Shield, type LucideIcon } from 'lucide-react'
+import { Home, Shield, MessageSquarePlus, type LucideIcon } from 'lucide-react'
 
 interface NavItem {
   path: string
@@ -11,6 +11,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { path: '/dashboard', label: 'HOME', icon: Home },
   { path: '/profile', label: 'HERO', icon: Shield },
+  { path: '/feedback', label: 'FEEDBACK', icon: MessageSquarePlus },
 ]
 
 export function Navigation() {

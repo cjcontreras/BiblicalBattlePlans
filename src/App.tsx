@@ -6,7 +6,7 @@ import { Toaster } from 'sonner'
 import { useAuth } from './hooks/useAuth'
 import { ProtectedRoute } from './components/auth'
 import { Layout } from './components/Layout'
-import { Landing, Login, Signup, ForgotPassword, ResetPassword, Dashboard, Plans, PlanDetail, ActivePlan, Profile, Acknowledgements, About } from './pages'
+import { Landing, Login, Signup, ForgotPassword, ResetPassword, Dashboard, Plans, PlanDetail, ActivePlan, Profile, Acknowledgements, About, Feedback } from './pages'
 import { LoadingOverlay } from './components/ui'
 
 // Scroll to top on route change
@@ -88,6 +88,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/acknowledgements" element={<Acknowledgements />} />
           <Route path="/about" element={<About />} />
+          <Route path="/feedback" element={<Feedback />} />
         </Route>
 
         {/* Catch all - redirect appropriately */}
