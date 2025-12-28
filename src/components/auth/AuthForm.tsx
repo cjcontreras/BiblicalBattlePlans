@@ -119,9 +119,9 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
           enterKeyHint="next"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
+          placeholder="hero@biblicalbattleplans.com"
           disabled={isLoading}
-          autoComplete="email"
+          autoComplete={mode === 'login' ? 'username' : 'email'}
         />
       )}
 
