@@ -90,18 +90,17 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
   const displayError = validationError || error
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" autoComplete="on">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {mode === 'signup' && (
         <Input
           label="Full Name"
-          name="name"
           id="name"
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           placeholder="hero_name"
           disabled={isLoading}
-          autoComplete="name"
+          required
           hint="Letters, numbers, and underscores only"
         />
       )}
@@ -109,48 +108,39 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
       {mode !== 'reset-password' && (
         <Input
           label="Email"
-          name="email"
           id="email"
           type="email"
-          inputMode="email"
-          autoCapitalize="off"
-          autoCorrect="off"
-          spellCheck={false}
-          enterKeyHint="next"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="hero@biblicalbattleplans.com"
+          placeholder="you@example.com"
           disabled={isLoading}
-          autoComplete={mode === 'login' ? 'username' : 'email'}
+          required
         />
       )}
 
       {mode !== 'forgot-password' && (
         <Input
           label="Password"
-          name="password"
           id="password"
           type="password"
-          enterKeyHint={mode === 'login' ? 'go' : 'next'}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
           disabled={isLoading}
-          autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+          required
         />
       )}
 
       {(mode === 'signup' || mode === 'reset-password') && (
         <Input
           label="Confirm Password"
-          name="confirm-password"
           id="confirm-password"
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder="••••••••"
           disabled={isLoading}
-          autoComplete="new-password"
+          required
         />
       )}
 
