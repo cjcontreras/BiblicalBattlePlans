@@ -59,12 +59,13 @@ export function Login() {
         setError(error.message || 'An error occurred. Please try again.')
         setIsLoading(false)
       }
+      // Success case: isLoading will remain true while useEffect handles navigation
+      // This is intentional - keeps the button in loading state during redirect
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
       setError(errorMessage)
       setIsLoading(false)
     }
-    // Don't navigate here - let the useEffect handle it when user state updates
   }
 
   if (emailNotConfirmed) {
