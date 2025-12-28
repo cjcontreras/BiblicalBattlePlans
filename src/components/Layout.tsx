@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { useState, useLayoutEffect } from 'react'
+import { useState, useRef, useLayoutEffect } from 'react'
 import { ChevronDown, User, LogOut } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useStats } from '../hooks/useStats'
@@ -10,25 +10,15 @@ export function Layout() {
   const { profile, signOut, user } = useAuth()
   const { data: stats } = useStats()
   const location = useLocation()
+  const mainRef = useRef<HTMLElement>(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const currentStreak = stats?.current_streak || 0
 
-  // Scroll to top when entering protected layout (after login) or on route change
-  // Use useLayoutEffect to scroll before browser paint
+  // Scroll the main content container to top on route change
   useLayoutEffect(() => {
-    // Scroll both window and document element for cross-browser compatibility
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-    document.documentElement.scrollTop = 0
-    document.body.scrollTop = 0
-    
-    // Also scroll after a short delay to handle mobile keyboard dismiss
-    const timeout = setTimeout(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-      document.documentElement.scrollTop = 0
-      document.body.scrollTop = 0
-    }, 100)
-    
-    return () => clearTimeout(timeout)
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0
+    }
   }, [location.pathname])
 
   const displayName = profile?.display_name || profile?.username || user?.email?.split('@')[0] || 'Soldier'
@@ -38,9 +28,9 @@ export function Layout() {
   }
 
   return (
-    <div className="min-h-screen bg-parchment-dark flex flex-col">
+    <div className="h-screen bg-parchment-dark flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-gradient-to-br from-parchment to-parchment-light border-b-2 border-border-subtle shadow-[0_4px_12px_var(--shadow-color)]">
+      <header className="flex-shrink-0 z-40 bg-gradient-to-br from-parchment to-parchment-light border-b-2 border-border-subtle shadow-[0_4px_12px_var(--shadow-color)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -130,29 +120,34 @@ export function Layout() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
-        <Outlet />
+      {/* Scrollable Content Area */}
+      <main 
+        ref={mainRef}
+        className="flex-1 overflow-y-auto overflow-x-hidden overscroll-behavior-y-contain"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+          <Outlet />
+        </div>
+
+        {/* Footer - inside scrollable area */}
+        <footer className="border-t border-border-subtle bg-parchment-light pb-24 md:pb-0">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="font-pixel text-[0.625rem] text-ink-muted">
+                Created and maintained by ShirePath Solutions
+              </p>
+              <Link
+                to="/acknowledgements"
+                className="font-pixel text-[0.625rem] text-sage hover:text-sage-dark transition-colors"
+              >
+                Acknowledgements
+              </Link>
+            </div>
+          </div>
+        </footer>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border-subtle bg-parchment-light pb-24 md:pb-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="font-pixel text-[0.625rem] text-ink-muted">
-              Created and maintained by ShirePath Solutions
-            </p>
-            <Link
-              to="/acknowledgements"
-              className="font-pixel text-[0.625rem] text-sage hover:text-sage-dark transition-colors"
-            >
-              Acknowledgements
-            </Link>
-          </div>
-        </div>
-      </footer>
-
-      {/* Mobile Navigation */}
+      {/* Mobile Navigation - fixed at bottom */}
       <MobileNavigation />
     </div>
   )
