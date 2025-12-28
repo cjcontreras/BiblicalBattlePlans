@@ -17,13 +17,17 @@ function ScrollToTop() {
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual'
     }
+    // Scroll to top on initial mount
+    window.scrollTo(0, 0)
   }, [])
 
   useEffect(() => {
     // Scroll to top immediately and after a small delay to handle async content
     window.scrollTo(0, 0)
-    const timeout = setTimeout(() => window.scrollTo(0, 0), 0)
-    return () => clearTimeout(timeout)
+    // Use requestAnimationFrame to ensure scroll happens after render
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0)
+    })
   }, [pathname])
 
   return null

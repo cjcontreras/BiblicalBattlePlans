@@ -107,6 +107,7 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
       {mode !== 'reset-password' && (
         <Input
           label="Email"
+          name="email"
           type="email"
           inputMode="email"
           value={email}
@@ -120,6 +121,7 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
       {mode !== 'forgot-password' && (
         <Input
           label="Password"
+          name="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

@@ -99,17 +99,31 @@ export const useAuth = create<AuthStore>((set, get) => ({
         } else if (event === 'SIGNED_IN' && session?.user) {
           // Sync username from user metadata to profile if not set
           const metadata = session.user.user_metadata
-          if (metadata?.username) {
-            // First check if profile already has data
-            const existingProfile = await fetchProfile(session.user.id)
+          
+          // First check if profile already has data
+          const existingProfile = await fetchProfile(session.user.id)
 
-            // Only update if username is not set, and preserve display_name if it exists
-            if (!existingProfile?.username) {
+          // Only update if username is not set
+          if (!existingProfile?.username) {
+            let usernameToSet: string | null = null
+            let displayNameToSet: string | null = null
+
+            if (metadata?.username) {
+              // Email signup - use provided username
+              usernameToSet = metadata.username
+              displayNameToSet = existingProfile?.display_name || metadata.display_name || metadata.username
+            } else if (metadata?.full_name) {
+              // Google OAuth - generate username from full_name (e.g., "Chris Bunce" -> "chris_bunce")
+              usernameToSet = metadata.full_name.toLowerCase().replace(/\s+/g, '_')
+              displayNameToSet = existingProfile?.display_name || metadata.full_name
+            }
+
+            if (usernameToSet) {
               await (supabase
                 .from('profiles') as ReturnType<typeof supabase.from>)
                 .update({
-                  username: metadata.username,
-                  display_name: existingProfile?.display_name || metadata.display_name || metadata.username,
+                  username: usernameToSet,
+                  display_name: displayNameToSet,
                 })
                 .eq('id', session.user.id)
             }

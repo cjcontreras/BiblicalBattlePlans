@@ -1,5 +1,5 @@
-import { Outlet, Link } from 'react-router-dom'
-import { useState } from 'react'
+import { Outlet, Link, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { ChevronDown, User, LogOut } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useStats } from '../hooks/useStats'
@@ -9,8 +9,14 @@ import { StreakBadge } from './ui'
 export function Layout() {
   const { profile, signOut, user } = useAuth()
   const { data: stats } = useStats()
+  const location = useLocation()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const currentStreak = stats?.current_streak || 0
+
+  // Scroll to top when entering protected layout (after login) or on route change
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [location.pathname])
 
   const displayName = profile?.display_name || profile?.username || user?.email?.split('@')[0] || 'Soldier'
 

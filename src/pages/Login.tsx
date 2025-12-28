@@ -19,6 +19,8 @@ export function Login() {
   // Auto-redirect when user becomes authenticated
   useEffect(() => {
     if (user && !error) {
+      // Scroll to top before navigating
+      window.scrollTo(0, 0)
       navigate(from, { replace: true })
     }
   }, [user, error, navigate, from])
