@@ -44,6 +44,9 @@ export function initSentry() {
       // Auth-related expected errors
       'Invalid login credentials',
       'Email not confirmed',
+      // Service worker errors
+      'Rejected',
+      /ServiceWorker/i,
     ],
 
     // Limit breadcrumbs to reduce noise

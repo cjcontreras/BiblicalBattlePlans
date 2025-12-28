@@ -24,6 +24,7 @@ interface AuthActions {
   updatePassword: (newPassword: string) => Promise<{ error: Error | null }>
   updateProfile: (data: Partial<Profile>) => Promise<{ error: Error | null }>
   refreshProfile: () => Promise<void>
+  deleteAccount: () => Promise<{ error: Error | null }>
 }
 
 type AuthStore = AuthState & AuthActions
@@ -300,6 +301,51 @@ export const useAuth = create<AuthStore>((set, get) => ({
 
     const profile = await fetchProfile(user.id)
     set({ profile })
+  },
+
+  deleteAccount: async () => {
+    const { user } = get()
+    if (!user) {
+      return { error: new Error('Not authenticated') }
+    }
+
+    try {
+      // Call the Supabase RPC function to delete the user account
+      // This cascades to delete all user data (profiles, user_plans, daily_progress)
+      const { error } = await supabase.rpc('delete_user_account')
+
+      if (error) {
+        captureError(error, { component: 'useAuth', action: 'deleteAccount', userId: user.id })
+        const errorMessage = typeof error === 'object' && error !== null && 'message' in error
+          ? String((error as { message: unknown }).message)
+          : 'Failed to delete account'
+        return { error: new Error(errorMessage) }
+      }
+
+      // Clear local state first
+      setSentryUser(null)
+      set({
+        user: null,
+        session: null,
+        profile: null,
+        isLoading: false,
+        isRecoveryMode: false,
+      })
+
+      // Try to sign out to clear local session storage, but don't fail if it errors
+      // (the user no longer exists on the server, so this may return 403)
+      try {
+        await supabase.auth.signOut({ scope: 'local' })
+      } catch {
+        // Ignore signOut errors - user is already deleted
+      }
+
+      return { error: null }
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Failed to delete account')
+      captureError(err, { component: 'useAuth', action: 'deleteAccount', userId: user.id })
+      return { error: err }
+    }
   },
 }))
 

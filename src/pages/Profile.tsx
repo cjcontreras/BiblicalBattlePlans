@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { Trash2 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useStats } from '../hooks/useStats'
+import { captureError } from '../lib/errorLogger'
 import { ProfileHeader, ProfileStats, CampaignHistory } from '../components/profile'
-import { Card, CardHeader, CardContent, CardFooter, Button, Input, LoadingSpinner } from '../components/ui'
+import { Card, CardHeader, CardContent, CardFooter, Button, Input, LoadingSpinner, Modal } from '../components/ui'
 
 // Rank definitions
 const RANKS = [
@@ -35,12 +38,16 @@ function getRankProgress(streak: number) {
 }
 
 export function Profile() {
-  const { profile, updateProfile } = useAuth()
+  const navigate = useNavigate()
+  const { profile, updateProfile, deleteAccount } = useAuth()
   const { data: stats, isLoading: statsLoading } = useStats()
   const [isEditing, setIsEditing] = useState(false)
   const [displayName, setDisplayName] = useState(profile?.display_name || '')
   const [streakMinimumInput, setStreakMinimumInput] = useState(String(profile?.streak_minimum || 3))
   const [isSaving, setIsSaving] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
 
   // Scroll to top when component mounts
   useEffect(() => {
@@ -70,6 +77,29 @@ export function Profile() {
     }
     setIsSaving(false)
     setIsEditing(false)
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') return
+
+    setIsDeleting(true)
+    try {
+      const { error } = await deleteAccount()
+
+      if (error) {
+        captureError(error, { component: 'Profile', action: 'deleteAccount' })
+        toast.error('Failed to delete account. Please try again.')
+        setIsDeleting(false)
+        return
+      }
+
+      toast.success('Your account has been deleted.')
+      navigate('/')
+    } catch (error) {
+      captureError(error, { component: 'Profile', action: 'deleteAccount' })
+      toast.error('Failed to delete account. Please try again.')
+      setIsDeleting(false)
+    }
   }
 
   if (statsLoading) {
@@ -260,6 +290,98 @@ export function Profile() {
 
       {/* Campaign History */}
       <CampaignHistory />
+
+      {/* Danger Zone */}
+      <Card noPadding>
+        <div className="bg-gradient-to-r from-danger/20 to-transparent px-4 py-3 border-b border-danger/30">
+          <div className="font-pixel text-[0.625rem] text-danger">
+            DANGER ZONE
+          </div>
+        </div>
+        <div className="p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <p className="font-pixel text-[0.625rem] text-ink mb-1">
+                DELETE ACCOUNT
+              </p>
+              <p className="font-pixel text-[0.5rem] text-ink-muted">
+                Permanently delete your account and all associated data.
+                This action cannot be undone.
+              </p>
+            </div>
+            <Button
+              variant="danger"
+              size="sm"
+              leftIcon={<Trash2 className="w-3 h-3" />}
+              onClick={() => setShowDeleteModal(true)}
+            >
+              DELETE
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false)
+          setDeleteConfirmText('')
+        }}
+        title="DELETE ACCOUNT"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div className="p-3 bg-danger/10 border border-danger/30">
+            <p className="font-pixel text-[0.625rem] text-danger mb-2">
+              WARNING: This action is permanent!
+            </p>
+            <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">
+              Deleting your account will permanently remove:
+            </p>
+            <ul className="font-pixel text-[0.5rem] text-ink-muted mt-2 space-y-1">
+              <li>- All your reading progress</li>
+              <li>- Your streak history</li>
+              <li>- All quests and campaigns</li>
+              <li>- Your profile and settings</li>
+            </ul>
+          </div>
+
+          <div>
+            <label className="font-pixel text-[0.5rem] text-ink-muted block mb-2">
+              Type DELETE to confirm:
+            </label>
+            <Input
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value.toUpperCase())}
+              placeholder="DELETE"
+              className="font-mono"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button
+              variant="danger"
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirmText !== 'DELETE'}
+              isLoading={isDeleting}
+              className="flex-1"
+            >
+              DELETE ACCOUNT
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setShowDeleteModal(false)
+                setDeleteConfirmText('')
+              }}
+              disabled={isDeleting}
+            >
+              CANCEL
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

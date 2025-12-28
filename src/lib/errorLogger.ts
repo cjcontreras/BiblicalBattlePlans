@@ -13,6 +13,37 @@ interface ErrorContext {
 }
 
 /**
+ * Extract a meaningful error message from various error types.
+ * Handles Supabase errors, standard Errors, and plain objects.
+ */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message
+  }
+
+  // Handle Supabase/Postgrest errors which are plain objects
+  if (error && typeof error === 'object') {
+    const err = error as Record<string, unknown>
+    // Supabase errors typically have a 'message' property
+    if (typeof err.message === 'string') {
+      return err.message
+    }
+    // Some errors have 'error_description'
+    if (typeof err.error_description === 'string') {
+      return err.error_description
+    }
+    // Fallback to JSON stringification for objects
+    try {
+      return JSON.stringify(error)
+    } catch {
+      return 'Unknown error (object)'
+    }
+  }
+
+  return String(error)
+}
+
+/**
  * Centralized error logging utility.
  * Captures errors to Sentry and logs to console in development.
  */
@@ -21,7 +52,7 @@ export function captureError(
   context?: ErrorContext,
   severity: ErrorSeverity = 'error'
 ) {
-  const errorMessage = error instanceof Error ? error.message : String(error)
+  const errorMessage = getErrorMessage(error)
   const errorObj = error instanceof Error ? error : new Error(errorMessage)
 
   // Always log to console in development

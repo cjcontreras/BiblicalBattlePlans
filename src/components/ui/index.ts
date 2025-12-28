@@ -1,6 +1,7 @@
 export { Button } from './Button'
 export { Card, CardHeader, CardContent, CardFooter } from './Card'
 export { Input } from './Input'
+export { Modal } from './Modal'
 export { ProgressBar, BlockProgress } from './ProgressBar'
 export { StatBlock, StatGrid, CharacterStats } from './StatBlock'
 export { Badge, StreakBadge } from './Badge'
