@@ -1,5 +1,6 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { Swords, BookOpen, ChevronRight, Archive, ChevronLeft } from 'lucide-react'
+import { useEffect } from 'react'
+import { Swords, BookOpen, ChevronRight, Archive, ChevronLeft, Trophy } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   useUserPlan,
@@ -10,11 +11,13 @@ import {
   useAdvanceDay,
   useLogFreeReading,
   useArchivePlan,
+  useMarkPlanComplete,
   useTodaysTotalChapters,
   getCurrentReadings,
   getTodaysReading,
   calculatePlanProgress,
   getChaptersReadToday,
+  isPlanAtFinalDay,
 } from '../hooks/usePlans'
 import { useAuth } from '../hooks/useAuth'
 import { captureError } from '../lib/errorLogger'
@@ -35,13 +38,15 @@ export function ActivePlan() {
   const advanceDay = useAdvanceDay()
   const logFreeReading = useLogFreeReading()
   const archivePlan = useArchivePlan()
+  const markPlanComplete = useMarkPlanComplete()
   const { data: totalChaptersToday = 0 } = useTodaysTotalChapters()
 
   const isLoading = planLoading || progressLoading
   const error = planError || progressError
   const isMutating = markChapterRead.isPending || markSectionComplete.isPending ||
                      advanceList.isPending || advanceDay.isPending ||
-                     logFreeReading.isPending || archivePlan.isPending
+                     logFreeReading.isPending || archivePlan.isPending ||
+                     markPlanComplete.isPending
 
   if (isLoading) {
     return (
@@ -112,6 +117,19 @@ export function ActivePlan() {
   const streakProgress = Math.min(totalChaptersToday, streakMinimum)
   const streakMet = totalChaptersToday >= streakMinimum
   const overallProgress = calculatePlanProgress(userPlan, plan)
+
+  // Check if plan is at its final day (for non-cycling plans)
+  const isAtFinalDay = isPlanAtFinalDay(userPlan, plan)
+  const allReadingsComplete = todaysReading.length > 0 && todaysReading.every(s => s.isCompleted)
+  const isPlanComplete = userPlan.is_completed || (isAtFinalDay && allReadingsComplete)
+
+  // Auto-mark plan as complete when final day readings are done
+  useEffect(() => {
+    if (isAtFinalDay && allReadingsComplete && !userPlan.is_completed && id) {
+      markPlanComplete.mutate({ userPlanId: id })
+      toast.success('Quest complete! Congratulations!')
+    }
+  }, [isAtFinalDay, allReadingsComplete, userPlan.is_completed, id])
 
   // Calculate days on plan (actual elapsed days since start)
   const daysOnPlan = (() => {
@@ -255,9 +273,11 @@ export function ActivePlan() {
                  `Day ${daysOnPlan} on this quest`}
               </p>
             </div>
-            {streakMet && (
+            {isPlanComplete ? (
+              <Badge variant="gold">COMPLETE</Badge>
+            ) : streakMet ? (
               <Badge variant="success">GOAL MET</Badge>
-            )}
+            ) : null}
           </div>
         </CardHeader>
 
@@ -356,22 +376,32 @@ export function ActivePlan() {
               </div>
             )}
             
-            {/* For non-cycling plans, show a single "Continue to next day" button when all sections are done */}
-            {!isCyclingPlan && todaysReading.length > 0 && todaysReading.every(s => s.isCompleted) && (
-              <button
-                onClick={() => handleContinue(todaysReading[0])}
-                disabled={isMutating}
-                className={`
-                  w-full mt-4 py-3 px-4 border-2 border-sage
-                  bg-sage/20 font-pixel text-[0.625rem] text-sage
-                  flex items-center justify-center gap-2
-                  hover:bg-sage/30 transition-colors
-                  ${isMutating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                `}
-              >
-                <span>CONTINUE TO NEXT DAY</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
+            {/* For non-cycling plans, show completion or continue button */}
+            {!isCyclingPlan && todaysReading.length > 0 && allReadingsComplete && (
+              isPlanComplete ? (
+                <div className="mt-4 py-6 px-4 border-2 border-gold bg-gold/10 text-center">
+                  <Trophy className="w-8 h-8 text-gold mx-auto mb-2" />
+                  <p className="font-pixel text-[0.75rem] text-gold">QUEST COMPLETE!</p>
+                  <p className="font-pixel text-[0.5rem] text-ink-muted mt-2">
+                    Congratulations! You have completed this reading plan.
+                  </p>
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleContinue(todaysReading[0])}
+                  disabled={isMutating}
+                  className={`
+                    w-full mt-4 py-3 px-4 border-2 border-sage
+                    bg-sage/20 font-pixel text-[0.625rem] text-sage
+                    flex items-center justify-center gap-2
+                    hover:bg-sage/30 transition-colors
+                    ${isMutating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                  `}
+                >
+                  <span>CONTINUE TO NEXT DAY</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              )
             )}
           </div>
 

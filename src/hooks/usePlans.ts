@@ -522,12 +522,19 @@ export function useAdvanceDay() {
       const maxDay = userPlan.plan.duration_days || 365
       const newDay = Math.min(userPlan.current_day + 1, maxDay)
 
+      // Check if plan is now complete (reached the final day)
+      const isNowComplete = newDay >= maxDay
+
       await (supabase
         .from('user_plans') as ReturnType<typeof supabase.from>)
-        .update({ current_day: newDay })
+        .update({
+          current_day: newDay,
+          is_completed: isNowComplete,
+          completed_at: isNowComplete ? new Date().toISOString() : null,
+        })
         .eq('id', userPlanId)
 
-      return { newDay }
+      return { newDay, isComplete: isNowComplete }
     },
     onSuccess: (_, variables) => {
       const today = getLocalDate()
@@ -621,6 +628,37 @@ export function useLogFreeReading() {
         queryClient.invalidateQueries({ queryKey: planKeys.userPlans(user.id) })
         queryClient.invalidateQueries({ queryKey: planKeys.todaysTotalProgress(user.id, today) })
         queryClient.invalidateQueries({ queryKey: ['stats', user.id] })
+      }
+    },
+  })
+}
+
+// Mark a plan as complete
+export function useMarkPlanComplete() {
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
+
+  return useMutation({
+    mutationFn: async ({ userPlanId }: { userPlanId: string }) => {
+      if (!user) throw new Error('Not authenticated')
+
+      await (supabase
+        .from('user_plans') as ReturnType<typeof supabase.from>)
+        .update({
+          is_completed: true,
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', userPlanId)
+
+      return { completed: true }
+    },
+    onSuccess: (_, variables) => {
+      const today = getLocalDate()
+      queryClient.invalidateQueries({ queryKey: planKeys.userPlan(variables.userPlanId) })
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: planKeys.userPlans(user.id) })
+        queryClient.invalidateQueries({ queryKey: ['stats', user.id] })
+        queryClient.invalidateQueries({ queryKey: planKeys.todaysTotalProgress(user.id, today) })
       }
     },
   })
@@ -955,6 +993,19 @@ export function calculatePlanProgress(userPlan: UserPlan, plan: ReadingPlan): nu
   // For other plans with fixed duration
   if (plan.duration_days === 0) return 0
   return Math.min(100, Math.round(((userPlan.current_day - 1) / plan.duration_days) * 100))
+}
+
+// Helper to check if a plan is at its final day (for non-cycling plans with duration)
+export function isPlanAtFinalDay(userPlan: UserPlan, plan: ReadingPlan): boolean {
+  // Cycling plans and free reading don't have a final day
+  if (plan.daily_structure.type === 'cycling_lists') return false
+  if (plan.daily_structure.type === 'free_reading') return false
+
+  // Plans with 0 duration run indefinitely
+  if (!plan.duration_days || plan.duration_days === 0) return false
+
+  // Check if current day is at or past the duration
+  return userPlan.current_day >= plan.duration_days
 }
 
 // Get count of chapters read today
