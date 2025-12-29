@@ -19,6 +19,7 @@ import {
   getChaptersReadToday,
   isPlanAtFinalDay,
 } from '../hooks/usePlans'
+import { useQuestCompleteAchievement } from '../hooks/useAchievements'
 import { useAuth } from '../hooks/useAuth'
 import { captureError } from '../lib/errorLogger'
 import { ReadingSection, PlanProgress, FreeReadingInput } from '../components/plans'
@@ -39,6 +40,7 @@ export function ActivePlan() {
   const logFreeReading = useLogFreeReading()
   const archivePlan = useArchivePlan()
   const markPlanComplete = useMarkPlanComplete()
+  const triggerQuestComplete = useQuestCompleteAchievement()
   const { data: totalChaptersToday = 0 } = useTodaysTotalChapters()
 
   const isLoading = planLoading || progressLoading
@@ -47,6 +49,34 @@ export function ActivePlan() {
                      advanceList.isPending || advanceDay.isPending ||
                      logFreeReading.isPending || archivePlan.isPending ||
                      markPlanComplete.isPending
+
+  // Achievement effects - must be before early returns to satisfy React hooks rules
+  // Auto-mark plan as complete when final day readings are done
+  useEffect(() => {
+    if (!userPlan || !id) return
+    const plan = userPlan.plan
+    const isCycling = plan.daily_structure.type === 'cycling_lists'
+    const isFree = plan.daily_structure.type === 'free_reading'
+
+    // Only for non-cycling, non-free plans with duration
+    if (isCycling || isFree || !plan.duration_days) return
+
+    const isAtFinal = userPlan.current_day >= plan.duration_days
+    const todaysReading = getTodaysReading(plan, userPlan.current_day, progress || null)
+    const allComplete = todaysReading.length > 0 && todaysReading.every(s => s.isCompleted)
+
+    if (isAtFinal && allComplete && !userPlan.is_completed) {
+      markPlanComplete.mutate({ userPlanId: id })
+      triggerQuestComplete(plan.name, plan.id)
+    }
+  }, [userPlan, progress, id, markPlanComplete, triggerQuestComplete])
+
+  // Trigger achievement if plan was already completed (e.g., completed on another device)
+  useEffect(() => {
+    if (userPlan?.is_completed && userPlan.plan?.id) {
+      triggerQuestComplete(userPlan.plan.name, userPlan.plan.id)
+    }
+  }, [userPlan?.is_completed, userPlan?.plan?.id, userPlan?.plan?.name, triggerQuestComplete])
 
   if (isLoading) {
     return (
@@ -122,14 +152,6 @@ export function ActivePlan() {
   const isAtFinalDay = isPlanAtFinalDay(userPlan, plan)
   const allReadingsComplete = todaysReading.length > 0 && todaysReading.every(s => s.isCompleted)
   const isPlanComplete = userPlan.is_completed || (isAtFinalDay && allReadingsComplete)
-
-  // Auto-mark plan as complete when final day readings are done
-  useEffect(() => {
-    if (isAtFinalDay && allReadingsComplete && !userPlan.is_completed && id) {
-      markPlanComplete.mutate({ userPlanId: id })
-      toast.success('Quest complete! Congratulations!')
-    }
-  }, [isAtFinalDay, allReadingsComplete, userPlan.is_completed, id])
 
   // Calculate days on plan (actual elapsed days since start)
   const daysOnPlan = (() => {
@@ -287,18 +309,22 @@ export function ActivePlan() {
               currentDay={userPlan.current_day}
               totalDays={plan.duration_days}
               daysOnPlan={daysOnPlan}
-              completedToday={chaptersReadToday}
+              completedToday={
+                plan.daily_structure.type === 'sectional'
+                  ? todaysReading.filter(s => s.isCompleted).length
+                  : chaptersReadToday
+              }
               totalToday={
                 isCyclingPlan
                   ? streakMinimum
-                  : plan.daily_structure.type === 'sequential'
-                    ? (plan.daily_structure as any).chapters_per_day || 3
+                  : plan.daily_structure.type === 'sequential' || plan.daily_structure.type === 'weekly_sectional'
+                    ? (plan.daily_structure as any).chapters_per_day || streakMinimum
                     : todaysReading.length
               }
               unit={
-                plan.daily_structure.type === 'sequential' || plan.daily_structure.type === 'cycling_lists'
-                  ? 'chapters'
-                  : 'readings'
+                plan.daily_structure.type === 'sectional'
+                  ? 'readings'
+                  : 'chapters'
               }
             />
           </CardContent>
@@ -468,10 +494,12 @@ export function ActivePlan() {
               {/* Readings/Chapters Today */}
               <div className="text-center p-4 bg-parchment-light border border-border-subtle">
                 <div className="font-pixel text-xl text-ink">
-                  {chaptersReadToday}
+                  {plan.daily_structure.type === 'sectional'
+                    ? todaysReading.filter(s => s.isCompleted).length
+                    : chaptersReadToday}
                 </div>
                 <div className="font-pixel text-[0.625rem] text-ink-muted mt-1">
-                  {isCyclingPlan ? 'Chapters Today' : 'Readings Today'}
+                  {plan.daily_structure.type === 'sectional' ? 'Readings Today' : 'Chapters Today'}
                 </div>
               </div>
 

@@ -26,13 +26,15 @@ export function useStats() {
           plans_completed: 0,
           plans_active: 0,
           total_days_reading: 0,
+          streak_shields: 0,
+          last_shield_used_date: null,
         }
       }
 
       // Fetch fresh profile stats from database (updated by triggers)
       const { data: profileData } = await (supabase
         .from('profiles') as ReturnType<typeof supabase.from>)
-        .select('current_streak, longest_streak, total_chapters_read, total_days_reading')
+        .select('current_streak, longest_streak, total_chapters_read, total_days_reading, streak_shields, last_shield_used_date')
         .eq('id', user.id)
         .single()
 
@@ -51,6 +53,8 @@ export function useStats() {
         longest_streak: number
         total_chapters_read: number
         total_days_reading: number
+        streak_shields: number
+        last_shield_used_date: string | null
       } | null
 
       return {
@@ -60,6 +64,8 @@ export function useStats() {
         plans_completed: plansCompleted,
         plans_active: plansActive,
         total_days_reading: profile?.total_days_reading ?? 0,
+        streak_shields: profile?.streak_shields ?? 0,
+        last_shield_used_date: profile?.last_shield_used_date ?? null,
       }
     },
     enabled: !!user,

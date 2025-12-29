@@ -1,0 +1,394 @@
+-- =============================================================================
+-- TEST DATA SCRIPT FOR LOCAL DEVELOPMENT
+-- =============================================================================
+-- Run this after db:reset to create test scenarios
+-- Usage: docker exec supabase_db_biblical-battle-plans psql -U postgres -f /dev/stdin < supabase/test_data.sql
+--
+-- Or copy/paste sections into DataGrip
+-- =============================================================================
+
+-- First, get the user ID (you'll need to sign up first, then run this)
+-- This script assumes you have ONE user in the database
+
+-- DO $$
+-- DECLARE
+--   v_user_id UUID;
+--   v_plan_id UUID;
+--   v_user_plan_id UUID;
+--   v_base_date DATE := CURRENT_DATE;
+--   i INTEGER;
+-- BEGIN
+--   -- Get the first user
+--   SELECT id INTO v_user_id FROM auth.users LIMIT 1;
+--
+--   IF v_user_id IS NULL THEN
+--     RAISE NOTICE 'No user found! Please sign up first, then run this script.';
+--     RETURN;
+--   END IF;
+--
+--   RAISE NOTICE 'Found user: %', v_user_id;
+--
+--   -- Get the 52-Week plan (or any plan)
+--   SELECT id INTO v_plan_id FROM reading_plans WHERE name = '52-Week Bible Reading Plan' LIMIT 1;
+--
+--   IF v_plan_id IS NULL THEN
+--     -- Fallback to any plan
+--     SELECT id INTO v_plan_id FROM reading_plans LIMIT 1;
+--   END IF;
+--
+--   RAISE NOTICE 'Using plan: %', v_plan_id;
+--
+--   -- Clean up existing test data
+--   DELETE FROM daily_progress WHERE user_id = v_user_id;
+--   DELETE FROM user_plans WHERE user_id = v_user_id;
+--
+--   -- Create a user plan
+--   INSERT INTO user_plans (id, user_id, plan_id, start_date, current_day, list_positions)
+--   VALUES (
+--     gen_random_uuid(),
+--     v_user_id,
+--     v_plan_id,
+--     v_base_date - INTERVAL '20 days',
+--     1,
+--     '{}'::jsonb
+--   )
+--   RETURNING id INTO v_user_plan_id;
+--
+--   RAISE NOTICE 'Created user_plan: %', v_user_plan_id;
+--
+--   -- =============================================================================
+--   -- SCENARIO: 14-day streak with 1 shield earned
+--   -- Days: today, yesterday, day before... going back 14 days (no gaps)
+--   -- Expected: current_streak = 14, streak_shields = 1
+--   -- =============================================================================
+--
+--   FOR i IN 0..13 LOOP
+--     INSERT INTO daily_progress (user_id, user_plan_id, day_number, date, completed_sections, is_complete)
+--     VALUES (
+--       v_user_id,
+--       v_user_plan_id,
+--       i + 1,
+--       v_base_date - i,
+--       ARRAY['week1-day1', 'week1-day2', 'week1-day3'], -- 3 sections = meets streak minimum
+--       true
+--     );
+--   END LOOP;
+--
+--   RAISE NOTICE 'Created 14 days of reading data (no gaps)';
+--   RAISE NOTICE 'Expected: current_streak=14, streak_shields=1';
+--
+--   -- Recalculate stats
+--   PERFORM recalculate_user_stats(v_user_id);
+--
+--   -- Show results
+--   RAISE NOTICE '--- RESULTS ---';
+--   PERFORM (
+--     SELECT format('current_streak=%s, longest_streak=%s, streak_shields=%s, reading_days=%s',
+--       current_streak, longest_streak, streak_shields, total_days_reading)
+--     FROM profiles WHERE id = v_user_id
+--   );
+--
+-- END $$;
+--
+-- -- Show final state
+-- SELECT
+--   current_streak,
+--   longest_streak,
+--   streak_shields,
+--   total_days_reading,
+--   total_chapters_read,
+--   last_reading_date
+-- FROM profiles
+-- WHERE id = (SELECT id FROM auth.users LIMIT 1);
+
+
+-- =============================================================================
+-- ALTERNATIVE SCENARIOS (uncomment and run individually)
+-- =============================================================================
+
+
+-- SCENARIO 2: 15 days with 1 gap on day 15 (shield should be used)
+-- Days: 1-14 consecutive, gap on day 15, day 16 read
+-- Expected: current_streak = 16, streak_shields = 0 (1 earned, 1 used)
+
+-- DO $$
+-- DECLARE
+--   v_user_id UUID;
+--   v_user_plan_id UUID;
+--   v_base_date DATE := CURRENT_DATE;
+--   i INTEGER;
+-- BEGIN
+--   SELECT id INTO v_user_id FROM auth.users LIMIT 1;
+--   SELECT id INTO v_user_plan_id FROM user_plans WHERE user_id = v_user_id LIMIT 1;
+--
+--   -- Clean existing progress
+--   DELETE FROM daily_progress WHERE user_id = v_user_id;
+--
+--   -- Days 1-14 (indices 0-13 from today going back)
+--   -- But we want gap at position 14 (day 15 from start)
+--   -- So: today=day16, yesterday=GAP, day before=day14...day1
+--
+--   -- Today (day 16 in streak)
+--   INSERT INTO daily_progress (user_id, user_plan_id, day_number, date, completed_sections, is_complete)
+--   VALUES (v_user_id, v_user_plan_id, 16, v_base_date, ARRAY['week1-day1', 'week1-day2', 'week1-day3'], true);
+--
+--   -- Skip yesterday (this is the gap - day 15)
+--
+--   -- Days 14 down to 1 (2 days ago to 15 days ago)
+--   FOR i IN 2..15 LOOP
+--     INSERT INTO daily_progress (user_id, user_plan_id, day_number, date, completed_sections, is_complete)
+--     VALUES (v_user_id, v_user_plan_id, 16-i, v_base_date - i, ARRAY['week1-day1', 'week1-day2', 'week1-day3'], true);
+--   END LOOP;
+--
+--   PERFORM recalculate_user_stats(v_user_id);
+--
+--   RAISE NOTICE 'Scenario 2: 14 reading days + 1 gap + 1 reading day';
+--   RAISE NOTICE 'Expected: current_streak=16, streak_shields=0 (earned 1, used 1)';
+-- END $$;
+--
+-- SELECT current_streak, longest_streak, streak_shields, total_days_reading FROM profiles
+-- WHERE id = (SELECT id FROM auth.users LIMIT 1);
+
+
+
+
+-- SCENARIO 3: 28 days with 1 gap (should have 1 shield remaining)
+-- Days: 1-14 consecutive, gap on day 15, days 16-29 consecutive
+-- Reading days: 28, Shields earned: 2, Shields used: 1, Available: 1
+
+-- DO $$
+-- DECLARE
+--   v_user_id UUID;
+--   v_user_plan_id UUID;
+--   v_base_date DATE := CURRENT_DATE;
+--   i INTEGER;
+--   day_offset INTEGER;
+-- BEGIN
+--   SELECT id INTO v_user_id FROM auth.users LIMIT 1;
+--   SELECT id INTO v_user_plan_id FROM user_plans WHERE user_id = v_user_id LIMIT 1;
+--
+--   DELETE FROM daily_progress WHERE user_id = v_user_id;
+--
+--   -- We need: today, yesterday, ... with a gap somewhere in the middle
+--   -- Total reading days: 28
+--   -- Total calendar days: 29 (28 reading + 1 gap)
+--   -- Gap at position 14 (so after first 14 reading days)
+--
+--   day_offset := 0;
+--
+--   -- Days 1-14 of reading (most recent 14 days before the gap)
+--   FOR i IN 0..13 LOOP
+--     INSERT INTO daily_progress (user_id, user_plan_id, day_number, date, completed_sections, is_complete)
+--     VALUES (v_user_id, v_user_plan_id, 28-i, v_base_date - day_offset, ARRAY['week1-day1', 'week1-day2', 'week1-day3'], true);
+--     day_offset := day_offset + 1;
+--   END LOOP;
+--
+--   -- Gap (skip one day)
+--   day_offset := day_offset + 1;
+--
+--   -- Days 15-28 of reading (14 days before the gap)
+--   FOR i IN 14..27 LOOP
+--     INSERT INTO daily_progress (user_id, user_plan_id, day_number, date, completed_sections, is_complete)
+--     VALUES (v_user_id, v_user_plan_id, 28-i, v_base_date - day_offset, ARRAY['week1-day1', 'week1-day2', 'week1-day3'], true);
+--     day_offset := day_offset + 1;
+--   END LOOP;
+--
+--   PERFORM recalculate_user_stats(v_user_id);
+--
+--   RAISE NOTICE 'Scenario 3: 28 reading days with 1 gap';
+--   RAISE NOTICE 'Expected: current_streak=29, streak_shields=1 (earned 2, used 1)';
+-- END $$;
+--
+-- SELECT current_streak, longest_streak, streak_shields, total_days_reading FROM profiles
+-- WHERE id = (SELECT id FROM auth.users LIMIT 1);
+
+
+
+
+-- SCENARIO 4: Gap too early (no shield to use, streak breaks)
+-- Days: 1-10 consecutive, gap on day 11, days 12-15
+-- First streak: 10 days (0 shields), breaks
+-- Second streak: 4 days
+-- Expected: current_streak = 4, longest_streak = 10
+--
+-- DO $$
+-- DECLARE
+--   v_user_id UUID;
+--   v_user_plan_id UUID;
+--   v_base_date DATE := CURRENT_DATE;
+--   i INTEGER;
+--   day_offset INTEGER;
+-- BEGIN
+--   SELECT id INTO v_user_id FROM auth.users LIMIT 1;
+--   SELECT id INTO v_user_plan_id FROM user_plans WHERE user_id = v_user_id LIMIT 1;
+--
+--   DELETE FROM daily_progress WHERE user_id = v_user_id;
+--
+--   day_offset := 0;
+--
+--   -- Current streak: 4 days (today through 3 days ago)
+--   FOR i IN 0..3 LOOP
+--     INSERT INTO daily_progress (user_id, user_plan_id, day_number, date, completed_sections, is_complete)
+--     VALUES (v_user_id, v_user_plan_id, i+1, v_base_date - day_offset, ARRAY['week1-day1', 'week1-day2', 'week1-day3'], true);
+--     day_offset := day_offset + 1;
+--   END LOOP;
+--
+--   -- Gap (skip one day) - this breaks the streak since no shield available
+--   day_offset := day_offset + 1;
+--
+--   -- Previous streak: 10 days
+--   FOR i IN 0..9 LOOP
+--     INSERT INTO daily_progress (user_id, user_plan_id, day_number, date, completed_sections, is_complete)
+--     VALUES (v_user_id, v_user_plan_id, i+1, v_base_date - day_offset, ARRAY['week1-day1', 'week1-day2', 'week1-day3'], true);
+--     day_offset := day_offset + 1;
+--   END LOOP;
+--
+--   PERFORM recalculate_user_stats(v_user_id);
+--
+--   RAISE NOTICE 'Scenario 4: Gap with no shield available';
+--   RAISE NOTICE 'Expected: current_streak=4, longest_streak=10, streak_shields=0';
+-- END $$;
+--
+-- SELECT current_streak, longest_streak, streak_shields, total_days_reading FROM profiles
+-- WHERE id = (SELECT id FROM auth.users LIMIT 1);
+
+
+
+-- =============================================================================
+-- SCENARIO 5: 55-day streak (no gaps) - should have max 3 shields
+-- Reading days: 55 consecutive
+-- Shields earned: 3 (at days 14, 28, 42) - capped at max 3
+-- Expected: current_streak = 55, streak_shields = 3
+-- =============================================================================
+
+-- DO $$
+-- DECLARE
+--   v_user_id UUID;
+--   v_user_plan_id UUID;
+--   v_base_date DATE := CURRENT_DATE;
+--   i INTEGER;
+-- BEGIN
+--   SELECT id INTO v_user_id FROM auth.users LIMIT 1;
+--   SELECT id INTO v_user_plan_id FROM user_plans WHERE user_id = v_user_id LIMIT 1;
+--
+--   DELETE FROM daily_progress WHERE user_id = v_user_id;
+--
+--   -- 55 consecutive days (today back to 54 days ago)
+--   FOR i IN 0..54 LOOP
+--     INSERT INTO daily_progress (user_id, user_plan_id, day_number, date, completed_sections, is_complete)
+--     VALUES (v_user_id, v_user_plan_id, 55-i, v_base_date - i, ARRAY['week1-day1', 'week1-day2', 'week1-day3'], true);
+--   END LOOP;
+--
+--   PERFORM recalculate_user_stats(v_user_id);
+--
+--   RAISE NOTICE 'Scenario 5: 55-day streak (no gaps)';
+--   RAISE NOTICE 'Expected: current_streak=55, streak_shields=3 (max), 13 days to next milestone';
+-- END $$;
+--
+-- SELECT current_streak, longest_streak, streak_shields, total_days_reading FROM profiles
+-- WHERE id = (SELECT id FROM auth.users LIMIT 1);
+
+
+
+-- =============================================================================
+-- SCENARIO 6: 57 reading days with 2 gaps - test multiple shield usage
+-- Structure:
+--   - Days 1-14 reading (earn 1st shield at day 14)
+--   - Gap on calendar day 15 (use 1st shield)
+--   - Days 15-28 reading (earn 2nd shield at day 28)
+--   - Gap on calendar day 30 (use 2nd shield)
+--   - Days 29-57 reading (earn 3rd shield at day 42, 4th at day 56)
+--
+-- Reading days: 57
+-- Calendar days in streak: 59 (57 reading + 2 bridged)
+-- Shields earned: 4 (at 14, 28, 42, 56)
+-- Shields used: 2
+-- Expected: current_streak = 59, streak_shields = 2 (4 earned - 2 used, capped at 3)
+-- =============================================================================
+
+-- DO $$
+-- DECLARE
+--   v_user_id UUID;
+--   v_user_plan_id UUID;
+--   v_base_date DATE := CURRENT_DATE;
+--   i INTEGER;
+--   day_offset INTEGER;
+-- BEGIN
+--   SELECT id INTO v_user_id FROM auth.users LIMIT 1;
+--   SELECT id INTO v_user_plan_id FROM user_plans WHERE user_id = v_user_id LIMIT 1;
+--
+--   DELETE FROM daily_progress WHERE user_id = v_user_id;
+--
+--   day_offset := 0;
+--
+--   -- Most recent reading days: 29-57 (29 days, from today going back)
+--   FOR i IN 0..28 LOOP
+--     INSERT INTO daily_progress (user_id, user_plan_id, day_number, date, completed_sections, is_complete)
+--     VALUES (v_user_id, v_user_plan_id, 57-i, v_base_date - day_offset, ARRAY['week1-day1', 'week1-day2', 'week1-day3'], true);
+--     day_offset := day_offset + 1;
+--   END LOOP;
+--
+--   -- Gap 2 (skip one day) - this will use 2nd shield
+--   day_offset := day_offset + 1;
+--
+--   -- Reading days 15-28 (14 days)
+--   FOR i IN 0..13 LOOP
+--     INSERT INTO daily_progress (user_id, user_plan_id, day_number, date, completed_sections, is_complete)
+--     VALUES (v_user_id, v_user_plan_id, 28-i, v_base_date - day_offset, ARRAY['week1-day1', 'week1-day2', 'week1-day3'], true);
+--     day_offset := day_offset + 1;
+--   END LOOP;
+--
+--   -- Gap 1 (skip one day) - this will use 1st shield
+--   day_offset := day_offset + 1;
+--
+--   -- Reading days 1-14 (14 days, oldest)
+--   FOR i IN 0..13 LOOP
+--     INSERT INTO daily_progress (user_id, user_plan_id, day_number, date, completed_sections, is_complete)
+--     VALUES (v_user_id, v_user_plan_id, 14-i, v_base_date - day_offset, ARRAY['week1-day1', 'week1-day2', 'week1-day3'], true);
+--     day_offset := day_offset + 1;
+--   END LOOP;
+--
+--   PERFORM recalculate_user_stats(v_user_id);
+--
+--   RAISE NOTICE 'Scenario 6: 57 reading days with 2 gaps';
+--   RAISE NOTICE 'Expected: current_streak=59, streak_shields=2 (4 earned - 2 used)';
+-- END $$;
+--
+-- SELECT current_streak, longest_streak, streak_shields, total_days_reading FROM profiles
+-- WHERE id = (SELECT id FROM auth.users LIMIT 1);
+
+
+
+-- =============================================================================
+-- SCENARIO 7: 60-day streak (no gaps) - max shields, clean test
+-- Reading days: 60 consecutive
+-- Shields earned: 4 (at days 14, 28, 42, 56) - capped at max 3
+-- Expected: current_streak = 60, streak_shields = 3
+-- =============================================================================
+
+-- DO $$
+-- DECLARE
+--   v_user_id UUID;
+--   v_user_plan_id UUID;
+--   v_base_date DATE := CURRENT_DATE;
+--   i INTEGER;
+-- BEGIN
+--   SELECT id INTO v_user_id FROM auth.users LIMIT 1;
+--   SELECT id INTO v_user_plan_id FROM user_plans WHERE user_id = v_user_id LIMIT 1;
+--
+--   DELETE FROM daily_progress WHERE user_id = v_user_id;
+--
+--   -- 60 consecutive days (today back to 59 days ago)
+--   FOR i IN 0..59 LOOP
+--     INSERT INTO daily_progress (user_id, user_plan_id, day_number, date, completed_sections, is_complete)
+--     VALUES (v_user_id, v_user_plan_id, 60-i, v_base_date - i, ARRAY['week1-day1', 'week1-day2', 'week1-day3'], true);
+--   END LOOP;
+--
+--   PERFORM recalculate_user_stats(v_user_id);
+--
+--   RAISE NOTICE 'Scenario 7: 60-day streak (no gaps)';
+--   RAISE NOTICE 'Expected: current_streak=60, streak_shields=3 (max)';
+-- END $$;
+--
+-- SELECT current_streak, longest_streak, streak_shields, total_days_reading FROM profiles
+-- WHERE id = (SELECT id FROM auth.users LIMIT 1);
