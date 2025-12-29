@@ -17,7 +17,7 @@ interface AuthState {
 interface AuthActions {
   initialize: () => Promise<void>
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>
-  signUp: (email: string, password: string, username: string) => Promise<{ error: Error | null }>
+  signUp: (email: string, password: string, username: string, displayName: string) => Promise<{ error: Error | null }>
   signInWithGoogle: () => Promise<{ error: Error | null }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<{ error: Error | null }>
@@ -192,10 +192,10 @@ export const useAuth = create<AuthStore>((set, get) => ({
     return { error: null }
   },
 
-  signUp: async (email: string, password: string, username: string) => {
+  signUp: async (email: string, password: string, username: string, displayName: string) => {
     set({ isLoading: true })
 
-    // Sign up the user - username will be stored in user metadata
+    // Sign up the user - username and display_name stored in user metadata
     // and synced to profile after email confirmation
     const { error } = await supabase.auth.signUp({
       email,
@@ -203,7 +203,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
       options: {
         data: {
           username,
-          display_name: username,
+          display_name: displayName,
         },
       },
     })

@@ -15,7 +15,7 @@ export function Signup() {
     setIsLoading(true)
     setError(null)
 
-    const { error } = await signUp(data.email, data.password!, data.username!)
+    const { error } = await signUp(data.email, data.password!, data.username!, data.displayName!)
 
     if (error) {
       setError(error.message)

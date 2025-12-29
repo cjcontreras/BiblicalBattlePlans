@@ -12,12 +12,14 @@ export interface AuthFormData {
   email: string
   password?: string
   username?: string
+  displayName?: string
 }
 
 export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
+  const [displayName, setDisplayName] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [validationError, setValidationError] = useState<string | null>(null)
 
@@ -54,6 +56,11 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
     }
 
     if (mode === 'signup') {
+      if (!displayName) {
+        setValidationError('Display name is required')
+        return
+      }
+
       if (!username) {
         setValidationError('Username is required')
         return
@@ -84,6 +91,7 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
       email,
       password: mode !== 'forgot-password' ? password : undefined,
       username: mode === 'signup' ? username : undefined,
+      displayName: mode === 'signup' ? displayName : undefined,
     })
   }
 
@@ -92,17 +100,30 @@ export function AuthForm({ mode, onSubmit, isLoading = false, error }: AuthFormP
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {mode === 'signup' && (
-        <Input
-          label="Full Name"
-          id="name"
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="hero_name"
-          disabled={isLoading}
-          required
-          hint="Letters, numbers, and underscores only"
-        />
+        <>
+          <Input
+            label="Display Name"
+            id="display-name"
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value.replace(/\s/g, '_').replace(/[^a-zA-Z0-9_]/g, ''))}
+            placeholder="The_Rock"
+            disabled={isLoading}
+            required
+            hint="Your nickname (use underscores, no spaces)"
+          />
+          <Input
+            label="Username"
+            id="username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s/g, '_').replace(/[^a-z0-9_]/g, ''))}
+            placeholder="firstname_lastname"
+            disabled={isLoading}
+            required
+            hint="Your name (e.g., simon_peter, no spaces)"
+          />
+        </>
       )}
 
       {mode !== 'reset-password' && (
