@@ -1,0 +1,330 @@
+name: PR Title Validation & Version Preview
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  validate-and-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate PR Title and Determine Version Bump
+        id: validate
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "PR Title: $PR_TITLE"
+          
+          # Initialize variables
+          VALID=false
+          BUMP_TYPE=""
+          EMOJI=""
+          COLOR=""
+          
+          # Check for BREAKING CHANGE or major version indicators
+          if echo "$PR_TITLE" | grep -iqE "^(BREAKING|major):"; then
+            VALID=true
+            BUMP_TYPE="major"
+            EMOJI="🔴"
+            COLOR="critical"
+            echo "✅ Valid: MAJOR version bump detected"
+          
+          # Check for feature additions (feat:, feature:)
+          elif echo "$PR_TITLE" | grep -iqE "^(feat|feature):"; then
+            VALID=true
+            BUMP_TYPE="minor"
+            EMOJI="🟡"
+            COLOR="warning"
+            echo "✅ Valid: MINOR version bump detected"
+          
+          # Check for fixes and patches
+          elif echo "$PR_TITLE" | grep -iqE "^(fix|bugfix|patch):"; then
+            VALID=true
+            BUMP_TYPE="patch"
+            EMOJI="🟢"
+            COLOR="success"
+            echo "✅ Valid: PATCH version bump detected"
+          
+          # Check for maintenance types
+          elif echo "$PR_TITLE" | grep -iqE "^(chore|docs|style|refactor|perf|test|ci|build):"; then
+            VALID=true
+            BUMP_TYPE="patch"
+            EMOJI="🟢"
+            COLOR="success"
+            echo "✅ Valid: PATCH version bump detected (maintenance)"
+          
+          # Invalid format
+          else
+            VALID=false
+            echo "❌ Invalid: PR title does not follow conventional commit format"
+          fi
+          
+          # Set outputs
+          echo "valid=$VALID" >> $GITHUB_OUTPUT
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          echo "emoji=$EMOJI" >> $GITHUB_OUTPUT
+          echo "color=$COLOR" >> $GITHUB_OUTPUT
+
+      - name: Get Current Version
+        if: steps.validate.outputs.valid == 'true'
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "current=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Calculate New Version
+        if: steps.validate.outputs.valid == 'true'
+        id: new-version
+        env:
+          CURRENT_VERSION: ${{ steps.current-version.outputs.current }}
+          BUMP_TYPE: ${{ steps.validate.outputs.bump_type }}
+        run: |
+          # Parse version parts
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+          
+          # Bump based on type
+          case "$BUMP_TYPE" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+          
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version will be: $NEW_VERSION"
+
+      - name: Post Success Comment
+        if: steps.validate.outputs.valid == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const emoji = '${{ steps.validate.outputs.emoji }}';
+            const bumpType = '${{ steps.validate.outputs.bump_type }}';
+            const currentVersion = '${{ steps.current-version.outputs.current }}';
+            const newVersion = '${{ steps.new-version.outputs.new }}';
+            const prTitle = '${{ github.event.pull_request.title }}';
+            
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Version Bump Preview')
+            );
+            
+            const body = `## ${emoji} Version Bump Preview
+            
+            **PR Title:** \`${prTitle}\`
+            
+            ✅ **Valid conventional commit format detected!**
+            
+            ### Version Change
+            \`\`\`
+            ${currentVersion} → ${newVersion}
+            \`\`\`
+            
+            **Bump Type:** \`${bumpType.toUpperCase()}\`
+            
+            ---
+            
+            <details>
+            <summary>📚 Conventional Commit Types</summary>
+            
+            | Type | Version Bump | Example |
+            |------|--------------|---------|
+            | \`BREAKING:\` or \`major:\` | **MAJOR** (X.0.0) | Breaking changes |
+            | \`feat:\` | **MINOR** (x.Y.0) | New features |
+            | \`fix:\` | **PATCH** (x.y.Z) | Bug fixes |
+            | \`chore:\`, \`docs:\`, \`style:\`, etc. | **PATCH** (x.y.Z) | Maintenance |
+            
+            See [Conventional Commits Guide](../blob/main/docs/CONVENTIONAL_COMMITS.md) for more details.
+            </details>
+            
+            ---
+            
+            When this PR is merged, the version bump workflow will automatically:
+            1. Create a new branch with the version change
+            2. Update \`package.json\` to version \`${newVersion}\`
+            3. Create a PR for the version bump
+            4. Auto-merge (if configured) or wait for manual approval`;
+            
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+
+      - name: Post Failure Comment
+        if: steps.validate.outputs.valid == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prTitle = '${{ github.event.pull_request.title }}';
+            
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Version Bump Preview')
+            );
+            
+            const body = `## ❌ Invalid PR Title Format
+            
+            **Current PR Title:** \`${prTitle}\`
+            
+            ⚠️ **This PR title does not follow the conventional commit format.**
+            
+            ### Required Format
+            \`\`\`
+            <type>: <description>
+            \`\`\`
+            
+            ### Valid Types
+            
+            | Type | Version Bump | Use Case |
+            |------|--------------|----------|
+            | \`BREAKING:\` or \`major:\` | **MAJOR** (X.0.0) | Breaking changes to existing functionality |
+            | \`feat:\` | **MINOR** (x.Y.0) | New features or functionality |
+            | \`fix:\` | **PATCH** (x.y.Z) | Bug fixes |
+            | \`chore:\` | **PATCH** (x.y.Z) | Maintenance, dependencies, build changes |
+            | \`docs:\` | **PATCH** (x.y.Z) | Documentation changes |
+            | \`style:\` | **PATCH** (x.y.Z) | Code formatting, no logic changes |
+            | \`refactor:\` | **PATCH** (x.y.Z) | Code refactoring without changing behavior |
+            | \`perf:\` | **PATCH** (x.y.Z) | Performance improvements |
+            | \`test:\` | **PATCH** (x.y.Z) | Adding or updating tests |
+            | \`ci:\` | **PATCH** (x.y.Z) | CI/CD configuration changes |
+            | \`build:\` | **PATCH** (x.y.Z) | Build system changes |
+            
+            ### Examples
+            
+            ✅ **Good PR Titles:**
+            - \`feat: Add dark mode toggle to settings\`
+            - \`fix: Resolve streak calculation bug\`
+            - \`chore: Update dependencies to latest versions\`
+            - \`docs: Add installation instructions\`
+            - \`BREAKING: Remove deprecated authentication endpoints\`
+            
+            ❌ **Bad PR Titles:**
+            - \`Update stuff\`
+            - \`Fixed bug\`
+            - \`WIP\`
+            - \`Changes\`
+            
+            ### Action Required
+            
+            Please update your PR title to follow the conventional commit format. You can edit the title by clicking the "Edit" button next to the PR title above.
+            
+            ---
+            
+            📚 **More Information:**
+            - [Conventional Commits Guide](../blob/main/docs/CONVENTIONAL_COMMITS.md)
+            - [Conventional Commits Specification](https://www.conventionalcommits.org/)`;
+            
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+
+      - name: Fail if Invalid
+        if: steps.validate.outputs.valid == 'false'
+        run: |
+          echo "::error::PR title does not follow conventional commit format"
+          echo "::error::Please update the PR title to match the format: <type>: <description>"
+          echo "::error::Valid types: BREAKING, major, feat, feature, fix, bugfix, patch, chore, docs, style, refactor, perf, test, ci, build"
+          exit 1
+
+      - name: Add Status Check Label
+        if: steps.validate.outputs.valid == 'true'
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          script: |
+            const bumpType = '${{ steps.validate.outputs.bump_type }}';
+            const labelMap = {
+              'major': 'version: major',
+              'minor': 'version: minor',
+              'patch': 'version: patch'
+            };
+            
+            const newLabel = labelMap[bumpType];
+            
+            // Get current labels
+            const { data: currentLabels } = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            // Remove old version labels
+            for (const label of currentLabels) {
+              if (label.name.startsWith('version:')) {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  name: label.name
+                }).catch(() => {});
+              }
+            }
+            
+            // Add new label (will be created if it doesn't exist)
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [newLabel]
+            }).catch(() => {
+              console.log('Label does not exist yet, skipping...');
+            });
+

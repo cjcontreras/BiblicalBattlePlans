@@ -1,0 +1,30 @@
+# CODEOWNERS file for BiblicalBattlePlans
+# This file defines who owns specific parts of the codebase
+# and who should automatically be requested for review on PRs.
+#
+# More info: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo
+# These users will be requested for review unless a later match takes precedence
+* @cjcontreras
+
+# Database migrations - Critical: require careful review
+/supabase/migrations/ @cjcontreras
+
+# GitHub Actions and CI/CD workflows
+/.github/workflows/ @cjcontreras
+
+# Configuration files
+*.config.js @cjcontreras
+*.config.ts @cjcontreras
+/vercel.json @cjcontreras
+/supabase/config.toml @cjcontreras
+
+# Package dependencies
+/package.json @cjcontreras
+/package-lock.json @cjcontreras
+
+# Documentation
+/docs/ @cjcontreras
+*.md @cjcontreras
+

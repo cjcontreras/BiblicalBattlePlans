@@ -106,6 +106,24 @@ npm run lint     # Run ESLint
 
 Contributions are welcome! Please feel free to submit issues and pull requests.
 
+### Development Workflow
+
+1. Fork the repository and create a feature branch
+2. Make your changes following our code standards
+3. Use [Conventional Commits](docs/CONVENTIONAL_COMMITS.md) for your commit messages
+4. Submit a pull request to the `main` branch with a conventional commit title
+   - `feat:` for new features → MINOR version bump
+   - `fix:` for bug fixes → PATCH version bump
+   - `BREAKING:` for breaking changes → MAJOR version bump
+5. Code owners will automatically be requested for review
+6. Address any feedback and wait for approval
+
+**Note:** The `main` branch is protected. All changes must go through pull requests with code review.
+
+**Documentation:**
+- [Branch Protection Rules](docs/BRANCH_PROTECTION.md) - Review process and setup
+- [Conventional Commits](docs/CONVENTIONAL_COMMITS.md) - Commit message guidelines
+
 ## License
 
 This project is proprietary software created by ShirePath Solutions.
