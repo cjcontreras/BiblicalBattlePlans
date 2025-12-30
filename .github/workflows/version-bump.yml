@@ -126,7 +126,7 @@ jobs:
             --label "version-bump"
 
       - name: Auto-merge PR (if GH_PAT is available)
-        if: secrets.GH_PAT != ''
+        if: ${{ secrets.GH_PAT != '' }}
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
