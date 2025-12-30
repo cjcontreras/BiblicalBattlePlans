@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Shield } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useStats } from '../hooks/useStats'
 import { captureError } from '../lib/errorLogger'
@@ -117,6 +117,8 @@ export function Profile() {
     plans_completed: 0,
     plans_active: 0,
     total_days_reading: 0,
+    streak_shields: 0,
+    last_shield_used_date: null,
   }
 
   const currentRank = getCurrentRank(userStats.current_streak)
@@ -203,6 +205,82 @@ export function Profile() {
 
       {/* Stats */}
       <ProfileStats stats={userStats} />
+
+      {/* Streak Shields */}
+      <Card noPadding>
+        <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent px-4 py-3 border-b border-border-subtle">
+          <div className="font-pixel text-[0.625rem] text-ink">
+            STREAK SHIELDS
+          </div>
+        </div>
+        <div className="p-4">
+          <div className="p-4 bg-parchment-light border border-border-subtle">
+            {/* Shield Icons Display */}
+            <div className="flex items-center justify-center gap-2 mb-4">
+              {[0, 1, 2].map((index) => (
+                <div
+                  key={index}
+                  className={`
+                    w-12 h-12 flex items-center justify-center border-2
+                    ${index < userStats.streak_shields
+                      ? 'border-sage bg-sage/20'
+                      : 'border-border-subtle bg-parchment'
+                    }
+                  `}
+                >
+                  <Shield
+                    className={`w-6 h-6 ${
+                      index < userStats.streak_shields ? 'text-sage' : 'text-ink-faint'
+                    }`}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Shield Count */}
+            <div className="text-center mb-4">
+              <span className="font-pixel text-[0.75rem] text-ink">
+                {userStats.streak_shields} / 3 SHIELDS
+              </span>
+            </div>
+
+            {/* Shield Info */}
+            <div className="space-y-2 text-center">
+              <p className="font-pixel text-[0.5rem] text-ink-muted">
+                Earn 1 shield for every 14 consecutive days of reading.
+              </p>
+              <p className="font-pixel text-[0.5rem] text-ink-muted">
+                Shields automatically protect your streak if you miss a day.
+              </p>
+              {userStats.streak_shields > 0 && (
+                <p className="font-pixel text-[0.5rem] text-sage mt-2">
+                  Your streak is protected!
+                </p>
+              )}
+            </div>
+
+            {/* Progress to next shield */}
+            {userStats.streak_shields < 3 && (
+              <div className="mt-4 pt-4 border-t border-border-subtle">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-pixel text-[0.5rem] text-ink-muted">
+                    PROGRESS TO NEXT SHIELD
+                  </span>
+                  <span className="font-pixel text-[0.5rem] text-ink-muted">
+                    {userStats.current_streak % 14} / 14 DAYS
+                  </span>
+                </div>
+                <div className="h-2 bg-parchment border border-border-subtle overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-sage to-sage-light transition-all duration-500"
+                    style={{ width: `${((userStats.current_streak % 14) / 14) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
 
       {/* Rank Progress */}
       <Card noPadding>

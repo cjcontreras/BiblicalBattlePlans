@@ -4,14 +4,19 @@ import { ChevronDown, User, LogOut, Download } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useStats } from '../hooks/useStats'
 import { useIsPWA } from '../hooks/useIsPWA'
+import { useCurrentAchievement, useDismissAchievement } from '../hooks/useAchievements'
 import { Navigation, MobileNavigation } from './Navigation'
 import { StreakBadge } from './ui'
 import { InstallModal } from './InstallModal'
+import { AchievementModal } from './AchievementModal'
+import { MilestoneWatcher } from './MilestoneWatcher'
 
 export function Layout() {
   const { profile, signOut, user } = useAuth()
   const { data: stats } = useStats()
   const isPWA = useIsPWA()
+  const currentAchievement = useCurrentAchievement()
+  const dismissAchievement = useDismissAchievement()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showInstallModal, setShowInstallModal] = useState(false)
   const currentStreak = stats?.current_streak || 0
@@ -165,6 +170,15 @@ export function Layout() {
         isOpen={showInstallModal}
         onClose={() => setShowInstallModal(false)}
       />
+
+      {/* Achievement Modal */}
+      <AchievementModal
+        achievement={currentAchievement}
+        onDismiss={dismissAchievement}
+      />
+
+      {/* Milestone Watcher - detects streak/rank/chapter achievements */}
+      <MilestoneWatcher />
     </div>
   )
 }

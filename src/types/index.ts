@@ -12,6 +12,9 @@ export interface Profile {
   total_chapters_read: number
   total_days_reading: number
   last_reading_date: string | null
+  // Streak shields (earned every 14 consecutive days, max 3)
+  streak_shields: number
+  last_shield_used_date: string | null
   created_at: string
   updated_at: string
 }
@@ -176,6 +179,8 @@ export interface UserStats {
   plans_completed: number
   plans_active: number
   total_days_reading: number
+  streak_shields: number
+  last_shield_used_date: string | null
 }
 
 // Auth Types
