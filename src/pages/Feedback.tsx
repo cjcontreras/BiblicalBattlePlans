@@ -28,9 +28,9 @@ const roadmap: RoadmapPhase[] = [
     icon: <Sparkles className="w-5 h-5" />,
     status: 'in-progress',
     items: [
-      'Milestone celebrations (streaks, completions)',
       'Notes & reflections on any reading plan',
       'View your notes history over time',
+      'Search and filter your reading notes',
     ],
   },
   {
@@ -57,12 +57,11 @@ const roadmap: RoadmapPhase[] = [
   {
     title: 'ENHANCED GAMIFICATION',
     icon: <Trophy className="w-5 h-5" />,
-    status: 'backlog',
+    status: 'planned',
     items: [
       'Achievement badges and unlockables',
-      'XP and leveling system',
-      'Streak shields and protection items',
       'Weekly challenges with rewards',
+      'Rare collectibles and special items',
     ],
   },
   {
@@ -70,10 +69,9 @@ const roadmap: RoadmapPhase[] = [
     icon: <Wrench className="w-5 h-5" />,
     status: 'in-progress',
     items: [
-      'Performance optimizations',
-      'Improved error handling',
       'Better offline support',
       'Accessibility improvements',
+      'Progressive web app enhancements',
     ],
   },
 ]

@@ -22,6 +22,8 @@ An RPG-themed Bible reading tracker that turns your Scripture journey into an ep
 - Track consecutive days of reading
 - Streak badges and milestones
 - Visual streak indicators
+- Streak shields to protect your reading streak
+- Milestone celebrations for achievements
 
 ### Daily Inspiration
 - Verse of the day on your dashboard
@@ -77,12 +79,6 @@ npm run lint     # Run ESLint
 
 ## Roadmap
 
-### Milestone Celebrations
-- Toast notifications for streak milestones (7, 30, 60, 90 days)
-- Rank promotion celebrations
-- Plan completion rewards
-- Chapter milestone acknowledgments
-
 ### Notes & Reflections
 - Add notes to any reading plan type
 - Journal page to browse all notes over time
@@ -104,7 +100,6 @@ npm run lint     # Run ESLint
 ### Enhanced Gamification
 - **Achievement Badges**: Unlock badges for streaks, chapters read, plans completed
 - **XP & Leveling**: Earn experience points and level up your profile
-- **Streak Shields**: Protect your streak from breaking (earned through consistency)
 - **Weekly Challenges**: Rotating challenges with bonus rewards
 
 ## Contributing
