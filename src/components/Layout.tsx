@@ -1,5 +1,5 @@
 import { Outlet, Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronDown, User, LogOut, Download } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useStats } from '../hooks/useStats'
@@ -10,6 +10,9 @@ import { StreakBadge } from './ui'
 import { InstallModal } from './InstallModal'
 import { AchievementModal } from './AchievementModal'
 import { MilestoneWatcher } from './MilestoneWatcher'
+import { WelcomeModal } from './WelcomeModal'
+
+const WELCOME_MODAL_KEY = 'hasSeenWelcomeModal'
 
 export function Layout() {
   const { profile, signOut, user } = useAuth()
@@ -19,9 +22,26 @@ export function Layout() {
   const dismissAchievement = useDismissAchievement()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showInstallModal, setShowInstallModal] = useState(false)
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
   const currentStreak = stats?.current_streak || 0
 
   const displayName = profile?.display_name || profile?.username || user?.email?.split('@')[0] || 'Soldier'
+
+  // Check if user should see welcome modal
+  useEffect(() => {
+    // Only check when profile is loaded (user is authenticated)
+    if (profile) {
+      const hasSeenWelcome = localStorage.getItem(WELCOME_MODAL_KEY)
+      if (!hasSeenWelcome) {
+        setShowWelcomeModal(true)
+      }
+    }
+  }, [profile])
+
+  const handleWelcomeClose = () => {
+    setShowWelcomeModal(false)
+    localStorage.setItem(WELCOME_MODAL_KEY, 'true')
+  }
 
   const handleSignOut = async () => {
     await signOut()
@@ -164,6 +184,12 @@ export function Layout() {
 
       {/* Mobile Navigation */}
       <MobileNavigation />
+
+      {/* Welcome Modal */}
+      <WelcomeModal
+        isOpen={showWelcomeModal}
+        onClose={handleWelcomeClose}
+      />
 
       {/* Install Modal */}
       <InstallModal
