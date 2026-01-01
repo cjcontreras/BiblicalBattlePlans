@@ -40,14 +40,41 @@ export const queryClient = new QueryClient({
       retry: 2, // Retry twice on failure
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
       refetchOnWindowFocus: true, // Refresh data when user returns to tab
-      networkMode: 'offlineFirst', // Don't fail immediately if offline
+      // Use 'online' instead of 'offlineFirst' to prevent stale cache issues on PWA
+      // This ensures queries fetch fresh data when network is available
+      networkMode: 'online',
     },
     mutations: {
       retry: 1,
-      networkMode: 'offlineFirst',
+      // Use 'always' so mutations are queued when offline and run when back online
+      networkMode: 'always',
     },
   },
 })
+
+/**
+ * Clear all user-specific cached data.
+ * Call this on auth state changes (sign in, sign out) to prevent stale data issues.
+ * 
+ * Issue: Query keys use user?.id || '' which can cache data with empty user IDs.
+ * When a new user logs in, they might see stale cached data from previous sessions
+ * or from the brief moment when user was null during auth initialization.
+ */
+export function clearUserCache() {
+  // Remove all queries from the cache
+  // This is the safest approach since user-specific data is tied to query keys
+  // that include the user ID, and we want a fresh start on auth changes
+  queryClient.clear()
+  
+  // Also clear the persisted cache to prevent stale data on next app load
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem('biblical-battle-plans-cache')
+    }
+  } catch {
+    // Ignore localStorage errors (e.g., in private browsing)
+  }
+}
 
 // No-op storage fallback for environments without localStorage
 const noopStorage: Storage = {
