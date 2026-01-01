@@ -15,7 +15,11 @@ createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <PersistQueryClientProvider
         client={queryClient}
-        persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24, buster: CACHE_BUSTER }} // 24 hour max age, buster invalidates cache when changed
+        persistOptions={{
+          persister,
+          maxAge: 1000 * 60 * 60 * 24, // 24 hour max age
+          buster: CACHE_BUSTER, // Invalidates cache when changed
+        }}
       >
         <App />
       </PersistQueryClientProvider>

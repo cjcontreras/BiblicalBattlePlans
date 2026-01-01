@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { focusManager } from '@tanstack/react-query'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Analytics } from '@vercel/analytics/react'
 import { Toaster } from 'sonner'
@@ -8,6 +9,28 @@ import { ProtectedRoute } from './components/auth'
 import { Layout } from './components/Layout'
 import { Landing, Login, Signup, ForgotPassword, ResetPassword, Dashboard, Plans, PlanDetail, ActivePlan, Profile, Acknowledgements, About, Feedback, GuildHub, Guild, GuildJoin } from './pages'
 import { LoadingOverlay } from './components/ui'
+
+// Configure React Query's focus manager to use visibility API
+// This is more reliable for PWAs and mobile browsers than the default focus event
+focusManager.setEventListener((handleFocus) => {
+  const onVisibilityChange = () => {
+    handleFocus(document.visibilityState === 'visible')
+  }
+  
+  const onFocus = () => {
+    handleFocus(true)
+  }
+  
+  // Listen for visibility changes (tab/app becomes visible again)
+  document.addEventListener('visibilitychange', onVisibilityChange)
+  // Also listen for focus as a fallback
+  window.addEventListener('focus', onFocus)
+  
+  return () => {
+    document.removeEventListener('visibilitychange', onVisibilityChange)
+    window.removeEventListener('focus', onFocus)
+  }
+})
 
 // Scroll to top on route change
 function ScrollToTop() {

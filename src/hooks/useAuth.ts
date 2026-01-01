@@ -186,7 +186,6 @@ export const useAuth = create<AuthStore>((set, get) => ({
     }
 
     // Immediately update auth state instead of waiting for onAuthStateChange
-    // Cache clearing happens in the SIGNED_IN event handler
     if (data.session?.user) {
       const profile = await fetchProfile(data.session.user.id)
       set({
@@ -246,7 +245,6 @@ export const useAuth = create<AuthStore>((set, get) => ({
 
   signOut: async () => {
     // Clear state immediately - no loading state needed for sign out
-    // Cache clearing happens in the SIGNED_OUT event handler
     set({
       user: null,
       session: null,
