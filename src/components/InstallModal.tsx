@@ -77,7 +77,7 @@ export function InstallModal({ isOpen, onClose }: InstallModalProps) {
         {detectedPlatform === 'desktop' && (
           <div className="flex items-center gap-2 p-3 bg-blue/10 border border-blue/30">
             <Monitor className="w-4 h-4 text-blue flex-shrink-0" />
-            <p className="font-pixel text-[0.5rem] text-ink-muted">
+            <p className="font-pixel text-[0.625rem] text-ink-muted">
               You&apos;re on a desktop. View this page on your phone to install, or share the link!
             </p>
           </div>
@@ -93,7 +93,7 @@ export function InstallModal({ isOpen, onClose }: InstallModalProps) {
             preload="metadata"
           >
             <source src={videoPath} type="video/mp4" />
-            <p className="p-4 font-pixel text-[0.5rem] text-ink-muted text-center">
+            <p className="p-4 font-pixel text-[0.625rem] text-ink-muted text-center">
               Your browser does not support video playback.
             </p>
           </video>
@@ -110,7 +110,7 @@ export function InstallModal({ isOpen, onClose }: InstallModalProps) {
                 <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center bg-sage text-parchment-lightest font-pixel text-[0.5rem]">
                   {index + 1}
                 </span>
-                <span className="font-pixel text-[0.5rem] text-ink-muted pt-0.5">
+                <span className="font-pixel text-[0.625rem] text-ink-muted pt-0.5">
                   {step}
                 </span>
               </li>
@@ -119,7 +119,7 @@ export function InstallModal({ isOpen, onClose }: InstallModalProps) {
         </div>
 
         {/* Browser note */}
-        <p className="font-pixel text-[0.5rem] text-ink-muted/70 text-center pt-2 border-t border-border-subtle">
+        <p className="font-pixel text-[0.625rem] text-ink-muted/70 text-center pt-2 border-t border-border-subtle">
           {selectedPlatform === 'ios'
             ? 'Note: Installation only works in Safari on iOS devices.'
             : 'Note: Installation works best in Chrome or Samsung Internet.'}

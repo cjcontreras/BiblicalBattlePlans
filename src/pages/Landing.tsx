@@ -65,7 +65,7 @@ export function Landing() {
                   </div>
                 </div>
                 <h4 className="font-pixel text-[0.625rem] text-ink mb-3">MULTIPLE QUESTS</h4>
-                <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">
+                <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">
                   Choose from various reading plans: sequential, cycling, sectional, or free reading.
                   Pick your path through Scripture.
                 </p>
@@ -81,7 +81,7 @@ export function Landing() {
                   </div>
                 </div>
                 <h4 className="font-pixel text-[0.625rem] text-ink mb-3">TRACK PROGRESS</h4>
-                <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">
+                <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">
                   Watch your journey unfold with chapter tracking,
                   daily checklists, and completion stats for every quest.
                 </p>
@@ -97,7 +97,7 @@ export function Landing() {
                   </div>
                 </div>
                 <h4 className="font-pixel text-[0.625rem] text-ink mb-3">BUILD STREAKS</h4>
-                <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">
+                <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">
                   Maintain your daily reading streak and level up your commitment
                   to consistent time in the Word.
                 </p>
@@ -113,7 +113,7 @@ export function Landing() {
                   </div>
                 </div>
                 <h4 className="font-pixel text-[0.625rem] text-ink mb-3">GROUP CAMPAIGNS</h4>
-                <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">
+                <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">
                   Join reading campaigns with friends or your church.
                   Track progress together and encourage one another.
                 </p>
@@ -129,7 +129,7 @@ export function Landing() {
                   </div>
                 </div>
                 <h4 className="font-pixel text-[0.625rem] text-ink mb-3">GAMIFIED JOURNEY</h4>
-                <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">
+                <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">
                   Experience Bible reading as an epic quest.
                   Retro RPG aesthetics make daily reading engaging and fun.
                 </p>
@@ -145,7 +145,7 @@ export function Landing() {
                   </div>
                 </div>
                 <h4 className="font-pixel text-[0.625rem] text-ink mb-3">DAILY INSPIRATION</h4>
-                <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">
+                <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">
                   Start each day with a verse of the day.
                   Be encouraged and equipped for your spiritual battles.
                 </p>
@@ -160,7 +160,7 @@ export function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <p className="font-pixel text-[0.5rem] text-ink-muted">
+              <p className="font-pixel text-[0.625rem] text-ink-muted">
                 Created and maintained by{' '}
                 <Link
                   to="/about"
@@ -176,13 +176,13 @@ export function Landing() {
             <div className="flex gap-4">
               <Link
                 to="/login"
-                className="font-pixel text-[0.5rem] text-sage hover:text-sage-dark transition-colors"
+                className="font-pixel text-[0.625rem] text-sage hover:text-sage-dark transition-colors"
               >
                 Login
               </Link>
               <Link
                 to="/signup"
-                className="font-pixel text-[0.5rem] text-sage hover:text-sage-dark transition-colors"
+                className="font-pixel text-[0.625rem] text-sage hover:text-sage-dark transition-colors"
               >
                 Sign Up
               </Link>

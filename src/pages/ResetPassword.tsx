@@ -58,7 +58,7 @@ export function ResetPassword() {
               <p className="font-pixel text-[0.625rem] text-ink">
                 No valid password reset session found.
               </p>
-              <p className="font-pixel text-[0.5rem] text-ink-muted">
+              <p className="font-pixel text-[0.625rem] text-ink-muted">
                 Please request a new password reset link from the login page.
               </p>
             </CardContent>
@@ -97,7 +97,7 @@ export function ResetPassword() {
               <p className="font-pixel text-[0.625rem] text-ink">
                 Your password has been reset successfully!
               </p>
-              <p className="font-pixel text-[0.5rem] text-ink-muted">
+              <p className="font-pixel text-[0.625rem] text-ink-muted">
                 Redirecting to login...
               </p>
             </CardContent>
@@ -116,7 +116,7 @@ export function ResetPassword() {
             <img src="/BiblicalBattlePlansLogo.png" alt="Biblical Battle Plans" className="w-full h-full object-contain" />
           </div>
           <h1 className="font-pixel text-[0.75rem] text-ink text-center group-hover:text-sage transition-colors">BIBLICAL BATTLE PLANS</h1>
-          <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-1">"The sword of the Spirit"</p>
+          <p className="font-pixel text-[0.625rem] text-ink-muted text-center mt-1">"The sword of the Spirit"</p>
         </Link>
 
         <Card variant="elevated">
@@ -124,7 +124,7 @@ export function ResetPassword() {
             <h1 className="font-pixel text-sm text-ink text-center">
               SET NEW PASSWORD
             </h1>
-            <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-2">
+            <p className="font-pixel text-[0.625rem] text-ink-muted text-center mt-2">
               Enter your new password below
             </p>
           </CardHeader>
@@ -141,7 +141,7 @@ export function ResetPassword() {
           <CardFooter className="text-center">
             <Link
               to="/login"
-              className="font-pixel text-[0.5rem] text-ink-muted hover:text-gold transition-colors"
+              className="font-pixel text-[0.625rem] text-ink-muted hover:text-gold transition-colors"
             >
               ← Back to Login
             </Link>

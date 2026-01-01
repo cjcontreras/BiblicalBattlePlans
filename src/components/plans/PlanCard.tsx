@@ -50,7 +50,7 @@ export function PlanCard({ plan, userPlan, showStartButton = true }: PlanCardPro
         </p>
 
         <div className="space-y-2">
-          <div className="flex justify-between font-pixel text-[0.5rem]">
+          <div className="flex justify-between font-pixel text-[0.625rem]">
             <span className="text-ink-muted">Duration:</span>
             <span className="text-ink">
               {plan.duration_days > 0 ? `${plan.duration_days} days` : 'Ongoing'}
@@ -60,7 +60,7 @@ export function PlanCard({ plan, userPlan, showStartButton = true }: PlanCardPro
           {isActive && (
             <>
               {plan.daily_structure.type === 'free_reading' ? (
-                <div className="flex justify-between font-pixel text-[0.5rem]">
+                <div className="flex justify-between font-pixel text-[0.625rem]">
                   <span className="text-ink-muted">Total Logged:</span>
                   <span className="text-gold">
                     {userPlan.list_positions?.['free'] || 0} chapters
@@ -68,12 +68,12 @@ export function PlanCard({ plan, userPlan, showStartButton = true }: PlanCardPro
                 </div>
               ) : (
                 <>
-                  <div className="flex justify-between font-pixel text-[0.5rem]">
+                  <div className="flex justify-between font-pixel text-[0.625rem]">
                     <span className="text-ink-muted">Current Day:</span>
                     <span className="text-gold">{userPlan.current_day}</span>
                   </div>
                   <div className="mt-3">
-                    <div className="flex justify-between font-pixel text-[0.5rem] text-ink-muted mb-1">
+                    <div className="flex justify-between font-pixel text-[0.625rem] text-ink-muted mb-1">
                       <span>Progress</span>
                       <span>{progress}%</span>
                     </div>

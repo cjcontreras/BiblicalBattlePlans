@@ -142,7 +142,7 @@ export function PlanDetail() {
                   <Infinity className="w-6 h-6" />
                 )}
               </div>
-              <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">
+              <div className="font-pixel text-[0.625rem] text-ink-muted mt-1">
                 {plan.daily_structure.type === 'free_reading' ? 'Self-Paced' :
                  plan.duration_days > 0 ? 'Days' : 'Ongoing'}
               </div>
@@ -151,7 +151,7 @@ export function PlanDetail() {
               <div className="font-pixel text-xl text-ink">
                 {plan.daily_structure.type === 'free_reading' ? '-' : sampleReading.length}
               </div>
-              <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">
+              <div className="font-pixel text-[0.625rem] text-ink-muted mt-1">
                 {plan.daily_structure.type === 'free_reading' ? 'Your Choice' : 'Readings/Day'}
               </div>
             </div>
@@ -159,7 +159,7 @@ export function PlanDetail() {
 
           {/* Plan Type Description */}
           <div className="p-4 bg-parchment-light border border-border-subtle">
-            <div className="font-pixel text-[0.5rem] text-ink-muted mb-1">Quest Type</div>
+            <div className="font-pixel text-[0.625rem] text-ink-muted mb-1">Quest Type</div>
             <div className="font-pixel text-[0.625rem] text-ink">{typeInfo.description}</div>
           </div>
 
@@ -206,7 +206,7 @@ export function PlanDetail() {
                         }}
                         className="w-16 px-2 py-1 text-center font-pixel text-[0.625rem] text-ink bg-parchment-light border border-border-subtle focus:border-sage focus:outline-none"
                       />
-                      <span className="font-pixel text-[0.5rem] text-ink-muted">
+                      <span className="font-pixel text-[0.625rem] text-ink-muted">
                         of {plan.duration_days || '∞'}
                       </span>
                     </div>
@@ -228,12 +228,12 @@ export function PlanDetail() {
                         className="p-3 bg-parchment-light border border-border-subtle flex justify-between items-center"
                       >
                         <div>
-                          <div className="font-pixel text-[0.5rem] text-ink-muted">{section.label}</div>
+                          <div className="font-pixel text-[0.625rem] text-ink-muted">{section.label}</div>
                           <div className="font-pixel text-[0.625rem] text-ink">
                             {section.passage}
                           </div>
                         </div>
-                        <div className="font-pixel text-[0.5rem] text-ink-faint">○</div>
+                        <div className="font-pixel text-[0.625rem] text-ink-faint">○</div>
                       </div>
                     ))}
                   </div>
@@ -245,7 +245,7 @@ export function PlanDetail() {
           {/* Day 1 Preview for cycling plans (they don't have day-based schedules) */}
           {plan.daily_structure.type === 'cycling_lists' && (
             <div>
-              <h3 className="font-pixel text-[0.5rem] text-ink-muted mb-3">
+              <h3 className="font-pixel text-[0.625rem] text-ink-muted mb-3">
                 STARTING CHAPTERS
               </h3>
               <div className="space-y-2">
@@ -255,12 +255,12 @@ export function PlanDetail() {
                     className="p-3 bg-parchment-light border border-border-subtle flex justify-between items-center"
                   >
                     <div>
-                      <div className="font-pixel text-[0.5rem] text-ink-muted">{section.label}</div>
+                      <div className="font-pixel text-[0.625rem] text-ink-muted">{section.label}</div>
                       <div className="font-pixel text-[0.625rem] text-ink">
                         {section.passage}
                       </div>
                     </div>
-                    <div className="font-pixel text-[0.5rem] text-ink-faint">○</div>
+                    <div className="font-pixel text-[0.625rem] text-ink-faint">○</div>
                   </div>
                 ))}
               </div>
@@ -271,7 +271,7 @@ export function PlanDetail() {
         <CardFooter>
           {existingUserPlan ? (
             <div className="w-full space-y-3">
-              <p className="font-pixel text-[0.5rem] text-ink-muted text-center">
+              <p className="font-pixel text-[0.625rem] text-ink-muted text-center">
                 You already have this quest active
               </p>
               <Button
@@ -324,13 +324,13 @@ export function PlanDetail() {
                     <div className="font-pixel text-[0.625rem] text-gold">
                       List {index + 1}: {list.label}
                     </div>
-                    <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">
+                    <div className="font-pixel text-[0.625rem] text-ink-muted mt-1">
                       {list.books.map((b) => b.book).join(', ')}
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="font-pixel text-[0.625rem] text-ink">{list.total_chapters} chapters</div>
-                    <div className="font-pixel text-[0.5rem] text-ink-muted">
+                    <div className="font-pixel text-[0.625rem] text-ink-muted">
                       Cycles every {list.total_chapters} days
                     </div>
                   </div>

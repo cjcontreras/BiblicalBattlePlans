@@ -34,11 +34,11 @@ export function ArchivedPlanCard({ userPlan }: ArchivedPlanCardProps) {
 
       <CardContent className="flex-1">
         <div className="space-y-2">
-          <div className="flex justify-between font-pixel text-[0.5rem]">
+          <div className="flex justify-between font-pixel text-[0.625rem]">
             <span className="text-ink-muted">Status:</span>
             <span className="text-ink-faint">{userPlan.is_completed ? 'Completed' : 'In Progress'}</span>
           </div>
-          <div className="flex justify-between font-pixel text-[0.5rem]">
+          <div className="flex justify-between font-pixel text-[0.625rem]">
             <span className="text-ink-muted">Progress:</span>
             <span className="text-ink-faint">{progress}%</span>
           </div>

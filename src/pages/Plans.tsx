@@ -23,7 +23,7 @@ export function Plans() {
       <Card>
         <CardContent className="text-center py-8">
           <p className="font-pixel text-[0.625rem] text-danger">ERROR: Failed to load data</p>
-          <p className="font-pixel text-[0.5rem] text-ink-muted mt-2">{error.message}</p>
+          <p className="font-pixel text-[0.625rem] text-ink-muted mt-2">{error.message}</p>
           <button
             onClick={() => queryClient.refetchQueries()}
             className="mt-4 font-pixel text-[0.625rem] text-sage hover:text-sage-dark underline"
@@ -102,30 +102,30 @@ export function Plans() {
       {/* Plan Types Legend */}
       <section>
         <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent -mx-4 px-4 py-3 mb-4 border-t border-b border-border-subtle">
-          <h3 className="font-pixel text-[0.5rem] text-ink-muted">QUEST TYPES</h3>
+          <h3 className="font-pixel text-[0.625rem] text-ink-muted">QUEST TYPES</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-3 bg-parchment-light border border-border-subtle">
             <span className="font-pixel text-[0.625rem] text-warning">CYCLING</span>
-            <p className="font-pixel text-[0.5rem] text-ink-muted mt-2 leading-relaxed">
+            <p className="font-pixel text-[0.625rem] text-ink-muted mt-2 leading-relaxed">
               Multiple independent reading lists that cycle at different rates (e.g., Horner's System)
             </p>
           </div>
           <div className="p-3 bg-parchment-light border border-border-subtle">
             <span className="font-pixel text-[0.625rem] text-sage">FREE</span>
-            <p className="font-pixel text-[0.5rem] text-ink-muted mt-2 leading-relaxed">
+            <p className="font-pixel text-[0.625rem] text-ink-muted mt-2 leading-relaxed">
               Log your own reading without a fixed schedule. Perfect for flexible study.
             </p>
           </div>
           <div className="p-3 bg-parchment-light border border-border-subtle">
             <span className="font-pixel text-[0.625rem] text-ink">SEQUENTIAL</span>
-            <p className="font-pixel text-[0.5rem] text-ink-muted mt-2 leading-relaxed">
+            <p className="font-pixel text-[0.625rem] text-ink-muted mt-2 leading-relaxed">
               Read through the Bible in order from Genesis to Revelation
             </p>
           </div>
           <div className="p-3 bg-parchment-light border border-border-subtle">
             <span className="font-pixel text-[0.625rem] text-blue">SECTIONAL</span>
-            <p className="font-pixel text-[0.5rem] text-ink-muted mt-2 leading-relaxed">
+            <p className="font-pixel text-[0.625rem] text-ink-muted mt-2 leading-relaxed">
               Daily readings from multiple sections (OT, NT, Psalms, Proverbs)
             </p>
           </div>

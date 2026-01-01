@@ -46,7 +46,7 @@ export function ForgotPassword() {
               <p className="font-pixel text-[0.625rem] text-ink">
                 Check your email for password reset instructions.
               </p>
-              <p className="font-pixel text-[0.5rem] text-ink-muted">
+              <p className="font-pixel text-[0.625rem] text-ink-muted">
                 The link will expire in 1 hour.
               </p>
             </CardContent>
@@ -74,7 +74,7 @@ export function ForgotPassword() {
             <img src="/BiblicalBattlePlansLogo.png" alt="Biblical Battle Plans" className="w-full h-full object-contain" />
           </div>
           <h1 className="font-pixel text-[0.75rem] text-ink text-center group-hover:text-sage transition-colors">BIBLICAL BATTLE PLANS</h1>
-          <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-1">"The sword of the Spirit"</p>
+          <p className="font-pixel text-[0.625rem] text-ink-muted text-center mt-1">"The sword of the Spirit"</p>
         </Link>
 
         <Card variant="elevated">
@@ -82,7 +82,7 @@ export function ForgotPassword() {
             <h1 className="font-pixel text-sm text-ink text-center">
               RECOVER ACCESS
             </h1>
-            <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-2">
+            <p className="font-pixel text-[0.625rem] text-ink-muted text-center mt-2">
               Enter your email to receive reset instructions
             </p>
           </CardHeader>
@@ -99,7 +99,7 @@ export function ForgotPassword() {
           <CardFooter className="text-center">
             <Link
               to="/login"
-              className="font-pixel text-[0.5rem] text-ink-muted hover:text-gold transition-colors"
+              className="font-pixel text-[0.625rem] text-ink-muted hover:text-gold transition-colors"
             >
               ← Back to Login
             </Link>

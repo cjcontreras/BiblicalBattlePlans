@@ -27,7 +27,7 @@ export function PlanProgress({
     <div className={`space-y-4 ${className}`}>
       {/* Today's Progress */}
       <div>
-        <div className="flex justify-between font-pixel text-[0.5rem] mb-2">
+        <div className="flex justify-between font-pixel text-[0.625rem] mb-2">
           <span className="text-ink-muted">Today's Progress</span>
           <span className="text-gold">
             {completedToday}/{totalToday} {unit}
@@ -43,7 +43,7 @@ export function PlanProgress({
       {/* Overall Progress */}
       {totalDays > 0 && (
         <div>
-          <div className="flex justify-between font-pixel text-[0.5rem] mb-2">
+          <div className="flex justify-between font-pixel text-[0.625rem] mb-2">
             <span className="text-ink-muted">Quest Progress</span>
             <span className="text-ink flex items-center gap-2">
               <span>Reading {currentDay} of {totalDays}</span>

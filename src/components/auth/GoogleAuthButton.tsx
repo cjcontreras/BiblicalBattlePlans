@@ -56,7 +56,7 @@ export function GoogleAuthButton({ className = '' }: GoogleAuthButtonProps) {
         Continue with Google
       </Button>
       {error && (
-        <p className="mt-2 font-pixel text-[0.5rem] text-danger text-center">
+        <p className="mt-2 font-pixel text-[0.625rem] text-danger text-center">
           {error}
         </p>
       )}
