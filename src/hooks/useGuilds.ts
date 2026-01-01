@@ -105,7 +105,13 @@ export function useGuildByInviteCode(code: string) {
   return useQuery({
     queryKey: guildKeys.byInviteCode(code.toUpperCase()),
     queryFn: async () => {
-      // Use secure RPC function for guild preview
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.rpc as any)('get_guild_by_invite_code', {
+        p_invite_code: code,
+      })
+
+      if (error) throw error
+
       type GuildPreviewRow = {
         id: string
         name: string
@@ -115,21 +121,11 @@ export function useGuildByInviteCode(code: string) {
         created_at: string
       }
 
-      type GetGuildRpcFn = (
-        fn: string,
-        args: { p_invite_code: string }
-      ) => Promise<{ data: GuildPreviewRow[] | null; error: Error | null }>
-
-      const rpc = supabase.rpc as unknown as GetGuildRpcFn
-      const { data, error } = await rpc('get_guild_by_invite_code', {
-        p_invite_code: code,
-      })
-
-      if (error) throw error
-      if (!data || data.length === 0) throw new Error('Guild not found')
+      const result = data as GuildPreviewRow[] | null
+      if (!result || result.length === 0) throw new Error('Guild not found')
 
       // Return as Guild type (some fields won't be present but that's ok for preview)
-      return data[0] as unknown as Guild
+      return result[0] as unknown as Guild
     },
     enabled: !!code && code.length >= 6,
   })
@@ -214,13 +210,8 @@ export function useJoinGuild() {
       if (!user) throw new Error('Not authenticated')
 
       // Use secure RPC function that validates invite code
-      type JoinGuildRpcFn = (
-        fn: string,
-        args: { p_invite_code: string }
-      ) => Promise<{ data: { guild_id: string; guild_name: string }[] | null; error: Error | null }>
-
-      const rpc = supabase.rpc as unknown as JoinGuildRpcFn
-      const { data, error } = await rpc('join_guild_by_invite_code', {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.rpc as any)('join_guild_by_invite_code', {
         p_invite_code: inviteCode,
       })
 
@@ -230,11 +221,13 @@ export function useJoinGuild() {
         throw new Error(message)
       }
 
-      if (!data || data.length === 0) {
+      // RPC returns array of {guild_id, guild_name}
+      const result = data as { guild_id: string; guild_name: string }[] | null
+      if (!result || result.length === 0) {
         throw new Error('Failed to join guild')
       }
 
-      return { guildId: data[0].guild_id, guildName: data[0].guild_name }
+      return { guildId: result[0].guild_id, guildName: result[0].guild_name }
     },
     onSuccess: (data) => {
       if (user) {
@@ -257,14 +250,8 @@ export function useLeaveGuild() {
     mutationFn: async (guildId: string) => {
       if (!user) throw new Error('Not authenticated')
 
-      // Use atomic RPC function
-      type LeaveGuildRpcFn = (
-        fn: string,
-        args: { p_guild_id: string }
-      ) => Promise<{ data: null; error: Error | null }>
-
-      const rpc = supabase.rpc as unknown as LeaveGuildRpcFn
-      const { error } = await rpc('leave_guild', { p_guild_id: guildId })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.rpc as any)('leave_guild', { p_guild_id: guildId })
 
       if (error) {
         throw new Error(error.message || 'Failed to leave guild')
@@ -361,14 +348,8 @@ export function useDeleteGuild() {
     mutationFn: async (guildId: string) => {
       if (!user) throw new Error('Not authenticated')
 
-      // Use atomic RPC function
-      type DeleteGuildRpcFn = (
-        fn: string,
-        args: { p_guild_id: string }
-      ) => Promise<{ data: null; error: Error | null }>
-
-      const rpc = supabase.rpc as unknown as DeleteGuildRpcFn
-      const { error } = await rpc('delete_guild', { p_guild_id: guildId })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.rpc as any)('delete_guild', { p_guild_id: guildId })
 
       if (error) {
         throw new Error(error.message || 'Failed to delete guild')
@@ -457,14 +438,8 @@ export function useDemoteMember() {
       guildId: string
       userId: string
     }) => {
-      // Use atomic RPC function
-      type DemoteMemberRpcFn = (
-        fn: string,
-        args: { p_guild_id: string; p_user_id: string }
-      ) => Promise<{ data: null; error: Error | null }>
-
-      const rpc = supabase.rpc as unknown as DemoteMemberRpcFn
-      const { error } = await rpc('demote_guild_member', {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.rpc as any)('demote_guild_member', {
         p_guild_id: guildId,
         p_user_id: userId,
       })

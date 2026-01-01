@@ -16,22 +16,15 @@ type GuildChapterCountRow = {
 
 // Typed RPC call helper for guild chapter counts
 async function getGuildChapterCounts(guildId: string, weekStart: string, monthStart: string) {
-  // Use type assertion to work around Supabase's strict RPC typing
-  // The function exists in the database but isn't auto-generated in types
-  type RpcFn = (
-    fn: string,
-    args: { p_guild_id: string; p_week_start: string; p_month_start: string }
-  ) => Promise<{ data: GuildChapterCountRow[] | null; error: Error | null }>
-
-  const rpc = supabase.rpc as unknown as RpcFn
-  const { data, error } = await rpc('get_guild_chapter_counts', {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase.rpc as any)('get_guild_chapter_counts', {
     p_guild_id: guildId,
     p_week_start: weekStart,
     p_month_start: monthStart,
   })
 
   if (error) throw error
-  return data
+  return data as GuildChapterCountRow[] | null
 }
 
 interface GuildLeaderboardProps {
