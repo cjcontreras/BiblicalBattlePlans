@@ -81,8 +81,8 @@ BEGIN
     INSERT INTO guild_activities (guild_id, user_id, activity_type, metadata)
     VALUES (NEW.guild_id, NEW.user_id, 'member_joined', '{}');
   EXCEPTION WHEN OTHERS THEN
-    RAISE WARNING '[GuildActivity] Failed to log member_joined for user % in guild %: %',
-      NEW.user_id, NEW.guild_id, SQLERRM;
+    RAISE WARNING '[GuildActivity] Failed to log member_joined for user % in guild %: % (SQLSTATE: %)',
+      NEW.user_id, NEW.guild_id, SQLERRM, SQLSTATE;
   END;
   RETURN NEW;
 END;
@@ -136,8 +136,8 @@ BEGIN
       END LOOP;
     END IF;
   EXCEPTION WHEN OTHERS THEN
-    RAISE WARNING '[GuildActivity] Failed to log reading_completed for user %: %',
-      NEW.user_id, SQLERRM;
+    RAISE WARNING '[GuildActivity] Failed to log reading_completed for user % (plan %): % (SQLSTATE: %)',
+      NEW.user_id, NEW.user_plan_id, SQLERRM, SQLSTATE;
   END;
   RETURN NEW;
 END;
@@ -227,8 +227,8 @@ BEGIN
       END LOOP;
     END IF;
   EXCEPTION WHEN OTHERS THEN
-    RAISE WARNING '[GuildActivity] Failed to log streak_milestone for user %: %',
-      NEW.id, SQLERRM;
+    RAISE WARNING '[GuildActivity] Failed to log streak_milestone for user % (streak %): % (SQLSTATE: %)',
+      NEW.id, NEW.current_streak, SQLERRM, SQLSTATE;
   END;
 
   RETURN NEW;
@@ -271,8 +271,8 @@ BEGIN
       );
     END LOOP;
   EXCEPTION WHEN OTHERS THEN
-    RAISE WARNING '[GuildActivity] Failed to log plan_started for user %: %',
-      NEW.user_id, SQLERRM;
+    RAISE WARNING '[GuildActivity] Failed to log plan_started for user % (plan %): % (SQLSTATE: %)',
+      NEW.user_id, NEW.plan_id, SQLERRM, SQLSTATE;
   END;
   RETURN NEW;
 END;
@@ -322,8 +322,8 @@ BEGIN
         );
       END LOOP;
     EXCEPTION WHEN OTHERS THEN
-      RAISE WARNING '[GuildActivity] Failed to log plan_completed for user %: %',
-        NEW.user_id, SQLERRM;
+      RAISE WARNING '[GuildActivity] Failed to log plan_completed for user % (plan %): % (SQLSTATE: %)',
+        NEW.user_id, NEW.plan_id, SQLERRM, SQLSTATE;
     END;
   END IF;
   RETURN NEW;

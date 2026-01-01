@@ -145,6 +145,7 @@ export interface Database {
           is_public: boolean
           is_active: boolean
           member_count: number
+          recommended_plan_id: string | null
           created_at: string
         }
         Insert: {
@@ -157,6 +158,7 @@ export interface Database {
           is_public?: boolean
           is_active?: boolean
           member_count?: number
+          recommended_plan_id?: string | null
           created_at?: string
         }
         Update: {
@@ -169,6 +171,7 @@ export interface Database {
           is_public?: boolean
           is_active?: boolean
           member_count?: number
+          recommended_plan_id?: string | null
           created_at?: string
         }
       }
@@ -193,6 +196,32 @@ export interface Database {
           user_id?: string
           role?: string
           joined_at?: string
+        }
+      }
+      guild_activities: {
+        Row: {
+          id: string
+          guild_id: string
+          user_id: string
+          activity_type: 'reading_completed' | 'streak_milestone' | 'rank_achieved' | 'member_joined' | 'plan_started' | 'plan_completed'
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          guild_id: string
+          user_id: string
+          activity_type: 'reading_completed' | 'streak_milestone' | 'rank_achieved' | 'member_joined' | 'plan_started' | 'plan_completed'
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          guild_id?: string
+          user_id?: string
+          activity_type?: 'reading_completed' | 'streak_milestone' | 'rank_achieved' | 'member_joined' | 'plan_started' | 'plan_completed'
+          metadata?: Json
+          created_at?: string
         }
       }
     }

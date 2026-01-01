@@ -7,6 +7,33 @@ import { getStreakRank } from '../../hooks/useStats'
 import { LoadingSpinner } from '../ui'
 import type { LeaderboardSortBy, GuildMember, Profile } from '../../types'
 
+// Type for the RPC function response
+type GuildChapterCountRow = {
+  user_id: string
+  chapters_week: number
+  chapters_month: number
+}
+
+// Typed RPC call helper for guild chapter counts
+async function getGuildChapterCounts(guildId: string, weekStart: string, monthStart: string) {
+  // Use type assertion to work around Supabase's strict RPC typing
+  // The function exists in the database but isn't auto-generated in types
+  type RpcFn = (
+    fn: string,
+    args: { p_guild_id: string; p_week_start: string; p_month_start: string }
+  ) => Promise<{ data: GuildChapterCountRow[] | null; error: Error | null }>
+
+  const rpc = supabase.rpc as unknown as RpcFn
+  const { data, error } = await rpc('get_guild_chapter_counts', {
+    p_guild_id: guildId,
+    p_week_start: weekStart,
+    p_month_start: monthStart,
+  })
+
+  if (error) throw error
+  return data
+}
+
 interface GuildLeaderboardProps {
   guildId: string
   members: (GuildMember & { profile: Profile })[]
@@ -49,28 +76,7 @@ export function GuildLeaderboard({ guildId, members }: GuildLeaderboardProps) {
     queryKey: ['guildChapterCounts', guildId],
     queryFn: async () => {
       const { weekStart, monthStart } = getDateRanges()
-
-      type ChapterCountRow = {
-        user_id: string
-        chapters_week: number
-        chapters_month: number
-      }
-
-      // Call the database RPC function for accurate chapter counts
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.rpc as any)(
-        'get_guild_chapter_counts',
-        {
-          p_guild_id: guildId,
-          p_week_start: weekStart,
-          p_month_start: monthStart,
-        }
-      ) as { data: ChapterCountRow[] | null; error: Error | null }
-
-      if (error) {
-        console.error('[Leaderboard] Failed to fetch chapter counts:', error)
-        throw error
-      }
+      const data = await getGuildChapterCounts(guildId, weekStart, monthStart)
 
       // Convert array result to lookup object
       const counts: Record<string, { week: number; month: number }> = {}

@@ -99,19 +99,37 @@ export function useGuild(guildId: string) {
 
 /**
  * Get a guild by its invite code (for preview before joining)
+ * Uses secure RPC function that returns limited guild info (no invite_code exposed)
  */
 export function useGuildByInviteCode(code: string) {
   return useQuery({
     queryKey: guildKeys.byInviteCode(code.toUpperCase()),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('guilds')
-        .select('*')
-        .eq('invite_code', code.toUpperCase())
-        .single()
+      // Use secure RPC function for guild preview
+      type GuildPreviewRow = {
+        id: string
+        name: string
+        description: string | null
+        member_count: number
+        is_public: boolean
+        created_at: string
+      }
+
+      type GetGuildRpcFn = (
+        fn: string,
+        args: { p_invite_code: string }
+      ) => Promise<{ data: GuildPreviewRow[] | null; error: Error | null }>
+
+      const rpc = supabase.rpc as unknown as GetGuildRpcFn
+      const { data, error } = await rpc('get_guild_by_invite_code', {
+        p_invite_code: code,
+      })
 
       if (error) throw error
-      return data as Guild
+      if (!data || data.length === 0) throw new Error('Guild not found')
+
+      // Return as Guild type (some fields won't be present but that's ok for preview)
+      return data[0] as unknown as Guild
     },
     enabled: !!code && code.length >= 6,
   })
@@ -185,6 +203,7 @@ export function useCreateGuild() {
 
 /**
  * Join a guild via invite code
+ * Uses secure RPC function that validates invite code at database level
  */
 export function useJoinGuild() {
   const queryClient = useQueryClient()
@@ -194,43 +213,28 @@ export function useJoinGuild() {
     mutationFn: async (inviteCode: string) => {
       if (!user) throw new Error('Not authenticated')
 
-      // Find the guild by invite code
-      const { data: guild, error: findError } = await (supabase
-        .from('guilds') as ReturnType<typeof supabase.from>)
-        .select('id, name')
-        .eq('invite_code', inviteCode.toUpperCase())
-        .single()
+      // Use secure RPC function that validates invite code
+      type JoinGuildRpcFn = (
+        fn: string,
+        args: { p_invite_code: string }
+      ) => Promise<{ data: { guild_id: string; guild_name: string }[] | null; error: Error | null }>
 
-      if (findError || !guild) {
-        throw new Error('Guild not found. Please check the invite code.')
+      const rpc = supabase.rpc as unknown as JoinGuildRpcFn
+      const { data, error } = await rpc('join_guild_by_invite_code', {
+        p_invite_code: inviteCode,
+      })
+
+      if (error) {
+        // Extract user-friendly message from database error
+        const message = error.message || 'Failed to join guild'
+        throw new Error(message)
       }
 
-      const guildData = guild as { id: string; name: string }
-
-      // Check if already a member
-      const { data: existing } = await (supabase
-        .from('guild_members') as ReturnType<typeof supabase.from>)
-        .select('id')
-        .eq('guild_id', guildData.id)
-        .eq('user_id', user.id)
-        .maybeSingle()
-
-      if (existing) {
-        throw new Error('You are already a member of this guild.')
+      if (!data || data.length === 0) {
+        throw new Error('Failed to join guild')
       }
 
-      // Join the guild as a member
-      const { error: joinError } = await (supabase
-        .from('guild_members') as ReturnType<typeof supabase.from>)
-        .insert({
-          guild_id: guildData.id,
-          user_id: user.id,
-          role: 'member',
-        })
-
-      if (joinError) throw joinError
-
-      return { guildId: guildData.id, guildName: guildData.name }
+      return { guildId: data[0].guild_id, guildName: data[0].guild_name }
     },
     onSuccess: (data) => {
       if (user) {

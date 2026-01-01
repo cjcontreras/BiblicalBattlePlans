@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { toast } from 'sonner'
 import { ChevronLeft, Users, Settings, UserPlus, LogOut, Crown, Trash2, BookOpen, Play } from 'lucide-react'
 import { Card, CardContent, Button, Badge, LoadingSpinner } from '../components/ui'
 import {
@@ -33,6 +34,14 @@ export function Guild() {
   const isAdmin = membership?.role === 'admin'
   const isOnlyMember = guild?.members.length === 1
 
+  // Filter members to only those with valid profiles (handles edge case of deleted profiles)
+  const membersWithProfiles = useMemo(() => {
+    if (!guild?.members) return []
+    return guild.members.filter(
+      (m): m is typeof m & { profile: Profile } => m.profile != null
+    )
+  }, [guild?.members])
+
   // Check if user is already on the recommended plan
   const recommendedPlan = guild?.recommended_plan
   const isOnRecommendedPlan = userPlans?.some(
@@ -46,7 +55,7 @@ export function Guild() {
       await startPlan.mutateAsync({ planId: recommendedPlan.id })
       navigate('/dashboard')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to start plan')
+      toast.error(err instanceof Error ? err.message : 'Failed to start plan')
     }
   }
 
@@ -63,7 +72,7 @@ export function Guild() {
       await leaveGuild.mutateAsync(id)
       navigate('/guild')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to leave guild')
+      toast.error(err instanceof Error ? err.message : 'Failed to leave guild')
     }
   }
 
@@ -76,7 +85,7 @@ export function Guild() {
       await deleteGuild.mutateAsync(id)
       navigate('/guild')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete guild')
+      toast.error(err instanceof Error ? err.message : 'Failed to delete guild')
     }
   }
 
@@ -239,7 +248,7 @@ export function Guild() {
         <div className="p-4">
           {activeTab === 'members' && (
             <GuildMemberList
-              members={guild.members as (typeof guild.members[number] & { profile: Profile })[]}
+              members={membersWithProfiles}
               guildId={guild.id}
               isAdmin={isAdmin}
             />
@@ -248,14 +257,14 @@ export function Guild() {
           {activeTab === 'leaderboard' && (
             <GuildLeaderboard
               guildId={guild.id}
-              members={guild.members as (typeof guild.members[number] & { profile: Profile })[]}
+              members={membersWithProfiles}
             />
           )}
 
           {activeTab === 'activity' && (
             <GuildActivityFeed
               guildId={guild.id}
-              members={guild.members as (typeof guild.members[number] & { profile: Profile })[]}
+              members={membersWithProfiles}
             />
           )}
         </div>

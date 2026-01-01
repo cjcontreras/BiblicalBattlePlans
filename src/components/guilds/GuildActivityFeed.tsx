@@ -75,15 +75,8 @@ function formatTimeAgo(dateString: string): string {
 export function GuildActivityFeed({ guildId, members }: GuildActivityFeedProps) {
   const { data: activities, isLoading, error, refetch } = useGuildActivities(guildId)
 
-  // Get current member user IDs for filtering
+  // Get current member user IDs to identify former members
   const memberUserIds = useMemo(() => new Set(members.map((m) => m.user_id)), [members])
-
-  // Filter activities to only show those from current members
-  // This keeps Activity tab in sync with Members/Leaderboard tabs
-  const filteredActivities = useMemo(() => {
-    if (!activities) return []
-    return activities.filter((activity) => memberUserIds.has(activity.user_id))
-  }, [activities, memberUserIds])
 
   if (isLoading) {
     return (
@@ -110,7 +103,7 @@ export function GuildActivityFeed({ guildId, members }: GuildActivityFeedProps) 
     )
   }
 
-  if (filteredActivities.length === 0) {
+  if (!activities || activities.length === 0) {
     return (
       <div className="text-center py-8">
         <p className="font-pixel text-[0.625rem] text-ink-muted">
@@ -125,7 +118,7 @@ export function GuildActivityFeed({ guildId, members }: GuildActivityFeedProps) 
 
   return (
     <div className="space-y-3">
-      {filteredActivities.map((activity) => {
+      {activities.map((activity) => {
         const config = activityConfig[activity.activity_type]
         if (!config) {
           console.warn('[GuildActivity] Unknown activity type:', activity.activity_type)
@@ -133,6 +126,7 @@ export function GuildActivityFeed({ guildId, members }: GuildActivityFeedProps) 
         }
 
         const Icon = config.icon
+        const isFormerMember = !memberUserIds.has(activity.user_id)
         const displayName =
           activity.profile?.display_name ||
           activity.profile?.username ||
@@ -141,17 +135,22 @@ export function GuildActivityFeed({ guildId, members }: GuildActivityFeedProps) 
         return (
           <div
             key={activity.id}
-            className="flex items-start gap-3 p-3 bg-parchment-light border border-border-subtle"
+            className={`flex items-start gap-3 p-3 border border-border-subtle ${
+              isFormerMember ? 'bg-parchment-dark/50' : 'bg-parchment-light'
+            }`}
           >
             {/* Icon */}
-            <div className={`flex-shrink-0 mt-0.5 ${config.color}`}>
+            <div className={`flex-shrink-0 mt-0.5 ${isFormerMember ? 'text-ink-muted' : config.color}`}>
               <Icon className="w-4 h-4" />
             </div>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <p className="font-pixel text-[0.625rem] text-ink leading-relaxed">
-                <span className="font-bold">{displayName}</span>{' '}
+              <p className={`font-pixel text-[0.625rem] leading-relaxed ${isFormerMember ? 'text-ink-muted' : 'text-ink'}`}>
+                <span className="font-bold">{displayName}</span>
+                {isFormerMember && (
+                  <span className="font-normal text-[0.5rem] text-ink-faint ml-1">(former member)</span>
+                )}{' '}
                 {config.getMessage(activity)}
               </p>
               <p className="font-pixel text-[0.5rem] text-ink-muted mt-1">

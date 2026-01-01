@@ -1,5 +1,5 @@
--- RPC function to calculate accurate chapter counts for guild leaderboard
--- Uses calculate_chapters_for_progress to get real chapter counts from daily_progress
+-- Security fix: Add authorization check to get_guild_chapter_counts
+-- Prevents unauthorized access to chapter counts for guilds the caller isn't a member of
 
 CREATE OR REPLACE FUNCTION get_guild_chapter_counts(
   p_guild_id UUID,
@@ -37,9 +37,3 @@ BEGIN
   GROUP BY gm.user_id;
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
-
--- Grant execute permission to authenticated users
-GRANT EXECUTE ON FUNCTION get_guild_chapter_counts(UUID, DATE, DATE) TO authenticated;
-
-COMMENT ON FUNCTION get_guild_chapter_counts(UUID, DATE, DATE) IS
-  'Calculates accurate weekly and monthly chapter counts for all members of a guild using the calculate_chapters_for_progress function';
