@@ -92,10 +92,10 @@ export function Login() {
                 <p className="font-pixel text-[0.625rem] text-warning">
                   ACTION REQUIRED
                 </p>
-                <p className="font-pixel text-[0.5rem] text-ink">
+                <p className="font-pixel text-[0.625rem] text-ink">
                   You must confirm your email address before you can login.
                 </p>
-                <p className="font-pixel text-[0.5rem] text-ink-muted">
+                <p className="font-pixel text-[0.625rem] text-ink-muted">
                   Check your inbox (and spam folder) for a confirmation link from us.
                 </p>
               </div>
@@ -108,7 +108,7 @@ export function Login() {
               >
                 I've confirmed my email — Try again
               </button>
-              <p className="font-pixel text-[0.5rem] text-ink-muted">
+              <p className="font-pixel text-[0.625rem] text-ink-muted">
                 Didn't receive an email?{' '}
                 <Link
                   to="/signup"
@@ -133,7 +133,7 @@ export function Login() {
             <img src="/BiblicalBattlePlansLogo.png" alt="Biblical Battle Plans" className="w-full h-full object-contain" />
           </div>
           <h1 className="font-pixel text-[0.75rem] text-ink text-center group-hover:text-sage transition-colors">BIBLICAL BATTLE PLANS</h1>
-          <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-1">"The sword of the Spirit"</p>
+          <p className="font-pixel text-[0.625rem] text-ink-muted text-center mt-1">"The sword of the Spirit"</p>
         </Link>
 
         <Card variant="elevated">
@@ -141,7 +141,7 @@ export function Login() {
             <h1 className="font-pixel text-sm text-ink text-center">
               HERO LOGIN
             </h1>
-            <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-2">
+            <p className="font-pixel text-[0.625rem] text-ink-muted text-center mt-2">
               Enter your credentials to continue
             </p>
           </CardHeader>
@@ -159,7 +159,7 @@ export function Login() {
                 <div className="w-full border-t border-border-subtle" />
               </div>
               <div className="relative flex justify-center">
-                <span className="px-3 bg-parchment font-pixel text-[0.5rem] text-ink-muted">
+                <span className="px-3 bg-parchment font-pixel text-[0.625rem] text-ink-muted">
                   OR
                 </span>
               </div>
@@ -171,11 +171,11 @@ export function Login() {
           <CardFooter className="flex flex-col gap-3 text-center">
             <Link
               to="/forgot-password"
-              className="font-pixel text-[0.5rem] text-ink-muted hover:text-gold transition-colors"
+              className="font-pixel text-[0.625rem] text-ink-muted hover:text-gold transition-colors"
             >
               Forgot password?
             </Link>
-            <p className="font-pixel text-[0.5rem] text-ink-muted">
+            <p className="font-pixel text-[0.625rem] text-ink-muted">
               New hero?{' '}
               <Link
                 to="/signup"
@@ -187,7 +187,7 @@ export function Login() {
           </CardFooter>
         </Card>
 
-        <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-6">
+        <p className="font-pixel text-[0.625rem] text-ink-muted text-center mt-6">
           "Put on the full armor of God" — Ephesians 6:11
         </p>
       </div>

@@ -408,7 +408,7 @@ export function ActivePlan() {
                 <div className="mt-4 py-6 px-4 border-2 border-gold bg-gold/10 text-center">
                   <Trophy className="w-8 h-8 text-gold mx-auto mb-2" />
                   <p className="font-pixel text-[0.75rem] text-gold">QUEST COMPLETE!</p>
-                  <p className="font-pixel text-[0.5rem] text-ink-muted mt-2">
+                  <p className="font-pixel text-[0.625rem] text-ink-muted mt-2">
                     Congratulations! You have completed this reading plan.
                   </p>
                 </div>
@@ -424,7 +424,7 @@ export function ActivePlan() {
                     ${isMutating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                   `}
                 >
-                  <span>CONTINUE TO NEXT DAY</span>
+                  <span>CONTINUE TO NEXT READING</span>
                   <ChevronRight className="w-4 h-4" />
                 </button>
               )
@@ -440,12 +440,12 @@ export function ActivePlan() {
                       <Swords className="w-6 h-6" />
                     </div>
                     <p className="font-pixel text-[0.625rem]">DAILY GOAL ACHIEVED!</p>
-                    <p className="font-pixel text-[0.5rem] text-ink-muted mt-1">
+                    <p className="font-pixel text-[0.625rem] text-ink-muted mt-1">
                       Keep reading or come back tomorrow
                     </p>
                   </div>
                 ) : (
-                  <p className="font-pixel text-[0.5rem] text-ink-muted">
+                  <p className="font-pixel text-[0.625rem] text-ink-muted">
                     {streakMinimum - chaptersReadToday} more chapter{streakMinimum - chaptersReadToday !== 1 ? 's' : ''} to reach your daily goal
                   </p>
                 )}
@@ -569,15 +569,15 @@ export function ActivePlan() {
           <div className="p-4 space-y-3">
             <div className="flex items-start gap-3">
               <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
-              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">Each list tracks your position independently. Read as many chapters as you want from any list.</p>
+              <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">Each list tracks your position independently. Read as many chapters as you want from any list.</p>
             </div>
             <div className="flex items-start gap-3">
               <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
-              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">When you finish a list, it cycles back to the beginning. Lists repeat at different rates.</p>
+              <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">When you finish a list, it cycles back to the beginning. Lists repeat at different rates.</p>
             </div>
             <div className="flex items-start gap-3">
               <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
-              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">Your daily goal is {streakMinimum} chapters (configurable in your profile) to maintain your streak.</p>
+              <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">Your daily goal is {streakMinimum} chapters (configurable in your profile) to maintain your streak.</p>
             </div>
           </div>
         </Card>
@@ -594,15 +594,15 @@ export function ActivePlan() {
           <div className="p-4 space-y-3">
             <div className="flex items-start gap-3">
               <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
-              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">Complete one reading per day from different parts of Scripture: Epistles, Law, History, Psalms, Poetry, Prophecy, and Gospels.</p>
+              <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">Complete one reading per day from different parts of Scripture: Epistles, Law, History, Psalms, Poetry, Prophecy, and Gospels.</p>
             </div>
             <div className="flex items-start gap-3">
               <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
-              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">Each week has 7 readings. Go at your own pace—the plan progresses when you mark readings complete.</p>
+              <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">Each week has 7 readings. Go at your own pace—the plan progresses when you mark readings complete.</p>
             </div>
             <div className="flex items-start gap-3">
               <ChevronRight className="w-4 h-4 text-sage flex-shrink-0 mt-0.5" />
-              <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">Complete all 52 weeks to read through the entire Bible with balanced daily variety.</p>
+              <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">Complete all 52 weeks to read through the entire Bible with balanced daily variety.</p>
             </div>
           </div>
         </Card>

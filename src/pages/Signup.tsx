@@ -51,10 +51,10 @@ export function Signup() {
                 <p className="font-pixel text-[0.625rem] text-warning">
                   IMPORTANT
                 </p>
-                <p className="font-pixel text-[0.5rem] text-ink">
+                <p className="font-pixel text-[0.625rem] text-ink">
                   You must click the confirmation link in your email before you can login.
                 </p>
-                <p className="font-pixel text-[0.5rem] text-ink-muted">
+                <p className="font-pixel text-[0.625rem] text-ink-muted">
                   Check your spam folder if you don't see it within a few minutes.
                 </p>
               </div>
@@ -67,7 +67,7 @@ export function Signup() {
               >
                 I've confirmed my email — Go to Login
               </Link>
-              <p className="font-pixel text-[0.5rem] text-ink-muted">
+              <p className="font-pixel text-[0.625rem] text-ink-muted">
                 Didn't receive an email? Check spam or try signing up again.
               </p>
             </CardFooter>
@@ -86,7 +86,7 @@ export function Signup() {
             <img src="/BiblicalBattlePlansLogo.png" alt="Biblical Battle Plans" className="w-full h-full object-contain" />
           </div>
           <h1 className="font-pixel text-[0.75rem] text-ink text-center group-hover:text-sage transition-colors">BIBLICAL BATTLE PLANS</h1>
-          <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-1">"The sword of the Spirit"</p>
+          <p className="font-pixel text-[0.625rem] text-ink-muted text-center mt-1">"The sword of the Spirit"</p>
         </Link>
 
         <Card variant="elevated">
@@ -94,7 +94,7 @@ export function Signup() {
             <h1 className="font-pixel text-sm text-ink text-center">
               ENLIST NOW
             </h1>
-            <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-2">
+            <p className="font-pixel text-[0.625rem] text-ink-muted text-center mt-2">
               Join the ranks and begin your quest
             </p>
           </CardHeader>
@@ -112,7 +112,7 @@ export function Signup() {
                 <div className="w-full border-t border-border-subtle" />
               </div>
               <div className="relative flex justify-center">
-                <span className="px-3 bg-parchment font-pixel text-[0.5rem] text-ink-muted">
+                <span className="px-3 bg-parchment font-pixel text-[0.625rem] text-ink-muted">
                   OR
                 </span>
               </div>
@@ -122,7 +122,7 @@ export function Signup() {
           </CardContent>
 
           <CardFooter className="text-center">
-            <p className="font-pixel text-[0.5rem] text-ink-muted">
+            <p className="font-pixel text-[0.625rem] text-ink-muted">
               Already enlisted?{' '}
               <Link
                 to="/login"
@@ -134,7 +134,7 @@ export function Signup() {
           </CardFooter>
         </Card>
 
-        <p className="font-pixel text-[0.5rem] text-ink-muted text-center mt-6">
+        <p className="font-pixel text-[0.625rem] text-ink-muted text-center mt-6">
           "Fight the good fight of faith" — 1 Timothy 6:12
         </p>
       </div>

@@ -42,7 +42,7 @@ export function ProgressBar({
     return (
       <div className={`w-full ${className}`}>
         {(showLabel || label) && (
-          <div className="flex justify-between mb-1 text-[0.5rem] font-pixel">
+          <div className="flex justify-between mb-1 text-[0.625rem] font-pixel">
             <span className="text-ink-muted">{label || 'PROGRESS'}</span>
             <span className="text-sage">{Math.round(percentage)}%</span>
           </div>
@@ -77,7 +77,7 @@ export function ProgressBar({
   return (
     <div className={`w-full ${className}`}>
       {(showLabel || label) && (
-        <div className="flex justify-between mb-1 text-[0.5rem] font-pixel">
+        <div className="flex justify-between mb-1 text-[0.625rem] font-pixel">
           <span className="text-ink-muted">{label || 'PROGRESS'}</span>
           <span className="text-sage">{Math.round(percentage)}%</span>
         </div>
@@ -126,7 +126,7 @@ export function BlockProgress({
           className={`
             w-6 h-6
             flex items-center justify-center
-            text-[0.5rem] font-pixel
+            text-[0.625rem] font-pixel
             border
             transition-all duration-150
             ${

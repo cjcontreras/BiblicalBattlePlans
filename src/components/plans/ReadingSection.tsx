@@ -56,7 +56,7 @@ export function ReadingSection({
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <div className="font-pixel text-[0.5rem] text-ink-muted mb-0.5">{label}</div>
+            <div className="font-pixel text-[0.625rem] text-ink-muted mb-0.5">{label}</div>
             <div
               className={`font-pixel text-[0.625rem] ${
                 isCompleted ? 'text-ink-muted line-through' : 'text-ink'
@@ -69,9 +69,9 @@ export function ReadingSection({
           {/* Status indicator */}
           <div className="flex-shrink-0">
             {isCompleted ? (
-              <span className="font-pixel text-[0.5rem] text-sage">DONE</span>
+              <span className="font-pixel text-[0.625rem] text-sage">DONE</span>
             ) : (
-              <span className="font-pixel text-[0.5rem] text-ink-faint">○</span>
+              <span className="font-pixel text-[0.625rem] text-ink-faint">○</span>
             )}
           </div>
         </div>
@@ -88,7 +88,7 @@ export function ReadingSection({
           className={`
             w-full text-left px-3 py-2 border-t border-sage/30
             flex items-center justify-between
-            font-pixel text-[0.5rem] text-sage hover:bg-sage/20 transition-colors
+            font-pixel text-[0.625rem] text-sage hover:bg-sage/20 transition-colors
             ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
           `}
         >

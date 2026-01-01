@@ -57,7 +57,7 @@ export function Layout() {
             <div className="flex items-center gap-4">
               {/* Logo Placeholder - Replace with actual logo */}
               <Link to="/dashboard" className="flex items-center gap-3">
-                <div className="w-10 h-10 flex items-center justify-center">
+                <div className="w-13 h-13 flex items-center justify-center">
                   <img src="/BiblicalBattlePlansLogo.png" alt="BBP" className="w-full h-full object-contain" />
                 </div>
                 <div className="hidden md:block">

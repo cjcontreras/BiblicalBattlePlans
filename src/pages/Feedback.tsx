@@ -112,7 +112,7 @@ export function Feedback() {
           <div className="p-4 text-center">
             <Bug className="w-6 h-6 mx-auto mb-2 text-red-600" />
             <h3 className="font-pixel text-[0.625rem] text-ink mb-1">BUGS</h3>
-            <p className="font-pixel text-[0.5rem] text-ink-muted">
+            <p className="font-pixel text-[0.625rem] text-ink-muted">
               Something broken or not working right?
             </p>
           </div>
@@ -121,7 +121,7 @@ export function Feedback() {
           <div className="p-4 text-center">
             <Lightbulb className="w-6 h-6 mx-auto mb-2 text-gold" />
             <h3 className="font-pixel text-[0.625rem] text-ink mb-1">IDEAS</h3>
-            <p className="font-pixel text-[0.5rem] text-ink-muted">
+            <p className="font-pixel text-[0.625rem] text-ink-muted">
               Feature requests or suggestions?
             </p>
           </div>
@@ -130,7 +130,7 @@ export function Feedback() {
           <div className="p-4 text-center">
             <MessageSquarePlus className="w-6 h-6 mx-auto mb-2 text-sage" />
             <h3 className="font-pixel text-[0.625rem] text-ink mb-1">GENERAL</h3>
-            <p className="font-pixel text-[0.5rem] text-ink-muted">
+            <p className="font-pixel text-[0.625rem] text-ink-muted">
               Any other thoughts or comments?
             </p>
           </div>
@@ -181,7 +181,7 @@ export function Feedback() {
                       {phase.title}
                     </h3>
                   </div>
-                  <span className={`font-pixel text-[0.5rem] px-2 py-1 border ${status.className}`}>
+                  <span className={`font-pixel text-[0.625rem] px-2 py-1 border ${status.className}`}>
                     {status.label}
                   </span>
                 </div>
@@ -189,7 +189,7 @@ export function Feedback() {
                   {phase.items.map((item, itemIndex) => (
                     <li
                       key={itemIndex}
-                      className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed flex items-start gap-2"
+                      className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed flex items-start gap-2"
                     >
                       <span className="text-sage mt-0.5">+</span>
                       {item}

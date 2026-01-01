@@ -5,7 +5,7 @@ export type Platform = 'ios' | 'android' | 'desktop'
  * Detection is done synchronously to avoid flicker on initial render
  */
 function detectPlatform(): Platform {
-  if (typeof navigator === 'undefined') return 'desktop'
+  if (typeof navigator === 'undefined') return 'ios'
 
   const userAgent = navigator.userAgent || navigator.vendor || ''
 
@@ -20,7 +20,7 @@ function detectPlatform(): Platform {
   // Android detection
   if (/android/i.test(userAgent)) return 'android'
 
-  return 'desktop'
+  return 'ios'
 }
 
 /**

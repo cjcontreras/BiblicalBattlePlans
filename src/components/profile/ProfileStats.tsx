@@ -74,7 +74,7 @@ function StatCard({
         {value}
         {suffix && <span className="text-[0.625rem]">{suffix}</span>}
       </div>
-      <div className="font-pixel text-[0.5rem] text-ink-muted mt-1">{label}</div>
+      <div className="font-pixel text-[0.625rem] text-ink-muted mt-1">{label}</div>
     </div>
   )
 }

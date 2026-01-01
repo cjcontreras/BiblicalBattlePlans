@@ -162,14 +162,14 @@ export function AchievementModal({ achievement, onDismiss }: AchievementModalPro
           )}
 
           {/* Description */}
-          <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">
+          <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">
             {achievement.description}
           </p>
         </div>
 
         {/* Footer */}
         <div className="px-6 py-3 border-t border-border-subtle bg-parchment-dark/20">
-          <p className="font-pixel text-[0.5rem] text-ink-muted text-center">
+          <p className="font-pixel text-[0.625rem] text-ink-muted text-center">
             TAP ANYWHERE TO CONTINUE
           </p>
         </div>

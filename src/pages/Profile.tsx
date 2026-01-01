@@ -146,7 +146,7 @@ export function Profile() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <div className="font-pixel text-[0.5rem] text-ink-muted">
+              <div className="font-pixel text-[0.625rem] text-ink-muted">
                 <span className="text-ink-faint">Username:</span>{' '}
                 <span className="text-sage">@{profile?.username}</span>
                 <span className="text-ink-faint ml-2">(set at enlistment)</span>
@@ -246,14 +246,14 @@ export function Profile() {
 
             {/* Shield Info */}
             <div className="space-y-2 text-center">
-              <p className="font-pixel text-[0.5rem] text-ink-muted">
+              <p className="font-pixel text-[0.625rem] text-ink-muted">
                 Earn 1 shield for every 14 consecutive days of reading.
               </p>
-              <p className="font-pixel text-[0.5rem] text-ink-muted">
+              <p className="font-pixel text-[0.625rem] text-ink-muted">
                 Shields automatically protect your streak if you miss a day.
               </p>
               {userStats.streak_shields > 0 && (
-                <p className="font-pixel text-[0.5rem] text-sage mt-2">
+                <p className="font-pixel text-[0.625rem] text-sage mt-2">
                   Your streak is protected!
                 </p>
               )}
@@ -263,10 +263,10 @@ export function Profile() {
             {userStats.streak_shields < 3 && (
               <div className="mt-4 pt-4 border-t border-border-subtle">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-pixel text-[0.5rem] text-ink-muted">
+                  <span className="font-pixel text-[0.625rem] text-ink-muted">
                     PROGRESS TO NEXT SHIELD
                   </span>
-                  <span className="font-pixel text-[0.5rem] text-ink-muted">
+                  <span className="font-pixel text-[0.625rem] text-ink-muted">
                     {userStats.current_streak % 14} / 14 DAYS
                   </span>
                 </div>
@@ -292,11 +292,11 @@ export function Profile() {
         <div className="p-4">
           <div className="p-4 bg-parchment-light border border-border-subtle">
             <div className="flex justify-between items-center mb-3">
-                <span className="font-pixel text-[0.5rem] text-ink-muted">
+                <span className="font-pixel text-[0.625rem] text-ink-muted">
                   CURRENT: <span className="text-sage">{currentRank.name}</span>
                 </span>
               {nextRank && (
-                <span className="font-pixel text-[0.5rem] text-ink-muted">
+                <span className="font-pixel text-[0.625rem] text-ink-muted">
                   NEXT: <span className="text-ink">{nextRank.name}</span>
                 </span>
               )}
@@ -310,11 +310,11 @@ export function Profile() {
             </div>
             
             {nextRank ? (
-              <p className="font-pixel text-[0.5rem] text-ink-muted">
+              <p className="font-pixel text-[0.625rem] text-ink-muted">
                 {daysToNext} day{daysToNext !== 1 ? 's' : ''} until next rank
               </p>
             ) : (
-              <p className="font-pixel text-[0.5rem] text-sage">
+              <p className="font-pixel text-[0.625rem] text-sage">
                 MAX RANK ACHIEVED!
               </p>
             )}
@@ -357,7 +357,7 @@ export function Profile() {
                     {rank.name}
                   </span>
                 </div>
-                <span className="font-pixel text-[0.5rem] text-ink-muted">
+                <span className="font-pixel text-[0.625rem] text-ink-muted">
                   {rank.description}
                 </span>
               </div>
@@ -407,10 +407,10 @@ export function Profile() {
             <p className="font-pixel text-[0.625rem] text-danger mb-2">
               WARNING: This action is permanent!
             </p>
-            <p className="font-pixel text-[0.5rem] text-ink-muted leading-relaxed">
+            <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">
               Deleting your account will permanently remove:
             </p>
-            <ul className="font-pixel text-[0.5rem] text-ink-muted mt-2 space-y-1">
+            <ul className="font-pixel text-[0.625rem] text-ink-muted mt-2 space-y-1">
               <li>- All your reading progress</li>
               <li>- Your streak history</li>
               <li>- All quests and campaigns</li>
@@ -419,7 +419,7 @@ export function Profile() {
           </div>
 
           <div>
-            <label className="font-pixel text-[0.5rem] text-ink-muted block mb-2">
+            <label className="font-pixel text-[0.625rem] text-ink-muted block mb-2">
               Type DELETE to confirm:
             </label>
             <Input
