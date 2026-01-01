@@ -58,24 +58,42 @@ const rankColors: Record<string, string> = {
 function getDateRanges() {
   const now = new Date()
   const weekStart = new Date(now)
-  weekStart.setDate(now.getDate() - now.getDay())
+  weekStart.setDate(now.getDate() - now.getDay()) // Sunday
   weekStart.setHours(0, 0, 0, 0)
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekStart.getDate() + 6) // Saturday
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0) // Last day of month
   return {
     weekStart: weekStart.toISOString().split('T')[0],
     monthStart: monthStart.toISOString().split('T')[0],
+    weekStartDate: weekStart,
+    weekEndDate: weekEnd,
+    monthStartDate: monthStart,
+    monthEndDate: monthEnd,
   }
+}
+
+// Format date range for display (e.g., "Dec 29 - Jan 4")
+function formatDateRange(start: Date, end: Date): string {
+  const formatOpts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
+  const startStr = start.toLocaleDateString('en-US', formatOpts)
+  const endStr = end.toLocaleDateString('en-US', formatOpts)
+  return `${startStr} - ${endStr}`
 }
 
 export function GuildLeaderboard({ guildId, members }: GuildLeaderboardProps) {
   const { user } = useAuth()
   const [sortBy, setSortBy] = useState<LeaderboardSortBy>('streak')
 
+  // Get date ranges for display
+  const dateRanges = getDateRanges()
+
   // Fetch chapter counts using RPC function (accurate chapter calculation from daily_progress)
   const { data: chapterCounts, isLoading: loadingChapters } = useQuery({
     queryKey: ['guildChapterCounts', guildId],
     queryFn: async () => {
-      const { weekStart, monthStart } = getDateRanges()
+      const { weekStart, monthStart } = dateRanges
       const data = await getGuildChapterCounts(guildId, weekStart, monthStart)
 
       // Convert array result to lookup object
@@ -166,22 +184,32 @@ export function GuildLeaderboard({ guildId, members }: GuildLeaderboardProps) {
   return (
     <div className="space-y-4">
       {/* Sort Selector */}
-      <div className="flex gap-1 flex-wrap">
-        {sortOptions.map((option) => (
-          <button
-            key={option.value}
-            onClick={() => setSortBy(option.value)}
-            className={`
-              px-3 py-1.5 font-pixel text-[0.5rem] border transition-colors
-              ${sortBy === option.value
-                ? 'bg-sage text-white border-sage-dark'
-                : 'bg-parchment-light text-ink border-border hover:bg-parchment-dark'
-              }
-            `}
-          >
-            {option.label}
-          </button>
-        ))}
+      <div className="space-y-1">
+        <div className="flex gap-1 flex-wrap">
+          {sortOptions.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => setSortBy(option.value)}
+              className={`
+                px-3 py-1.5 font-pixel text-[0.5rem] border transition-colors
+                ${sortBy === option.value
+                  ? 'bg-sage text-white border-sage-dark'
+                  : 'bg-parchment-light text-ink border-border hover:bg-parchment-dark'
+                }
+              `}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        {/* Date range indicator */}
+        {(sortBy === 'chapters_week' || sortBy === 'chapters_month') && (
+          <p className="font-pixel text-[0.5rem] text-ink-muted">
+            {sortBy === 'chapters_week'
+              ? formatDateRange(dateRanges.weekStartDate, dateRanges.weekEndDate)
+              : formatDateRange(dateRanges.monthStartDate, dateRanges.monthEndDate)}
+          </p>
+        )}
       </div>
 
       {/* Loading indicator for chapter counts */}

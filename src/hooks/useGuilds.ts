@@ -247,6 +247,7 @@ export function useJoinGuild() {
 
 /**
  * Leave a guild
+ * Uses atomic RPC function to prevent race conditions
  */
 export function useLeaveGuild() {
   const queryClient = useQueryClient()
@@ -256,32 +257,18 @@ export function useLeaveGuild() {
     mutationFn: async (guildId: string) => {
       if (!user) throw new Error('Not authenticated')
 
-      // Check if user is the last admin
-      const { data: members } = await (supabase
-        .from('guild_members') as ReturnType<typeof supabase.from>)
-        .select('user_id, role')
-        .eq('guild_id', guildId)
+      // Use atomic RPC function
+      type LeaveGuildRpcFn = (
+        fn: string,
+        args: { p_guild_id: string }
+      ) => Promise<{ data: null; error: Error | null }>
 
-      const memberList = (members || []) as { user_id: string; role: string }[]
-      const admins = memberList.filter((m) => m.role === 'admin')
-      const isLastAdmin = admins.length === 1 && admins[0].user_id === user.id
+      const rpc = supabase.rpc as unknown as LeaveGuildRpcFn
+      const { error } = await rpc('leave_guild', { p_guild_id: guildId })
 
-      if (isLastAdmin && memberList.length > 1) {
-        throw new Error('You must promote another member to admin before leaving.')
+      if (error) {
+        throw new Error(error.message || 'Failed to leave guild')
       }
-
-      // If only member, must delete the guild instead
-      if (memberList.length === 1) {
-        throw new Error('You are the only member. Delete the guild instead of leaving.')
-      }
-
-      const { error } = await (supabase
-        .from('guild_members') as ReturnType<typeof supabase.from>)
-        .delete()
-        .eq('guild_id', guildId)
-        .eq('user_id', user.id)
-
-      if (error) throw error
 
       return { guildId }
     },
@@ -364,6 +351,7 @@ export function useSetGuildRecommendedPlan() {
 
 /**
  * Delete a guild (admin only, must be last member)
+ * Uses atomic RPC function to prevent race conditions
  */
 export function useDeleteGuild() {
   const queryClient = useQueryClient()
@@ -373,29 +361,19 @@ export function useDeleteGuild() {
     mutationFn: async (guildId: string) => {
       if (!user) throw new Error('Not authenticated')
 
-      // Verify user is admin and only member
-      const { data: members } = await (supabase
-        .from('guild_members') as ReturnType<typeof supabase.from>)
-        .select('user_id, role')
-        .eq('guild_id', guildId)
+      // Use atomic RPC function
+      type DeleteGuildRpcFn = (
+        fn: string,
+        args: { p_guild_id: string }
+      ) => Promise<{ data: null; error: Error | null }>
 
-      const memberList = (members || []) as { user_id: string; role: string }[]
-      const isAdmin = memberList.some((m) => m.user_id === user.id && m.role === 'admin')
+      const rpc = supabase.rpc as unknown as DeleteGuildRpcFn
+      const { error } = await rpc('delete_guild', { p_guild_id: guildId })
 
-      if (!isAdmin) {
-        throw new Error('Only admins can delete guilds.')
+      if (error) {
+        throw new Error(error.message || 'Failed to delete guild')
       }
 
-      if (memberList.length > 1) {
-        throw new Error('Remove all other members before deleting the guild.')
-      }
-
-      const { error } = await (supabase
-        .from('guilds') as ReturnType<typeof supabase.from>)
-        .delete()
-        .eq('id', guildId)
-
-      if (error) throw error
       return { guildId }
     },
     onSuccess: () => {
@@ -466,6 +444,7 @@ export function usePromoteMember() {
 
 /**
  * Demote an admin to member (admin only)
+ * Uses atomic RPC function to prevent race conditions
  */
 export function useDemoteMember() {
   const queryClient = useQueryClient()
@@ -478,24 +457,22 @@ export function useDemoteMember() {
       guildId: string
       userId: string
     }) => {
-      // Check we're not removing the last admin
-      const { data: members } = await (supabase
-        .from('guild_members') as ReturnType<typeof supabase.from>)
-        .select('user_id, role')
-        .eq('guild_id', guildId)
-        .eq('role', 'admin')
+      // Use atomic RPC function
+      type DemoteMemberRpcFn = (
+        fn: string,
+        args: { p_guild_id: string; p_user_id: string }
+      ) => Promise<{ data: null; error: Error | null }>
 
-      if ((members?.length || 0) <= 1) {
-        throw new Error('Cannot demote the last admin.')
+      const rpc = supabase.rpc as unknown as DemoteMemberRpcFn
+      const { error } = await rpc('demote_guild_member', {
+        p_guild_id: guildId,
+        p_user_id: userId,
+      })
+
+      if (error) {
+        throw new Error(error.message || 'Failed to demote member')
       }
 
-      const { error } = await (supabase
-        .from('guild_members') as ReturnType<typeof supabase.from>)
-        .update({ role: 'member' })
-        .eq('guild_id', guildId)
-        .eq('user_id', userId)
-
-      if (error) throw error
       return { guildId, userId }
     },
     onSuccess: (data) => {
