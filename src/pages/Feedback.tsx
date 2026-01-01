@@ -18,19 +18,28 @@ const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfVgGHqLyIPkaR
 interface RoadmapPhase {
   title: string
   icon: React.ReactNode
-  status: 'in-progress' | 'planned' | 'backlog'
+  status: 'completed' | 'in-progress' | 'planned' | 'backlog'
   items: string[]
 }
 
 const roadmap: RoadmapPhase[] = [
   {
+    title: 'GUILDS',
+    icon: <Users className="w-5 h-5" />,
+    status: 'completed',
+    items: [
+      'Create or join reading guilds',
+      'Guild leaderboards and activity feed',
+      'Recommend plans to your guild',
+    ],
+  },
+  {
     title: 'POLISH & ENHANCEMENTS',
     icon: <Sparkles className="w-5 h-5" />,
-    status: 'in-progress',
+    status: 'planned',
     items: [
       'Notes & reflections on any reading plan',
       'View your notes history over time',
-      'Search and filter your reading notes',
     ],
   },
   {
@@ -44,24 +53,24 @@ const roadmap: RoadmapPhase[] = [
     ],
   },
   {
-    title: 'GROUPS',
-    icon: <Users className="w-5 h-5" />,
-    status: 'planned',
-    items: [
-      'Create or join reading groups',
-      'Group leaderboards and activity feed',
-      'Group challenges (read X chapters together)',
-      'Recommend plans to your group',
-    ],
-  },
-  {
     title: 'ENHANCED GAMIFICATION',
     icon: <Trophy className="w-5 h-5" />,
     status: 'planned',
     items: [
       'Achievement badges and unlockables',
+      'XP and leveling system',
       'Weekly challenges with rewards',
-      'Rare collectibles and special items',
+      'Customizable avatars',
+      'Armor of God unlockables',
+    ],
+  },
+  {
+    title: 'GUILD CHALLENGES',
+    icon: <Users className="w-5 h-5" />,
+    status: 'backlog',
+    items: [
+      'Group challenges (read X chapters together)',
+      'Competitive guild events',
     ],
   },
   {
@@ -69,16 +78,17 @@ const roadmap: RoadmapPhase[] = [
     icon: <Wrench className="w-5 h-5" />,
     status: 'in-progress',
     items: [
-      'Better offline support',
+      'Automated testing (unit + E2E)',
+      'Performance optimizations',
       'Accessibility improvements',
-      'Progressive web app enhancements',
     ],
   },
 ]
 
 const statusLabels: Record<RoadmapPhase['status'], { label: string; className: string }> = {
+  'completed': { label: 'COMPLETE', className: 'bg-sage/30 text-sage-dark border-sage' },
   'in-progress': { label: 'IN PROGRESS', className: 'bg-gold/20 text-gold-dark border-gold' },
-  'planned': { label: 'PLANNED', className: 'bg-sage/20 text-sage-dark border-sage' },
+  'planned': { label: 'PLANNED', className: 'bg-blue/20 text-blue border-blue' },
   'backlog': { label: 'BACKLOG', className: 'bg-ink-muted/20 text-ink-muted border-ink-muted' },
 }
 
