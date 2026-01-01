@@ -2,7 +2,15 @@ import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ChevronLeft, Users, Settings, UserPlus, LogOut, Crown, Trash2 } from 'lucide-react'
 import { Card, CardContent, Button, Badge, LoadingSpinner } from '../components/ui'
-import { GuildMemberList, InviteShareModal, GuildSettingsModal } from '../components/guilds'
+import {
+  GuildMemberList,
+  InviteShareModal,
+  GuildSettingsModal,
+  GuildTabs,
+  GuildLeaderboard,
+  GuildActivityFeed,
+} from '../components/guilds'
+import type { GuildTab } from '../components/guilds'
 import { useGuild, useMyGuildMembership, useLeaveGuild, useDeleteGuild } from '../hooks/useGuilds'
 import type { Profile } from '../types'
 
@@ -17,6 +25,7 @@ export function Guild() {
 
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
+  const [activeTab, setActiveTab] = useState<GuildTab>('members')
 
   const isAdmin = membership?.role === 'admin'
   const isOnlyMember = guild?.members.length === 1
@@ -148,20 +157,32 @@ export function Guild() {
         </CardContent>
       </Card>
 
-      {/* Members Section */}
+      {/* Tabbed Content Section */}
       <div className="sage-panel">
-        <div className="sage-panel-header">
-          <div className="flex items-center gap-2 font-pixel text-[0.75rem]">
-            <Users className="w-5 h-5" />
-            MEMBERS
-          </div>
-        </div>
+        <GuildTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
         <div className="p-4">
-          <GuildMemberList
-            members={guild.members as (typeof guild.members[number] & { profile: Profile })[]}
-            guildId={guild.id}
-            isAdmin={isAdmin}
-          />
+          {activeTab === 'members' && (
+            <GuildMemberList
+              members={guild.members as (typeof guild.members[number] & { profile: Profile })[]}
+              guildId={guild.id}
+              isAdmin={isAdmin}
+            />
+          )}
+
+          {activeTab === 'leaderboard' && (
+            <GuildLeaderboard
+              guildId={guild.id}
+              members={guild.members as (typeof guild.members[number] & { profile: Profile })[]}
+            />
+          )}
+
+          {activeTab === 'activity' && (
+            <GuildActivityFeed
+              guildId={guild.id}
+              members={guild.members as (typeof guild.members[number] & { profile: Profile })[]}
+            />
+          )}
         </div>
       </div>
 

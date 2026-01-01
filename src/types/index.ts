@@ -184,6 +184,55 @@ export interface UserGuildMembership extends GuildMember {
   guild: Guild
 }
 
+// Guild Activity Types
+
+export type GuildActivityType =
+  | 'reading_completed'
+  | 'streak_milestone'
+  | 'rank_achieved'
+  | 'member_joined'
+  | 'plan_started'
+  | 'plan_completed'
+
+export interface GuildActivityMetadata {
+  plan_name?: string
+  day_number?: number
+  chapters_read?: number
+  date?: string
+  streak_days?: number
+  rank?: string
+  previous_rank?: string
+  total_days?: number
+}
+
+export interface GuildActivity {
+  id: string
+  guild_id: string
+  user_id: string
+  activity_type: GuildActivityType
+  metadata: GuildActivityMetadata
+  created_at: string
+  // Joined data
+  profile?: Profile
+}
+
+// Guild Leaderboard Types
+
+export type LeaderboardSortBy = 'streak' | 'chapters_week' | 'chapters_month' | 'chapters_all'
+
+export interface LeaderboardEntry {
+  user_id: string
+  rank: number
+  display_name: string
+  avatar_url: string | null
+  current_streak: number
+  streak_rank: string // RECRUIT, SOLDIER, WARRIOR, VETERAN, LEGENDARY
+  chapters_this_week: number
+  chapters_this_month: number
+  total_chapters_read: number
+  is_current_user: boolean
+}
+
 // Stats Types
 
 export interface UserStats {

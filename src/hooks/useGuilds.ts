@@ -10,6 +10,19 @@ export const guildKeys = {
   detail: (id: string) => [...guildKeys.all, 'detail', id] as const,
   members: (guildId: string) => [...guildKeys.all, 'members', guildId] as const,
   byInviteCode: (code: string) => [...guildKeys.all, 'byInviteCode', code] as const,
+  // Leaderboard and activity keys (for cross-query invalidation)
+  leaderboard: (guildId: string) => ['guildLeaderboard', guildId] as const,
+  activities: (guildId: string) => ['guildActivities', guildId] as const,
+}
+
+// Helper to invalidate all guild-related queries (members, leaderboard, activities, list)
+function invalidateGuildData(queryClient: ReturnType<typeof useQueryClient>, guildId: string) {
+  queryClient.invalidateQueries({ queryKey: guildKeys.detail(guildId) })
+  // Invalidate all leaderboard queries for this guild (regardless of sortBy)
+  queryClient.invalidateQueries({ queryKey: guildKeys.leaderboard(guildId) })
+  queryClient.invalidateQueries({ queryKey: guildKeys.activities(guildId) })
+  // Invalidate all myGuilds queries so member counts update on the list page
+  queryClient.invalidateQueries({ queryKey: ['guilds', 'myGuilds'] })
 }
 
 /**
@@ -221,7 +234,7 @@ export function useJoinGuild() {
     onSuccess: (data) => {
       if (user) {
         queryClient.invalidateQueries({ queryKey: guildKeys.myGuilds(user.id) })
-        queryClient.invalidateQueries({ queryKey: guildKeys.detail(data.guildId) })
+        invalidateGuildData(queryClient, data.guildId)
       }
     },
   })
@@ -270,7 +283,7 @@ export function useLeaveGuild() {
     onSuccess: (data) => {
       if (user) {
         queryClient.invalidateQueries({ queryKey: guildKeys.myGuilds(user.id) })
-        queryClient.invalidateQueries({ queryKey: guildKeys.detail(data.guildId) })
+        invalidateGuildData(queryClient, data.guildId)
       }
     },
   })
@@ -380,7 +393,7 @@ export function useRemoveMember() {
       return { guildId, userId }
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: guildKeys.detail(data.guildId) })
+      invalidateGuildData(queryClient, data.guildId)
     },
   })
 }
@@ -409,7 +422,7 @@ export function usePromoteMember() {
       return { guildId, userId }
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: guildKeys.detail(data.guildId) })
+      invalidateGuildData(queryClient, data.guildId)
     },
   })
 }
@@ -449,7 +462,7 @@ export function useDemoteMember() {
       return { guildId, userId }
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: guildKeys.detail(data.guildId) })
+      invalidateGuildData(queryClient, data.guildId)
     },
   })
 }
