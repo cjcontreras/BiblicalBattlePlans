@@ -17,14 +17,18 @@ focusManager.setEventListener((handleFocus) => {
     handleFocus(document.visibilityState === 'visible')
   }
   
+  const onFocus = () => {
+    handleFocus(true)
+  }
+  
   // Listen for visibility changes (tab/app becomes visible again)
   document.addEventListener('visibilitychange', onVisibilityChange)
   // Also listen for focus as a fallback
-  window.addEventListener('focus', () => handleFocus(true))
+  window.addEventListener('focus', onFocus)
   
   return () => {
     document.removeEventListener('visibilitychange', onVisibilityChange)
-    window.removeEventListener('focus', () => handleFocus(true))
+    window.removeEventListener('focus', onFocus)
   }
 })
 
