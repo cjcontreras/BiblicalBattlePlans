@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
+import { supabase, withTimeout } from '../lib/supabase'
 import { useAuth } from './useAuth'
 import type { Guild, GuildMember, GuildWithMembers, UserGuildMembership, Profile, ReadingPlan } from '../types'
 
@@ -29,28 +29,30 @@ function invalidateGuildData(queryClient: ReturnType<typeof useQueryClient>, gui
  * Get all guilds the current user is a member of
  */
 export function useMyGuilds() {
-  const { user } = useAuth()
+  const { user, isInitialized } = useAuth()
 
   return useQuery({
     queryKey: guildKeys.myGuilds(user?.id || ''),
     queryFn: async () => {
       if (!user) return []
 
-      const { data, error } = await supabase
-        .from('guild_members')
-        .select(`
-          *,
-          guild:guilds(*)
-        `)
-        .eq('user_id', user.id)
-        .order('joined_at', { ascending: false })
+      const { data, error } = await withTimeout(() =>
+        supabase
+          .from('guild_members')
+          .select(`
+            *,
+            guild:guilds(*)
+          `)
+          .eq('user_id', user.id)
+          .order('joined_at', { ascending: false })
+      )
 
       if (error) throw error
       return data as UserGuildMembership[]
     },
-    enabled: !!user,
+    enabled: !!user && isInitialized,
     staleTime: 30 * 1000, // 30 seconds
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false, // Disabled - page reloads on tab switch anyway
   })
 }
 

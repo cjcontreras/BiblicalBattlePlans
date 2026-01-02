@@ -39,7 +39,7 @@ export const queryClient = new QueryClient({
       gcTime: 1000 * 60 * 60 * 24, // 24 hours (keep cached data longer for persistence)
       retry: 2, // Retry twice on failure
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
-      refetchOnWindowFocus: true, // Refresh data when user returns to tab
+      refetchOnWindowFocus: false, // Disabled - page reloads on tab switch anyway (see App.tsx useTabVisibilityHandler)
       refetchOnReconnect: true, // Refresh data when network reconnects (PWA coming back online)
       // Use 'online' mode to ensure queries properly refetch when network is available
       // 'offlineFirst' can cause PWA to get stuck in loading state when resuming from suspension
@@ -88,7 +88,8 @@ export const persister = createSyncStoragePersister({
 // Cache version - increment this to invalidate all user caches on deploy
 // Changed: v2 - Fixed chapter counting for sectional/weekly plans
 // Changed: v3 - Improved persistent cache handling and visibility management to reduce stale data issues
-export const CACHE_BUSTER = 'v3'
+// Changed: v4 - Re-enabled cache persistence with page reload workaround for Supabase hang issue
+export const CACHE_BUSTER = 'v4'
 
 /**
  * Clear all user-specific cached data.

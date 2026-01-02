@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
+import { supabase, withTimeout } from '../lib/supabase'
 import { useAuth } from './useAuth'
 import type { ReadingPlan, UserPlan, DailyProgress, DailyStructure, CyclingListsStructure, ListPositions, WeeklySectionalStructure } from '../types'
 
@@ -87,26 +87,28 @@ export function useReadingPlan(planId: string) {
 
 // Fetch user's plans (active and completed)
 export function useUserPlans() {
-  const { user } = useAuth()
+  const { user, isInitialized } = useAuth()
 
   return useQuery({
     queryKey: planKeys.userPlans(user?.id || ''),
     queryFn: async () => {
       if (!user) return []
 
-      const { data, error } = await supabase
-        .from('user_plans')
-        .select(`
-          *,
-          plan:reading_plans(*)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+      const { data, error } = await withTimeout(() =>
+        supabase
+          .from('user_plans')
+          .select(`
+            *,
+            plan:reading_plans(*)
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+      )
 
       if (error) throw error
       return data as (UserPlan & { plan: ReadingPlan })[]
     },
-    enabled: !!user,
+    enabled: !!user && isInitialized,
   })
 }
 
@@ -154,7 +156,7 @@ export function useDailyProgress(userPlanId: string, date?: string) {
 
 // Fetch all daily progress records for today (for dashboard display)
 export function useAllTodayProgress() {
-  const { user } = useAuth()
+  const { user, isInitialized } = useAuth()
   const today = getLocalDate()
 
   return useQuery({
@@ -162,11 +164,13 @@ export function useAllTodayProgress() {
     queryFn: async () => {
       if (!user) return {}
 
-      const { data, error } = await supabase
-        .from('daily_progress')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('date', today)
+      const { data, error } = await withTimeout(() =>
+        supabase
+          .from('daily_progress')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('date', today)
+      )
 
       if (error) throw error
 
@@ -177,29 +181,19 @@ export function useAllTodayProgress() {
       }
       return progressMap
     },
-    enabled: !!user,
+    enabled: !!user && isInitialized,
   })
 }
 
 // Fetch total chapters read today across ALL plans (for global streak tracking)
 export function useTodaysTotalChapters() {
-  const { user } = useAuth()
+  const { user, isInitialized } = useAuth()
   const today = getLocalDate()
 
   return useQuery({
     queryKey: planKeys.todaysTotalProgress(user?.id || '', today),
     queryFn: async () => {
       if (!user) return 0
-
-      // Fetch all progress for today across all plans
-      const { data: progressData, error: progressError } = await (supabase
-        .from('daily_progress') as ReturnType<typeof supabase.from>)
-        .select('*, user_plan:user_plans(current_day, plan:reading_plans(daily_structure))')
-        .eq('user_id', user.id)
-        .eq('date', today)
-
-      if (progressError) throw progressError
-      if (!progressData || progressData.length === 0) return 0
 
       type ProgressWithPlan = {
         completed_sections?: string[]
@@ -211,9 +205,23 @@ export function useTodaysTotalChapters() {
         }
       }
 
+      // Fetch all progress for today across all plans
+      const result = await withTimeout(() =>
+        (supabase
+          .from('daily_progress') as ReturnType<typeof supabase.from>)
+          .select('*, user_plan:user_plans(current_day, plan:reading_plans(daily_structure))')
+          .eq('user_id', user.id)
+          .eq('date', today)
+      ) as { data: ProgressWithPlan[] | null; error: Error | null }
+
+      if (result.error) throw result.error
+      if (!result.data || result.data.length === 0) return 0
+
+      const progressData = result.data
+
       // Calculate total chapters based on plan types
       let totalChapters = 0
-      for (const progress of progressData as ProgressWithPlan[]) {
+      for (const progress of progressData) {
         const completedSections = progress.completed_sections || []
         const dailyStructure = progress.user_plan?.plan?.daily_structure
         const currentDay = progress.user_plan?.current_day || 1
@@ -313,7 +321,7 @@ export function useTodaysTotalChapters() {
 
       return totalChapters
     },
-    enabled: !!user,
+    enabled: !!user && isInitialized,
   })
 }
 
