@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import {
   useUserPlan,
   useDailyProgress,
+  useProgressForPlanDay,
   useMarkChapterRead,
   useMarkSectionComplete,
   useAdvanceList,
@@ -32,7 +33,19 @@ export function ActivePlan() {
   const { profile } = useAuth()
 
   const { data: userPlan, isLoading: planLoading, error: planError } = useUserPlan(id || '')
-  const { data: progress, isLoading: progressLoading, error: progressError } = useDailyProgress(id || '')
+  // For cycling plans, use today's progress (tracks by listId:chapterIndex)
+  const { data: todayProgress, isLoading: todayProgressLoading, error: todayProgressError } = useDailyProgress(id || '')
+  // For sequential/sectional plans, use day_number-based progress to preserve
+  // completion status across midnight (fixes the "progress reset" bug)
+  const { data: dayNumberProgress, isLoading: dayNumberProgressLoading, error: dayNumberProgressError } = useProgressForPlanDay(
+    id || '',
+    userPlan?.current_day || 0
+  )
+  // Choose the right progress based on plan type
+  const isCyclingPlan = userPlan?.plan.daily_structure.type === 'cycling_lists'
+  const progress = isCyclingPlan ? todayProgress : dayNumberProgress
+  const progressLoading = isCyclingPlan ? todayProgressLoading : dayNumberProgressLoading
+  const progressError = isCyclingPlan ? todayProgressError : dayNumberProgressError
   const markChapterRead = useMarkChapterRead()
   const markSectionComplete = useMarkSectionComplete()
   const advanceList = useAdvanceList()
@@ -122,7 +135,6 @@ export function ActivePlan() {
   }
 
   const { plan } = userPlan
-  const isCyclingPlan = plan.daily_structure.type === 'cycling_lists'
   const isFreeReading = plan.daily_structure.type === 'free_reading'
   const isWeeklyPlan = plan.daily_structure.type === 'weekly_sectional'
 

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { BookOpen, Swords, Trophy, Plus, Book, Play } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-import { useUserPlans, useAllTodayProgress, getCurrentReadings, getTodaysReading, calculatePlanProgress } from '../hooks/usePlans'
+import { useUserPlans, useAllTodayProgress, useProgressByDayNumber, getProgressForCurrentDay, getCurrentReadings, getTodaysReading, calculatePlanProgress } from '../hooks/usePlans'
 import { useStats } from '../hooks/useStats'
 import { useVerseOfDay } from '../hooks/useVerseOfDay'
 import { Card, CardContent, Button, StreakBadge, LoadingSpinner, ProgressBar } from '../components/ui'
@@ -13,6 +13,7 @@ export function Dashboard() {
   const { data: stats, isLoading: statsLoading, error: statsError } = useStats()
   const { data: dailyVerse, isLoading: verseLoading } = useVerseOfDay()
   const { data: todayProgressMap = {} } = useAllTodayProgress()
+  const { data: progressByDayNumber = {} } = useProgressByDayNumber()
 
   const isLoading = plansLoading || statsLoading
   const error = plansError || statsError
@@ -149,7 +150,12 @@ export function Dashboard() {
               {activeCampaigns.map((userPlan) => {
                 const isCyclingPlan = userPlan.plan.daily_structure.type === 'cycling_lists'
                 const isFreeReading = userPlan.plan.daily_structure.type === 'free_reading'
-                const dailyProgress = todayProgressMap[userPlan.id] || null
+                // For cycling plans, use today's progress (tracks by listId:chapterIndex)
+                // For sequential/sectional plans, use day_number-based progress to preserve
+                // completion status across midnight (fixes the "progress reset" bug)
+                const dailyProgress = isCyclingPlan
+                  ? (todayProgressMap[userPlan.id] || null)
+                  : getProgressForCurrentDay(progressByDayNumber, userPlan.id, userPlan.current_day)
                 const todaysReading = isCyclingPlan
                   ? getCurrentReadings(userPlan.plan, userPlan.list_positions || {}, dailyProgress)
                   : getTodaysReading(userPlan.plan, userPlan.current_day, dailyProgress)
