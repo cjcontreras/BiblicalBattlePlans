@@ -87,8 +87,6 @@ export const useAuth = create<AuthStore>((set, get) => ({
 
       // Listen for auth changes
       supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log('Auth event:', event, 'Session:', !!session)
-
         // Check URL hash for recovery token (handles INITIAL_SESSION with recovery)
         const currentHash = window.location.hash
         const isRecoveryFromHash = currentHash && currentHash.includes('type=recovery')
@@ -163,7 +161,6 @@ export const useAuth = create<AuthStore>((set, get) => ({
           set({ session })
         } else if (event === 'USER_UPDATED') {
           // Password was successfully changed, exit recovery mode
-          console.log('User updated, exiting recovery mode')
           set({ isRecoveryMode: false })
         }
       })

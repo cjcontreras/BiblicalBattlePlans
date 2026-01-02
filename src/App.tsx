@@ -1,6 +1,5 @@
-import { useEffect, useLayoutEffect } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { focusManager } from '@tanstack/react-query'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Analytics } from '@vercel/analytics/react'
 import { Toaster } from 'sonner'
@@ -10,27 +9,39 @@ import { Layout } from './components/Layout'
 import { Landing, Login, Signup, ForgotPassword, ResetPassword, Dashboard, Plans, PlanDetail, ActivePlan, Profile, Acknowledgements, About, Feedback, GuildHub, Guild, GuildJoin } from './pages'
 import { LoadingOverlay } from './components/ui'
 
-// Configure React Query's focus manager to use visibility API
-// This is more reliable for PWAs and mobile browsers than the default focus event
-focusManager.setEventListener((handleFocus) => {
-  const onVisibilityChange = () => {
-    handleFocus(document.visibilityState === 'visible')
-  }
-  
-  const onFocus = () => {
-    handleFocus(true)
-  }
-  
-  // Listen for visibility changes (tab/app becomes visible again)
-  document.addEventListener('visibilitychange', onVisibilityChange)
-  // Also listen for focus as a fallback
-  window.addEventListener('focus', onFocus)
-  
-  return () => {
-    document.removeEventListener('visibilitychange', onVisibilityChange)
-    window.removeEventListener('focus', onFocus)
-  }
-})
+/**
+ * Handle tab visibility changes to prevent Supabase client corruption.
+ *
+ * Issue: Supabase JS client promises hang after browser tab is suspended/backgrounded.
+ * HTTP requests complete successfully but the JS promise never resolves due to
+ * internal client state corruption from browser throttling.
+ *
+ * The ONLY reliable fix is a full page reload to get a fresh Supabase client.
+ * See: https://github.com/supabase/auth-js/issues/1594
+ */
+function useTabVisibilityHandler() {
+  const hiddenAtRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        hiddenAtRef.current = Date.now()
+      } else if (document.visibilityState === 'visible' && hiddenAtRef.current) {
+        const hiddenDuration = Date.now() - hiddenAtRef.current
+        hiddenAtRef.current = null
+
+        // Reload on any meaningful tab switch to get fresh Supabase client
+        // Even very short switches (< 1 second) can corrupt the client
+        if (hiddenDuration > 300) {
+          window.location.reload()
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+}
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -56,6 +67,9 @@ function ScrollToTop() {
 
 function App() {
   const { initialize, isInitialized, user } = useAuth()
+
+  // Handle tab visibility changes to prevent Supabase client corruption
+  useTabVisibilityHandler()
 
   useEffect(() => {
     initialize()
