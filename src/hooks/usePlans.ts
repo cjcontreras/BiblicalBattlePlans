@@ -166,7 +166,37 @@ export function useDailyProgress(userPlanId: string, date?: string) {
   })
 }
 
+/**
+ * Fetch progress for a specific plan day (by day_number, not date).
+ *
+ * Use this for sequential/sectional plans to preserve completion status
+ * across midnight. Returns the most recent progress for the specified day_number.
+ */
+export function useProgressForPlanDay(userPlanId: string, dayNumber: number) {
+  return useQuery({
+    queryKey: ['progressForPlanDay', userPlanId, dayNumber],
+    queryFn: async () => {
+      // Using withTimeout to prevent hanging promises after tab suspension
+      const { data, error } = await withTimeout(() =>
+        supabase
+          .from('daily_progress')
+          .select('*')
+          .eq('user_plan_id', userPlanId)
+          .eq('day_number', dayNumber)
+          .order('date', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      )
+
+      if (error) throw error
+      return data as DailyProgress | null
+    },
+    enabled: !!userPlanId && dayNumber > 0,
+  })
+}
+
 // Fetch all daily progress records for today (for dashboard display)
+// NOTE: This is still useful for streak tracking and cycling plans
 export function useAllTodayProgress() {
   const { user, isInitialized } = useAuth()
   const today = getLocalDate()
@@ -195,6 +225,73 @@ export function useAllTodayProgress() {
     },
     enabled: !!user && isInitialized,
   })
+}
+
+/**
+ * Fetch progress by day_number for displaying completion status.
+ *
+ * This solves the bug where progress appears reset after midnight:
+ * - User completes Day 1 on Jan 1, doesn't click "Continue"
+ * - On Jan 2, current_day is still 1
+ * - Old query looked for progress with date='Jan 2' (found nothing)
+ * - This query looks for progress with day_number=1 (finds yesterday's completion)
+ *
+ * Returns a map of userPlanId -> { dayNumber -> DailyProgress }
+ * The consumer matches progress using their plan's current_day.
+ */
+export function useProgressByDayNumber() {
+  const { user, isInitialized } = useAuth()
+
+  return useQuery({
+    queryKey: ['progressByDayNumber', user?.id || ''],
+    queryFn: async () => {
+      if (!user) return {}
+
+      // Fetch recent progress (last 30 days covers edge cases)
+      const cutoffDate = new Date()
+      cutoffDate.setDate(cutoffDate.getDate() - 30)
+      const cutoff = cutoffDate.toISOString().split('T')[0]
+
+      const { data, error } = await withTimeout(() =>
+        supabase
+          .from('daily_progress')
+          .select('*')
+          .eq('user_id', user.id)
+          .gte('date', cutoff)
+          .order('date', { ascending: false })
+      )
+
+      if (error) throw error
+
+      // Create nested map: userPlanId -> { dayNumber -> DailyProgress }
+      // Only keep the most recent progress for each day_number (first one due to descending order)
+      const progressMap: Record<string, Record<number, DailyProgress>> = {}
+      for (const progress of (data || []) as DailyProgress[]) {
+        if (!progressMap[progress.user_plan_id]) {
+          progressMap[progress.user_plan_id] = {}
+        }
+        // Only store if we haven't seen this day_number yet (most recent wins)
+        if (!progressMap[progress.user_plan_id][progress.day_number]) {
+          progressMap[progress.user_plan_id][progress.day_number] = progress
+        }
+      }
+      return progressMap
+    },
+    enabled: !!user && isInitialized,
+  })
+}
+
+/**
+ * Helper to get progress for a specific plan's current day from the progress map.
+ * Use with useProgressByDayNumber() for sectional/sequential plans.
+ */
+export function getProgressForCurrentDay(
+  progressMap: Record<string, Record<number, DailyProgress>> | undefined,
+  userPlanId: string,
+  currentDay: number
+): DailyProgress | null {
+  if (!progressMap || !progressMap[userPlanId]) return null
+  return progressMap[userPlanId][currentDay] || null
 }
 
 // Fetch total chapters read today across ALL plans (for global streak tracking)
