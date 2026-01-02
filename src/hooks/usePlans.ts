@@ -486,6 +486,78 @@ export function useStartPlan() {
   })
 }
 
+/**
+ * Helper to toggle a section in completed_sections array
+ */
+function toggleSection(sections: string[], sectionId: string): string[] {
+  if (sections.includes(sectionId)) {
+    return sections.filter((s) => s !== sectionId)
+  }
+  return [...sections, sectionId]
+}
+
+/**
+ * Helper to handle duplicate key errors when inserting daily_progress.
+ * If insert fails due to duplicate key, fetches existing record and updates it.
+ * This handles race conditions where a record already exists (e.g. a prior
+ * progress query timed out, or two concurrent requests both attempted inserts).
+ */
+async function handleDuplicateKeyAndUpdate(
+  insertError: { code?: string; message?: string } | null,
+  userPlanId: string,
+  date: string,
+  sectionId: string,
+  isCompleteCalculator?: (sections: string[]) => boolean
+): Promise<DailyProgress | null> {
+  // Check if this is a duplicate key error (PostgreSQL unique_violation)
+  if (insertError?.code !== '23505') {
+    return null // Not a duplicate key error
+  }
+
+  // Fetch the existing record (with timeout to prevent hanging)
+  const { data: actualExisting, error: fetchError } = await withTimeout(() =>
+    supabase
+      .from('daily_progress')
+      .select('*')
+      .eq('user_plan_id', userPlanId)
+      .eq('date', date)
+      .single()
+  )
+
+  if (fetchError || !actualExisting) {
+    // Record was deleted between insert and fetch, or fetch failed
+    // Throw original error with more context
+    throw new Error(
+      `Duplicate key error occurred but could not fetch existing record. ` +
+      `Original error: ${insertError?.message || 'Unknown'}`
+    )
+  }
+
+  const existing = actualExisting as DailyProgress
+  // Re-calculate toggle based on actual existing data
+  const actualSections = toggleSection(existing.completed_sections || [], sectionId)
+  const isComplete = isCompleteCalculator ? isCompleteCalculator(actualSections) : existing.is_complete
+
+  const updateResult = await withTimeout(() =>
+    (supabase.from('daily_progress') as ReturnType<typeof supabase.from>)
+      .update({
+        completed_sections: actualSections,
+        is_complete: isComplete,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existing.id)
+      .select()
+      .single()
+  ) as { data: DailyProgress | null; error: Error | null }
+  const { data: updatedData, error: updateError } = updateResult
+
+  if (updateError) {
+    throw updateError
+  }
+
+  return updatedData as DailyProgress
+}
+
 // Mark a chapter as read (for cycling plans)
 export function useMarkChapterRead() {
   const queryClient = useQueryClient()
@@ -517,35 +589,46 @@ export function useMarkChapterRead() {
         .maybeSingle()
 
       const existingProgress = progressData as DailyProgress | null
-      let completedSections = existingProgress?.completed_sections || []
-
-      // Toggle: add if not present, remove if present
-      if (completedSections.includes(chapterKey)) {
-        completedSections = completedSections.filter((s: string) => s !== chapterKey)
-      } else {
-        completedSections = [...completedSections, chapterKey]
-      }
+      const completedSections = toggleSection(existingProgress?.completed_sections || [], chapterKey)
 
       // 2. Update or create daily_progress
       if (existingProgress) {
-        await (supabase
+        const { error: updateError } = await (supabase
           .from('daily_progress') as ReturnType<typeof supabase.from>)
           .update({
             completed_sections: completedSections,
             updated_at: new Date().toISOString(),
           })
           .eq('id', existingProgress.id)
+
+        if (updateError) throw updateError
       } else {
-        await (supabase
+        // Try INSERT, handle duplicate key error gracefully
+        const { error: insertError } = await (supabase
           .from('daily_progress') as ReturnType<typeof supabase.from>)
           .insert({
             user_id: user.id,
             user_plan_id: userPlanId,
-            day_number: userPlan.current_day, // Legacy field
+            day_number: userPlan.current_day,
             date: today,
             completed_sections: completedSections,
             is_complete: false,
           })
+
+        if (insertError) {
+          // Try to handle duplicate key error
+          const handled = await handleDuplicateKeyAndUpdate(
+            insertError,
+            userPlanId,
+            today,
+            chapterKey
+          )
+          if (handled) {
+            return { completedSections: handled.completed_sections }
+          }
+          // Not a duplicate key error, throw it
+          throw insertError
+        }
       }
 
       // Note: We do NOT advance list_positions here - that's done explicitly
@@ -557,11 +640,14 @@ export function useMarkChapterRead() {
       const today = getLocalDate()
       queryClient.invalidateQueries({ queryKey: planKeys.dailyProgress(variables.userPlanId, today) })
       queryClient.invalidateQueries({ queryKey: planKeys.userPlan(variables.userPlanId) })
+      // Also invalidate the day_number-based progress queries (used by ActivePlan and Dashboard)
+      queryClient.invalidateQueries({ queryKey: ['progressForPlanDay', variables.userPlanId] })
       if (user) {
         queryClient.invalidateQueries({ queryKey: planKeys.userPlans(user.id) })
         queryClient.invalidateQueries({ queryKey: planKeys.todaysTotalProgress(user.id, today) })
         queryClient.invalidateQueries({ queryKey: ['stats', user.id] })
         queryClient.invalidateQueries({ queryKey: ['allTodayProgress', user.id, today] })
+        queryClient.invalidateQueries({ queryKey: ['progressByDayNumber', user.id] })
       }
     },
   })
@@ -803,14 +889,9 @@ export function useMarkSectionComplete() {
       if (!user) throw new Error('Not authenticated')
 
       const today = getLocalDate()
-      const completedSections = existingProgress?.completed_sections || []
-
-      // Toggle section - add if not present, remove if present
-      const newCompletedSections = completedSections.includes(sectionId)
-        ? completedSections.filter((s) => s !== sectionId)
-        : [...completedSections, sectionId]
-
+      const newCompletedSections = toggleSection(existingProgress?.completed_sections || [], sectionId)
       const isComplete = newCompletedSections.length >= totalSections
+      const isCompleteCalculator = (sections: string[]) => sections.length >= totalSections
 
       if (existingProgress) {
         const { data, error } = await (supabase
@@ -826,35 +907,55 @@ export function useMarkSectionComplete() {
 
         if (error) throw error
         return data as DailyProgress
-      } else {
-        const { data, error } = await (supabase
-          .from('daily_progress') as ReturnType<typeof supabase.from>)
-          .insert({
-            user_id: user.id,
-            user_plan_id: userPlanId,
-            day_number: dayNumber,
-            date: today,
-            completed_sections: newCompletedSections,
-            is_complete: isComplete,
-          })
-          .select()
-          .single()
-
-        if (error) throw error
-        return data as DailyProgress
       }
+
+      // Try INSERT, handle duplicate key error gracefully
+      // This can happen if progress query timed out but record actually exists
+      const { data, error: insertError } = await (supabase
+        .from('daily_progress') as ReturnType<typeof supabase.from>)
+        .insert({
+          user_id: user.id,
+          user_plan_id: userPlanId,
+          day_number: dayNumber,
+          date: today,
+          completed_sections: newCompletedSections,
+          is_complete: isComplete,
+        })
+        .select()
+        .single()
+
+      if (insertError) {
+        // Try to handle duplicate key error
+        const handled = await handleDuplicateKeyAndUpdate(
+          insertError,
+          userPlanId,
+          today,
+          sectionId,
+          isCompleteCalculator
+        )
+        if (handled) {
+          return handled
+        }
+        // Not a duplicate key error, throw it
+        throw insertError
+      }
+
+      return data as DailyProgress
     },
     onSuccess: (data, variables) => {
       const today = getLocalDate()
       queryClient.invalidateQueries({
         queryKey: planKeys.dailyProgress(variables.userPlanId, today),
       })
+      // Also invalidate the day_number-based progress queries (used by ActivePlan and Dashboard)
+      queryClient.invalidateQueries({ queryKey: ['progressForPlanDay', variables.userPlanId] })
 
       // Always invalidate stats, allTodayProgress, and todaysTotalProgress when sections are marked
       if (user) {
         queryClient.invalidateQueries({ queryKey: ['stats', user.id] })
         queryClient.invalidateQueries({ queryKey: ['allTodayProgress', user.id, today] })
         queryClient.invalidateQueries({ queryKey: planKeys.todaysTotalProgress(user.id, today) })
+        queryClient.invalidateQueries({ queryKey: ['progressByDayNumber', user.id] })
       }
 
       if (data.is_complete && user) {
