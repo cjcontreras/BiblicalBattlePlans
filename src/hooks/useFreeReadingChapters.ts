@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase, withTimeout } from '../lib/supabase'
 import { useAuth } from './useAuth'
 import { getLocalDate, planKeys } from './usePlans'
-import type { FreeReadingChapter, BookCompletionStatus, UserPlan, ReadingPlan, FreeReadingStructure } from '../types'
+import type { FreeReadingChapter, BookCompletionStatus, UserPlan, ReadingPlan, FreeReadingStructure, DailyProgress } from '../types'
 import { 
   BIBLE_BOOKS, 
   APOCRYPHA_BOOKS, 
@@ -10,6 +10,9 @@ import {
   APOCRYPHA_TOTAL_CHAPTERS,
   type BibleBook 
 } from '../lib/bibleData'
+
+// Type helper for tables not yet in generated types
+type SupabaseFrom = ReturnType<typeof supabase.from>
 
 // Query keys for free reading chapters
 export const freeReadingKeys = {
@@ -44,17 +47,16 @@ export function useFreeReadingChapters(userPlanId: string) {
   return useQuery({
     queryKey: freeReadingKeys.chapters(userPlanId),
     queryFn: async () => {
-      const { data, error } = await withTimeout(() =>
-        supabase
-          .from('free_reading_chapters')
+      const result = await withTimeout(() =>
+        (supabase.from('free_reading_chapters') as SupabaseFrom)
           .select('*')
           .eq('user_plan_id', userPlanId)
           .order('book')
           .order('chapter')
-      )
+      ) as { data: FreeReadingChapter[] | null; error: Error | null }
 
-      if (error) throw error
-      return data as FreeReadingChapter[]
+      if (result.error) throw result.error
+      return result.data as FreeReadingChapter[]
     },
     enabled: !!userPlanId,
   })
@@ -127,19 +129,17 @@ export function useToggleChapter() {
 
       if (isCurrentlyCompleted) {
         // Remove the chapter (uncheck)
-        const { error } = await supabase
-          .from('free_reading_chapters')
+        const { error } = await (supabase.from('free_reading_chapters') as SupabaseFrom)
           .delete()
           .eq('user_plan_id', userPlanId)
           .eq('book', book)
           .eq('chapter', chapter)
 
         if (error) throw error
-        return { action: 'removed', book, chapter }
+        return { action: 'removed' as const, book, chapter }
       } else {
         // Add the chapter (check)
-        const { error } = await supabase
-          .from('free_reading_chapters')
+        const { error } = await (supabase.from('free_reading_chapters') as SupabaseFrom)
           .insert({
             user_plan_id: userPlanId,
             user_id: user.id,
@@ -148,7 +148,7 @@ export function useToggleChapter() {
           })
 
         if (error) throw error
-        return { action: 'added', book, chapter }
+        return { action: 'added' as const, book, chapter }
       }
     },
     onSuccess: (_, variables) => {
@@ -184,14 +184,13 @@ export function useToggleBook() {
 
       if (isFullyComplete) {
         // Remove all chapters for this book (uncheck all)
-        const { error } = await supabase
-          .from('free_reading_chapters')
+        const { error } = await (supabase.from('free_reading_chapters') as SupabaseFrom)
           .delete()
           .eq('user_plan_id', userPlanId)
           .eq('book', book)
 
         if (error) throw error
-        return { action: 'removed_all', book, count: currentlyCompletedChapters.length }
+        return { action: 'removed_all' as const, book, count: currentlyCompletedChapters.length }
       } else {
         // Add all missing chapters for this book (check all)
         const allChapters = Array.from({ length: totalChapters }, (_, i) => i + 1)
@@ -205,14 +204,13 @@ export function useToggleBook() {
             chapter,
           }))
 
-          const { error } = await supabase
-            .from('free_reading_chapters')
+          const { error } = await (supabase.from('free_reading_chapters') as SupabaseFrom)
             .insert(inserts)
 
           if (error) throw error
         }
 
-        return { action: 'added_all', book, count: missingChapters.length }
+        return { action: 'added_all' as const, book, count: missingChapters.length }
       }
     },
     onSuccess: (_, variables) => {
@@ -253,7 +251,7 @@ export function useSyncDailyProgress() {
         .eq('date', today)
         .maybeSingle()
 
-      const existingProgress = progressData
+      const existingProgress = progressData as DailyProgress | null
 
       // Create entries for streak tracking
       const currentCount = existingProgress?.completed_sections?.length || 0
@@ -265,16 +263,14 @@ export function useSyncDailyProgress() {
       ]
 
       if (existingProgress) {
-        await supabase
-          .from('daily_progress')
+        await (supabase.from('daily_progress') as SupabaseFrom)
           .update({
             completed_sections: completedSections,
             updated_at: new Date().toISOString(),
           })
           .eq('id', existingProgress.id)
       } else {
-        await supabase
-          .from('daily_progress')
+        await (supabase.from('daily_progress') as SupabaseFrom)
           .insert({
             user_id: user.id,
             user_plan_id: userPlanId,
@@ -287,8 +283,7 @@ export function useSyncDailyProgress() {
 
       // Update running total in user_plans
       const currentTotal = userPlan.list_positions?.['free'] || 0
-      await supabase
-        .from('user_plans')
+      await (supabase.from('user_plans') as SupabaseFrom)
         .update({ 
           list_positions: { free: currentTotal + chaptersAddedToday } 
         })
@@ -331,8 +326,7 @@ export function useCheckAndCompletePlan() {
       const isComplete = completedChaptersCount >= totalChapters
 
       if (isComplete) {
-        const { error } = await supabase
-          .from('user_plans')
+        const { error } = await (supabase.from('user_plans') as SupabaseFrom)
           .update({
             is_completed: true,
             completed_at: new Date().toISOString(),

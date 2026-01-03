@@ -507,7 +507,8 @@ async function handleDuplicateKeyAndUpdate(
   userPlanId: string,
   date: string,
   sectionId: string,
-  isCompleteCalculator?: (sections: string[]) => boolean
+  isCompleteCalculator?: (sections: string[]) => boolean,
+  targetDayNumber?: number
 ): Promise<DailyProgress | null> {
   // Check if this is a duplicate key error (PostgreSQL unique_violation)
   if (insertError?.code !== '23505') {
@@ -534,17 +535,30 @@ async function handleDuplicateKeyAndUpdate(
   }
 
   const existing = actualExisting as DailyProgress
-  // Re-calculate toggle based on actual existing data
-  const actualSections = toggleSection(existing.completed_sections || [], sectionId)
+  
+  // If the existing record is for a different day, reset completed_sections
+  // This handles the case where user advances to a new day on the same date
+  const isNewDay = targetDayNumber !== undefined && existing.day_number !== targetDayNumber
+  const baseSections = isNewDay ? [] : (existing.completed_sections || [])
+  
+  // Re-calculate toggle based on actual existing data (or empty for new day)
+  const actualSections = toggleSection(baseSections, sectionId)
   const isComplete = isCompleteCalculator ? isCompleteCalculator(actualSections) : existing.is_complete
+
+  const updateData: Record<string, unknown> = {
+    completed_sections: actualSections,
+    is_complete: isComplete,
+    updated_at: new Date().toISOString(),
+  }
+  
+  // Update day_number if we're on a new day
+  if (isNewDay) {
+    updateData.day_number = targetDayNumber
+  }
 
   const updateResult = await withTimeout(() =>
     (supabase.from('daily_progress') as ReturnType<typeof supabase.from>)
-      .update({
-        completed_sections: actualSections,
-        is_complete: isComplete,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', existing.id)
       .select()
       .single()
@@ -931,7 +945,8 @@ export function useMarkSectionComplete() {
           userPlanId,
           today,
           sectionId,
-          isCompleteCalculator
+          isCompleteCalculator,
+          dayNumber // Pass dayNumber so we can update it if needed
         )
         if (handled) {
           return handled
@@ -949,6 +964,8 @@ export function useMarkSectionComplete() {
       })
       // Also invalidate the day_number-based progress queries (used by ActivePlan and Dashboard)
       queryClient.invalidateQueries({ queryKey: ['progressForPlanDay', variables.userPlanId] })
+      // Invalidate the specific day_number query as well
+      queryClient.invalidateQueries({ queryKey: ['progressForPlanDay', variables.userPlanId, variables.dayNumber] })
 
       // Always invalidate stats, allTodayProgress, and todaysTotalProgress when sections are marked
       if (user) {

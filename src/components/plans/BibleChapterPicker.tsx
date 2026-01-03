@@ -26,8 +26,8 @@ export function BibleChapterPicker({
   onToggleBook,
   disabled = false,
 }: BibleChapterPickerProps) {
-  // Track which testaments and books are expanded
-  const [expandedTestaments, setExpandedTestaments] = useState<Set<string>>(new Set(['OT']))
+  // Track which testaments and books are expanded (all collapsed by default)
+  const [expandedTestaments, setExpandedTestaments] = useState<Set<string>>(new Set())
   const [expandedBooks, setExpandedBooks] = useState<Set<string>>(new Set())
 
   // Group books by testament

@@ -23,10 +23,20 @@ const activityConfig: Record<
     color: 'text-sage',
     getMessage: (a) => {
       const { plan_name, day_number, chapters_read } = a.metadata
+      const chapterCount = chapters_read || 1
+      const chapterText = `${chapterCount} chapter${chapterCount > 1 ? 's' : ''}`
+      
+      // For Free Reading / Apocrypha Reading plans, show chapter count instead of day
+      if (plan_name && (plan_name.includes('Free Reading') || plan_name.includes('Apocrypha'))) {
+        return `read ${chapterText} in ${plan_name}`
+      }
+      
+      // For day-based plans, show day number
       if (plan_name && day_number) {
         return `completed Day ${day_number} of ${plan_name}`
       }
-      return `read ${chapters_read || 1} chapter${(chapters_read || 1) > 1 ? 's' : ''}`
+      
+      return `read ${chapterText}`
     },
   },
   streak_milestone: {

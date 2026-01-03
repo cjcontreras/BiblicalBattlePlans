@@ -132,7 +132,7 @@ export function BibleProgressDashboard({
               {totalCompleted.toLocaleString()} / {totalChapters.toLocaleString()} chapters
             </span>
           </div>
-          <ProgressBar progress={percentage} variant="success" size="lg" />
+          <ProgressBar value={percentage} variant="success" size="lg" />
         </div>
       </div>
 
