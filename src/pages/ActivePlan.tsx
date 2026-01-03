@@ -225,7 +225,7 @@ export function ActivePlan() {
 
       toast.success(isFullyComplete 
         ? `Unmarked all chapters in ${book}` 
-        : `Marked ${chaptersToAdd} chapters in ${book} as read!`
+        : `Marked ${chaptersToAdd} chapter${chaptersToAdd === 1 ? '' : 's'} in ${book} as read!`
       )
     } catch (err) {
       captureError(err, { component: 'ActivePlan', action: 'toggleBook', planId: id })
