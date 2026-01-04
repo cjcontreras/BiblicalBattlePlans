@@ -132,11 +132,11 @@ export function useUserPlan(userPlanId: string) {
             plan:reading_plans(*)
           `)
           .eq('id', userPlanId)
-          .single()
+          .maybeSingle()
       )
 
       if (error) throw error
-      return data as UserPlan & { plan: ReadingPlan }
+      return data as (UserPlan & { plan: ReadingPlan }) | null
     },
     enabled: !!userPlanId,
   })

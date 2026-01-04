@@ -35,6 +35,7 @@ export function initSentry() {
       /extensions\//i,
       /^chrome:\/\//i,
       /^moz-extension:\/\//i,
+      /runtime\.sendMessage/i,
       // Network errors that aren't actionable
       'Network request failed',
       'Failed to fetch',
