@@ -89,7 +89,9 @@ export const persister = createSyncStoragePersister({
 // Changed: v2 - Fixed chapter counting for sectional/weekly plans
 // Changed: v3 - Improved persistent cache handling and visibility management to reduce stale data issues
 // Changed: v4 - Re-enabled cache persistence with page reload workaround for Supabase hang issue
-export const CACHE_BUSTER = 'v5'
+// Changed: v5 - Adjusted query/mutation defaults and cache lifetimes, affecting how cached data is reused
+// Changed: v6 - Updated cache persistence and user cache clearing logic; force full cache reset across users
+export const CACHE_BUSTER = 'v6'
 
 /**
  * Clear all user-specific cached data.

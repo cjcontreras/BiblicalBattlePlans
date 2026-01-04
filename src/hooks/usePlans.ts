@@ -507,7 +507,8 @@ async function handleDuplicateKeyAndUpdate(
   userPlanId: string,
   date: string,
   sectionId: string,
-  isCompleteCalculator?: (sections: string[]) => boolean
+  isCompleteCalculator?: (sections: string[]) => boolean,
+  targetDayNumber?: number
 ): Promise<DailyProgress | null> {
   // Check if this is a duplicate key error (PostgreSQL unique_violation)
   if (insertError?.code !== '23505') {
@@ -534,17 +535,34 @@ async function handleDuplicateKeyAndUpdate(
   }
 
   const existing = actualExisting as DailyProgress
-  // Re-calculate toggle based on actual existing data
-  const actualSections = toggleSection(existing.completed_sections || [], sectionId)
+
+  // Track if we're on a new reading day (for updating day_number)
+  const isNewDay = targetDayNumber !== undefined && existing.day_number !== targetDayNumber
+
+  // IMPORTANT: Always accumulate completed_sections across all readings on the same date
+  // Do NOT reset when advancing days - we want to count ALL chapters read today
+  const baseSections = existing.completed_sections || []
+
+  // Re-calculate toggle based on actual existing data (accumulating)
+  const actualSections = toggleSection(baseSections, sectionId)
+
+  // is_complete refers to the CURRENT day's reading being complete, not all readings
   const isComplete = isCompleteCalculator ? isCompleteCalculator(actualSections) : existing.is_complete
+
+  const updateData: Record<string, unknown> = {
+    completed_sections: actualSections,
+    is_complete: isComplete,
+    updated_at: new Date().toISOString(),
+  }
+
+  // Update day_number to track current reading position
+  if (isNewDay) {
+    updateData.day_number = targetDayNumber
+  }
 
   const updateResult = await withTimeout(() =>
     (supabase.from('daily_progress') as ReturnType<typeof supabase.from>)
-      .update({
-        completed_sections: actualSections,
-        is_complete: isComplete,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', existing.id)
       .select()
       .single()
@@ -752,90 +770,6 @@ export function useAdvanceDay() {
   })
 }
 
-// Log free reading entry (for free_reading plans)
-export function useLogFreeReading() {
-  const queryClient = useQueryClient()
-  const { user } = useAuth()
-
-  return useMutation({
-    mutationFn: async ({
-      userPlanId,
-      chapters,
-      notes,
-      userPlan,
-    }: {
-      userPlanId: string
-      chapters: number
-      notes?: string
-      userPlan: UserPlan & { plan: ReadingPlan }
-    }) => {
-      if (!user) throw new Error('Not authenticated')
-      if (chapters <= 0) throw new Error('Must log at least 1 chapter')
-
-      const today = getLocalDate()
-
-      // Get today's progress
-      const { data: progressData } = await supabase
-        .from('daily_progress')
-        .select('*')
-        .eq('user_plan_id', userPlanId)
-        .eq('date', today)
-        .maybeSingle()
-
-      const existingProgress = progressData as DailyProgress | null
-
-      // Create entries: each chapter gets "free:N" identifier
-      const currentCount = existingProgress?.completed_sections.length || 0
-      const newEntries = Array.from({ length: chapters }, (_, i) => `free:${currentCount + i}`)
-
-      const completedSections = [
-        ...(existingProgress?.completed_sections || []),
-        ...newEntries
-      ]
-
-      // Update or create daily_progress
-      if (existingProgress) {
-        await (supabase.from('daily_progress') as ReturnType<typeof supabase.from>)
-          .update({
-            completed_sections: completedSections,
-            notes: notes || existingProgress.notes,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', existingProgress.id)
-      } else {
-        await (supabase.from('daily_progress') as ReturnType<typeof supabase.from>)
-          .insert({
-            user_id: user.id,
-            user_plan_id: userPlanId,
-            day_number: 1,
-            date: today,
-            completed_sections: completedSections,
-            notes: notes || null,
-            is_complete: false,
-          })
-      }
-
-      // Update running total
-      const totalLogged = (userPlan.list_positions?.['free'] || 0) + chapters
-      await (supabase.from('user_plans') as ReturnType<typeof supabase.from>)
-        .update({ list_positions: { free: totalLogged } })
-        .eq('id', userPlanId)
-
-      return { completedSections, totalLogged }
-    },
-    onSuccess: (_, variables) => {
-      const today = getLocalDate()
-      queryClient.invalidateQueries({ queryKey: planKeys.dailyProgress(variables.userPlanId, today) })
-      queryClient.invalidateQueries({ queryKey: planKeys.userPlan(variables.userPlanId) })
-      if (user) {
-        queryClient.invalidateQueries({ queryKey: planKeys.userPlans(user.id) })
-        queryClient.invalidateQueries({ queryKey: planKeys.todaysTotalProgress(user.id, today) })
-        queryClient.invalidateQueries({ queryKey: ['stats', user.id] })
-      }
-    },
-  })
-}
-
 // Mark a plan as complete
 export function useMarkPlanComplete() {
   const queryClient = useQueryClient()
@@ -931,7 +865,8 @@ export function useMarkSectionComplete() {
           userPlanId,
           today,
           sectionId,
-          isCompleteCalculator
+          isCompleteCalculator,
+          dayNumber // Pass dayNumber so we can update it if needed
         )
         if (handled) {
           return handled
@@ -949,6 +884,8 @@ export function useMarkSectionComplete() {
       })
       // Also invalidate the day_number-based progress queries (used by ActivePlan and Dashboard)
       queryClient.invalidateQueries({ queryKey: ['progressForPlanDay', variables.userPlanId] })
+      // Invalidate the specific day_number query as well
+      queryClient.invalidateQueries({ queryKey: ['progressForPlanDay', variables.userPlanId, variables.dayNumber] })
 
       // Always invalidate stats, allTodayProgress, and todaysTotalProgress when sections are marked
       if (user) {

@@ -66,6 +66,7 @@ export interface FreeReadingStructure {
   type: 'free_reading'
   allow_notes: boolean
   require_chapter_count: boolean
+  book_type?: 'bible' | 'apocrypha' // Which book collection to track (default: 'bible')
 }
 
 export interface WeeklyCategory {
@@ -147,6 +148,25 @@ export interface ListProgress {
   list_id: string
   current_chapter_index: number
   cycles_completed: number
+}
+
+// Free Reading Chapter Tracking
+export interface FreeReadingChapter {
+  id: string
+  user_plan_id: string
+  user_id: string
+  book: string      // e.g., "Genesis", "Tobit"
+  chapter: number   // e.g., 1, 2, 3...
+  completed_at: string
+}
+
+// For tracking completion status of books
+export interface BookCompletionStatus {
+  book: string
+  totalChapters: number
+  completedChapters: number
+  completedChapterNumbers: number[]
+  isComplete: boolean
 }
 
 // Guild Types
