@@ -23,6 +23,7 @@ When reviewing pull requests, focus on issues that **actually matter**:
 - ARIA attributes on elements that are already accessible (e.g., buttons with clear text)
 - Suggestions to re-show dismissed UI or add "nice to have" UX features
 - Formatting issues (trust Prettier)
+- Theoretical error handling for edge cases with natural recovery paths (e.g., "what if this Promise rejects?" when the user can simply retry)
 
 ## Comment Style
 
