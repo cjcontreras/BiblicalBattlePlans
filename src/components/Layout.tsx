@@ -4,6 +4,7 @@ import { ChevronDown, User, LogOut, Download } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useStats } from '../hooks/useStats'
 import { useIsPWA } from '../hooks/useIsPWA'
+import { useSWUpdate } from '../hooks/useSWUpdate'
 import { useCurrentAchievement, useDismissAchievement } from '../hooks/useAchievements'
 import { Navigation, MobileNavigation } from './Navigation'
 import { StreakBadge } from './ui'
@@ -11,6 +12,7 @@ import { InstallModal } from './InstallModal'
 import { AchievementModal } from './AchievementModal'
 import { MilestoneWatcher } from './MilestoneWatcher'
 import { WelcomeModal } from './WelcomeModal'
+import { UpdateBanner } from './UpdateBanner'
 
 const WELCOME_MODAL_KEY = 'hasSeenWelcomeModal'
 
@@ -18,6 +20,7 @@ export function Layout() {
   const { profile, signOut, user } = useAuth()
   const { data: stats } = useStats()
   const isPWA = useIsPWA()
+  const { needRefresh, updateServiceWorker, close: dismissUpdate } = useSWUpdate()
   const currentAchievement = useCurrentAchievement()
   const dismissAchievement = useDismissAchievement()
   const [showUserMenu, setShowUserMenu] = useState(false)
@@ -49,8 +52,16 @@ export function Layout() {
 
   return (
     <div className="min-h-screen bg-parchment-dark flex flex-col">
+      {/* Update Banner */}
+      {needRefresh && (
+        <UpdateBanner
+          onUpdate={updateServiceWorker}
+          onDismiss={dismissUpdate}
+        />
+      )}
+
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-gradient-to-br from-parchment to-parchment-light border-b-2 border-border-subtle shadow-[0_4px_12px_var(--shadow-color)]">
+      <header className={`sticky ${needRefresh ? 'top-[52px]' : 'top-0'} z-40 bg-gradient-to-br from-parchment to-parchment-light border-b-2 border-border-subtle shadow-[0_4px_12px_var(--shadow-color)] transition-[top] duration-200`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
