@@ -143,7 +143,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
         })
 
         // Clear URL hash after processing to prevent re-processing on refresh
-        if (hasAccessToken && window.history.replaceState) {
+        if (hasAccessToken) {
           window.history.replaceState(null, '', window.location.pathname + window.location.search)
         }
       } else {
