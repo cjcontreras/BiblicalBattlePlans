@@ -50,8 +50,8 @@ export function ActivePlan() {
     userPlan?.current_day || 0
   )
   // Choose the right progress based on plan type
-  const isCyclingPlan = userPlan?.plan.daily_structure.type === 'cycling_lists'
-  const isFreeReadingPlan = userPlan?.plan.daily_structure.type === 'free_reading'
+  const isCyclingPlan = userPlan?.plan?.daily_structure?.type === 'cycling_lists'
+  const isFreeReadingPlan = userPlan?.plan?.daily_structure?.type === 'free_reading'
   const progress = isCyclingPlan ? todayProgress : dayNumberProgress
   const progressLoading = isCyclingPlan ? todayProgressLoading : dayNumberProgressLoading
   const progressError = isCyclingPlan ? todayProgressError : dayNumberProgressError
@@ -261,6 +261,20 @@ export function ActivePlan() {
       <Card>
         <CardContent className="text-center py-8">
           <p className="font-pixel text-[0.625rem] text-danger">ERROR: Quest not found</p>
+          <Button variant="secondary" onClick={() => navigate('/dashboard')} className="mt-4">
+            Back to Dashboard
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!userPlan.plan) {
+    return (
+      <Card>
+        <CardContent className="text-center py-8">
+          <p className="font-pixel text-[0.625rem] text-danger">ERROR: Reading plan data unavailable</p>
+          <p className="font-pixel text-[0.5rem] text-ink-muted mt-2">The reading plan for this quest could not be loaded.</p>
           <Button variant="secondary" onClick={() => navigate('/dashboard')} className="mt-4">
             Back to Dashboard
           </Button>

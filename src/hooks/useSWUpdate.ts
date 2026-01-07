@@ -32,8 +32,13 @@ export function useSWUpdate(): SWUpdateState {
       onRegisteredSW(_swUrl, registration) {
         // Check for updates periodically (every 60 minutes)
         if (registration) {
-          intervalRef.current = setInterval(() => {
-            registration.update()
+          intervalRef.current = setInterval(async () => {
+            try {
+              await registration.update()
+            } catch {
+              // Silently ignore update check failures (offline, network issues)
+              // The SW will update on next successful check or page reload
+            }
           }, 60 * 60 * 1000)
         }
       },
