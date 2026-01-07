@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase, withTimeout } from '../lib/supabase'
+import { getSupabase, withTimeout } from '../lib/supabase'
 import { useAuth } from './useAuth'
 import type { ReadingPlan, UserPlan, DailyProgress, DailyStructure, CyclingListsStructure, ListPositions, WeeklySectionalStructure } from '../types'
 
@@ -57,7 +57,7 @@ export function useReadingPlans() {
     queryFn: async () => {
       // Using withTimeout to prevent hanging promises after tab suspension
       const { data, error } = await withTimeout(() =>
-        supabase
+        getSupabase()
           .from('reading_plans')
           .select('*')
           .eq('is_active', true)
@@ -77,7 +77,7 @@ export function useReadingPlan(planId: string) {
     queryFn: async () => {
       // Using withTimeout to prevent hanging promises after tab suspension
       const { data, error } = await withTimeout(() =>
-        supabase
+        getSupabase()
           .from('reading_plans')
           .select('*')
           .eq('id', planId)
@@ -101,7 +101,7 @@ export function useUserPlans() {
       if (!user) return []
 
       const { data, error } = await withTimeout(() =>
-        supabase
+        getSupabase()
           .from('user_plans')
           .select(`
             *,
@@ -125,7 +125,7 @@ export function useUserPlan(userPlanId: string) {
     queryFn: async () => {
       // Using withTimeout to prevent hanging promises after tab suspension
       const { data, error } = await withTimeout(() =>
-        supabase
+        getSupabase()
           .from('user_plans')
           .select(`
             *,
@@ -151,7 +151,7 @@ export function useDailyProgress(userPlanId: string, date?: string) {
     queryFn: async () => {
       // Using withTimeout to prevent hanging promises after tab suspension
       const { data, error } = await withTimeout(() =>
-        supabase
+        getSupabase()
           .from('daily_progress')
           .select('*')
           .eq('user_plan_id', userPlanId)
@@ -178,7 +178,7 @@ export function useProgressForPlanDay(userPlanId: string, dayNumber: number) {
     queryFn: async () => {
       // Using withTimeout to prevent hanging promises after tab suspension
       const { data, error } = await withTimeout(() =>
-        supabase
+        getSupabase()
           .from('daily_progress')
           .select('*')
           .eq('user_plan_id', userPlanId)
@@ -207,7 +207,7 @@ export function useAllTodayProgress() {
       if (!user) return {}
 
       const { data, error } = await withTimeout(() =>
-        supabase
+        getSupabase()
           .from('daily_progress')
           .select('*')
           .eq('user_id', user.id)
@@ -253,7 +253,7 @@ export function useProgressByDayNumber() {
       const cutoff = cutoffDate.toISOString().split('T')[0]
 
       const { data, error } = await withTimeout(() =>
-        supabase
+        getSupabase()
           .from('daily_progress')
           .select('*')
           .eq('user_id', user.id)
@@ -316,8 +316,8 @@ export function useTodaysTotalChapters() {
 
       // Fetch all progress for today across all plans
       const result = await withTimeout(() =>
-        (supabase
-          .from('daily_progress') as ReturnType<typeof supabase.from>)
+        (getSupabase()
+          .from('daily_progress') as ReturnType<ReturnType<typeof getSupabase>['from']>)
           .select('*, user_plan:user_plans(current_day, plan:reading_plans(daily_structure))')
           .eq('user_id', user.id)
           .eq('date', today)
@@ -444,7 +444,7 @@ export function useStartPlan() {
       if (!user) throw new Error('Not authenticated')
 
       // Fetch the plan to get list structure for initial positions
-      const { data: planData, error: planError } = await supabase
+      const { data: planData, error: planError } = await getSupabase()
         .from('reading_plans')
         .select('*')
         .eq('id', planId)
@@ -462,8 +462,8 @@ export function useStartPlan() {
         })
       }
 
-      const { data, error } = await (supabase
-        .from('user_plans') as ReturnType<typeof supabase.from>)
+      const { data, error } = await (getSupabase()
+        .from('user_plans') as ReturnType<ReturnType<typeof getSupabase>['from']>)
         .insert({
           user_id: user.id,
           plan_id: planId,
@@ -517,7 +517,7 @@ async function handleDuplicateKeyAndUpdate(
 
   // Fetch the existing record (with timeout to prevent hanging)
   const { data: actualExisting, error: fetchError } = await withTimeout(() =>
-    supabase
+    getSupabase()
       .from('daily_progress')
       .select('*')
       .eq('user_plan_id', userPlanId)
@@ -561,7 +561,7 @@ async function handleDuplicateKeyAndUpdate(
   }
 
   const updateResult = await withTimeout(() =>
-    (supabase.from('daily_progress') as ReturnType<typeof supabase.from>)
+    (getSupabase().from('daily_progress') as ReturnType<ReturnType<typeof getSupabase>['from']>)
       .update(updateData)
       .eq('id', existing.id)
       .select()
@@ -599,7 +599,7 @@ export function useMarkChapterRead() {
       const chapterKey = `${listId}:${chapterIndex}`
 
       // 1. Get or create today's progress
-      const { data: progressData } = await supabase
+      const { data: progressData } = await getSupabase()
         .from('daily_progress')
         .select('*')
         .eq('user_plan_id', userPlanId)
@@ -611,8 +611,8 @@ export function useMarkChapterRead() {
 
       // 2. Update or create daily_progress
       if (existingProgress) {
-        const { error: updateError } = await (supabase
-          .from('daily_progress') as ReturnType<typeof supabase.from>)
+        const { error: updateError } = await (getSupabase()
+          .from('daily_progress') as ReturnType<ReturnType<typeof getSupabase>['from']>)
           .update({
             completed_sections: completedSections,
             updated_at: new Date().toISOString(),
@@ -622,8 +622,8 @@ export function useMarkChapterRead() {
         if (updateError) throw updateError
       } else {
         // Try INSERT, handle duplicate key error gracefully
-        const { error: insertError } = await (supabase
-          .from('daily_progress') as ReturnType<typeof supabase.from>)
+        const { error: insertError } = await (getSupabase()
+          .from('daily_progress') as ReturnType<ReturnType<typeof getSupabase>['from']>)
           .insert({
             user_id: user.id,
             user_plan_id: userPlanId,
@@ -702,8 +702,8 @@ export function useAdvanceList() {
         [listId]: newPosition,
       }
 
-      await (supabase
-        .from('user_plans') as ReturnType<typeof supabase.from>)
+      await (getSupabase()
+        .from('user_plans') as ReturnType<ReturnType<typeof getSupabase>['from']>)
         .update({ list_positions: newPositions })
         .eq('id', userPlanId)
 
@@ -746,8 +746,8 @@ export function useAdvanceDay() {
       // Check if plan is now complete (reached the final day)
       const isNowComplete = newDay >= maxDay
 
-      await (supabase
-        .from('user_plans') as ReturnType<typeof supabase.from>)
+      await (getSupabase()
+        .from('user_plans') as ReturnType<ReturnType<typeof getSupabase>['from']>)
         .update({
           current_day: newDay,
           is_completed: isNowComplete,
@@ -779,8 +779,8 @@ export function useMarkPlanComplete() {
     mutationFn: async ({ userPlanId }: { userPlanId: string }) => {
       if (!user) throw new Error('Not authenticated')
 
-      await (supabase
-        .from('user_plans') as ReturnType<typeof supabase.from>)
+      await (getSupabase()
+        .from('user_plans') as ReturnType<ReturnType<typeof getSupabase>['from']>)
         .update({
           is_completed: true,
           completed_at: new Date().toISOString(),
@@ -823,19 +823,36 @@ export function useMarkSectionComplete() {
       if (!user) throw new Error('Not authenticated')
 
       const today = getLocalDate()
-      const newCompletedSections = toggleSection(existingProgress?.completed_sections || [], sectionId)
-      const isComplete = newCompletedSections.length >= totalSections
-      const isCompleteCalculator = (sections: string[]) => sections.length >= totalSections
 
-      if (existingProgress) {
-        const { data, error } = await (supabase
-          .from('daily_progress') as ReturnType<typeof supabase.from>)
+      // Always fetch existing progress by date (not day_number) to handle
+      // advancing to next reading on same day. The existingProgress param may be
+      // null if queried by day_number but record exists for same date.
+      let actualExisting = existingProgress
+      if (!actualExisting) {
+        const { data: existingByDate } = await getSupabase()
+          .from('daily_progress')
+          .select('*')
+          .eq('user_plan_id', userPlanId)
+          .eq('date', today)
+          .maybeSingle()
+        actualExisting = existingByDate as DailyProgress | null
+      }
+
+      // Re-calculate sections based on actual existing data
+      const actualCompletedSections = toggleSection(actualExisting?.completed_sections || [], sectionId)
+      const actualIsComplete = actualCompletedSections.length >= totalSections
+
+      if (actualExisting) {
+        // Update existing record
+        const { data, error } = await (getSupabase()
+          .from('daily_progress') as ReturnType<ReturnType<typeof getSupabase>['from']>)
           .update({
-            completed_sections: newCompletedSections,
-            is_complete: isComplete,
+            completed_sections: actualCompletedSections,
+            is_complete: actualIsComplete,
+            day_number: dayNumber, // Update to current day position
             updated_at: new Date().toISOString(),
           })
-          .eq('id', existingProgress.id)
+          .eq('id', actualExisting.id)
           .select()
           .single()
 
@@ -843,38 +860,21 @@ export function useMarkSectionComplete() {
         return data as DailyProgress
       }
 
-      // Try INSERT, handle duplicate key error gracefully
-      // This can happen if progress query timed out but record actually exists
-      const { data, error: insertError } = await (supabase
-        .from('daily_progress') as ReturnType<typeof supabase.from>)
+      // No existing record - insert new one
+      const { data, error } = await (getSupabase()
+        .from('daily_progress') as ReturnType<ReturnType<typeof getSupabase>['from']>)
         .insert({
           user_id: user.id,
           user_plan_id: userPlanId,
           day_number: dayNumber,
           date: today,
-          completed_sections: newCompletedSections,
-          is_complete: isComplete,
+          completed_sections: actualCompletedSections,
+          is_complete: actualIsComplete,
         })
         .select()
         .single()
 
-      if (insertError) {
-        // Try to handle duplicate key error
-        const handled = await handleDuplicateKeyAndUpdate(
-          insertError,
-          userPlanId,
-          today,
-          sectionId,
-          isCompleteCalculator,
-          dayNumber // Pass dayNumber so we can update it if needed
-        )
-        if (handled) {
-          return handled
-        }
-        // Not a duplicate key error, throw it
-        throw insertError
-      }
-
+      if (error) throw error
       return data as DailyProgress
     },
     onSuccess: (data, variables) => {
@@ -893,6 +893,10 @@ export function useMarkSectionComplete() {
         queryClient.invalidateQueries({ queryKey: ['allTodayProgress', user.id, today] })
         queryClient.invalidateQueries({ queryKey: planKeys.todaysTotalProgress(user.id, today) })
         queryClient.invalidateQueries({ queryKey: ['progressByDayNumber', user.id] })
+        // Invalidate guild data (user may be in multiple guilds)
+        queryClient.invalidateQueries({ queryKey: ['guildChapterCounts'] })
+        // Invalidate guild detail to refresh profile.total_chapters_read
+        queryClient.invalidateQueries({ queryKey: ['guilds', 'detail'] })
       }
 
       if (data.is_complete && user) {
@@ -1268,8 +1272,8 @@ export function useArchivePlan() {
     mutationFn: async (userPlanId: string) => {
       if (!user) throw new Error('Not authenticated')
 
-      const { data, error } = await (supabase
-        .from('user_plans') as ReturnType<typeof supabase.from>)
+      const { data, error } = await (getSupabase()
+        .from('user_plans') as ReturnType<ReturnType<typeof getSupabase>['from']>)
         .update({
           is_archived: true,
           archived_at: new Date().toISOString(),
@@ -1298,8 +1302,8 @@ export function useUnarchivePlan() {
     mutationFn: async (userPlanId: string) => {
       if (!user) throw new Error('Not authenticated')
 
-      const { data, error} = await (supabase
-        .from('user_plans') as ReturnType<typeof supabase.from>)
+      const { data, error} = await (getSupabase()
+        .from('user_plans') as ReturnType<ReturnType<typeof getSupabase>['from']>)
         .update({
           is_archived: false,
           archived_at: null,

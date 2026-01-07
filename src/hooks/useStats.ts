@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { supabase, withTimeout } from '../lib/supabase'
+import { getSupabase, withTimeout } from '../lib/supabase'
 import { useAuth } from './useAuth'
 import type { UserStats } from '../types'
 
@@ -34,7 +34,7 @@ export function useStats() {
       // Fetch fresh profile stats from database (updated by triggers)
       // Using withTimeout to prevent hanging promises after tab suspension
       const profileResult = await withTimeout(() =>
-        supabase
+        getSupabase()
           .from('profiles')
           .select('current_streak, longest_streak, total_chapters_read, total_days_reading, streak_shields, last_shield_used_date')
           .eq('id', user.id)
@@ -44,7 +44,7 @@ export function useStats() {
 
       // Count active/completed plans
       const plansResult = await withTimeout(() =>
-        supabase
+        getSupabase()
           .from('user_plans')
           .select('id, is_completed, is_archived')
           .eq('user_id', user.id)

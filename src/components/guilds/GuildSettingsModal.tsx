@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { BookOpen } from 'lucide-react'
 import { Modal, Input, Button } from '../ui'
 import { useUpdateGuild, useSetGuildRecommendedPlan } from '../../hooks/useGuilds'
-import { supabase } from '../../lib/supabase'
+import { getSupabase } from '../../lib/supabase'
 import type { GuildWithMembers, ReadingPlan } from '../../types'
 
 interface GuildSettingsModalProps {
@@ -25,7 +25,7 @@ export function GuildSettingsModal({ isOpen, onClose, guild }: GuildSettingsModa
   const { data: availablePlans } = useQuery({
     queryKey: ['readingPlans', 'active'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('reading_plans')
         .select('id, name, description, duration_days')
         .eq('is_active', true)

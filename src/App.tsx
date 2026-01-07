@@ -8,19 +8,18 @@ import { ProtectedRoute } from './components/auth'
 import { Layout } from './components/Layout'
 import { Landing, Login, Signup, ForgotPassword, ResetPassword, Dashboard, Plans, PlanDetail, ActivePlan, Profile, Acknowledgements, About, Feedback, GuildHub, Guild, GuildJoin } from './pages'
 import { LoadingOverlay } from './components/ui'
+import { queryClient } from './lib/queryClient'
 
 /**
- * Handle tab visibility changes by reloading the page.
+ * Handle tab visibility changes by invalidating stale queries.
  *
- * Issue: Supabase JS client promises hang after browser tab is suspended/backgrounded.
- * The HTTP requests complete but the JS promises never resolve due to internal client
- * state corruption from browser throttling.
+ * When a tab returns from background after 5+ seconds, we invalidate the
+ * React Query cache to trigger refetches of potentially stale data.
  *
- * This happens almost immediately when the tab is hidden - even 300ms is enough for
- * the browser to start throttling and corrupt the client state. The ONLY reliable
- * fix is a full page reload to get a fresh Supabase client.
+ * Token refresh is handled automatically by the Supabase client when needed -
+ * even with autoRefreshToken disabled, it will refresh on API calls if expired.
  *
- * See: https://github.com/supabase/auth-js/issues/1594
+ * See: https://github.com/supabase/supabase-js/issues/1594
  */
 function useTabRecoveryHandler() {
   const hiddenAtRef = useRef<number | null>(null)
@@ -33,10 +32,9 @@ function useTabRecoveryHandler() {
         const hiddenDuration = Date.now() - hiddenAtRef.current
         hiddenAtRef.current = null
 
-        // If hidden for more than 300ms, reload the page
-        // Browser throttling starts quickly and corrupts the Supabase client
-        if (hiddenDuration > 300) {
-          window.location.reload()
+        // If hidden for more than 5 seconds, invalidate queries to refresh stale data
+        if (hiddenDuration > 5000) {
+          queryClient.invalidateQueries()
         }
       }
     }

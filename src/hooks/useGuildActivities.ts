@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { supabase, withTimeout } from '../lib/supabase'
+import { getSupabase, withTimeout } from '../lib/supabase'
 import type { GuildActivity } from '../types'
 
 // Query keys
@@ -17,7 +17,7 @@ export function useGuildActivities(guildId: string, limit = 20) {
     queryFn: async () => {
       // Using withTimeout to prevent hanging promises after tab suspension
       const { data, error } = await withTimeout(() =>
-        supabase
+        getSupabase()
           .from('guild_activities')
           .select(`
             *,
@@ -35,6 +35,9 @@ export function useGuildActivities(guildId: string, limit = 20) {
       return data as GuildActivity[]
     },
     enabled: !!guildId,
-    staleTime: 60 * 1000, // 1 minute
+    // Background refresh every 10 minutes to keep activity feed fresh
+    refetchInterval: 10 * 60 * 1000,
+    // Only refetch in background when tab is visible
+    refetchIntervalInBackground: false,
   })
 }

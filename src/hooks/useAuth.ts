@@ -1,10 +1,26 @@
 import { create } from 'zustand'
-import { supabase } from '../lib/supabase'
+import { getSupabase } from '../lib/supabase'
 import { setSentryUser } from '../lib/sentry'
 import { captureError } from '../lib/errorLogger'
 import { clearUserCache } from '../lib/queryClient'
 import type { User, Session } from '@supabase/supabase-js'
 import type { Profile } from '../types'
+
+/**
+ * AUTH ARCHITECTURE
+ *
+ * We manage auth state ourselves in Zustand instead of relying on GoTrueClient's
+ * internal state management. This avoids issues with:
+ * - navigator.locks deadlocks after tab suspension
+ * - Multiple GoTrueClient instances warnings from HMR
+ * - Unpredictable onAuthStateChange timing
+ *
+ * Auth flow:
+ * 1. On app init: Check localStorage for existing session via getSession()
+ * 2. On sign in/out: Update Zustand state directly after the operation
+ * 3. On tab visibility change: Refresh token if needed (handled in App.tsx)
+ * 4. URL auth flows (OAuth, password reset): Handled in initialize()
+ */
 
 interface AuthState {
   user: User | null
@@ -31,7 +47,7 @@ interface AuthActions {
 type AuthStore = AuthState & AuthActions
 
 const fetchProfile = async (userId: string): Promise<Profile | null> => {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('profiles')
     .select('*')
     .eq('id', userId)
@@ -45,6 +61,44 @@ const fetchProfile = async (userId: string): Promise<Profile | null> => {
   return data
 }
 
+/**
+ * Sync profile data from user metadata (for OAuth sign-ins).
+ * This sets username and display_name if not already set.
+ */
+const syncProfileFromMetadata = async (user: User): Promise<void> => {
+  const metadata = user.user_metadata
+  const existingProfile = await fetchProfile(user.id)
+
+  // Only update if username is not set
+  if (!existingProfile?.username) {
+    let usernameToSet: string | null = null
+    let displayNameToSet: string | null = null
+
+    if (metadata?.username) {
+      // Email signup - use provided username
+      usernameToSet = metadata.username
+      displayNameToSet = existingProfile?.display_name || metadata.display_name || metadata.username
+    } else if (metadata?.full_name) {
+      // Google OAuth - generate username from full_name (e.g., "Chris Bunce" -> "chris_bunce")
+      usernameToSet = metadata.full_name.toLowerCase().replace(/\s+/g, '_')
+      displayNameToSet = existingProfile?.display_name || metadata.full_name
+    }
+
+    if (usernameToSet) {
+      await (getSupabase()
+        .from('profiles') as ReturnType<ReturnType<typeof getSupabase>['from']>)
+        .update({
+          username: usernameToSet,
+          display_name: displayNameToSet,
+        })
+        .eq('id', user.id)
+    }
+  }
+
+  // Clear cached data from previous user/session to prevent stale data
+  clearUserCache()
+}
+
 export const useAuth = create<AuthStore>((set, get) => ({
   user: null,
   profile: null,
@@ -55,14 +109,28 @@ export const useAuth = create<AuthStore>((set, get) => ({
 
   initialize: async () => {
     try {
-      // Check if this is a recovery flow from URL hash BEFORE getting session
+      // Check URL hash for special auth flows (OAuth callback, password recovery)
       const hash = window.location.hash
       const isRecoveryFromUrl = !!(hash && hash.includes('type=recovery'))
+      const hasAccessToken = !!(hash && hash.includes('access_token'))
 
-      // Get initial session
-      const { data: { session } } = await supabase.auth.getSession()
+      // If URL contains auth tokens (OAuth or recovery), let Supabase process them
+      // This happens automatically via detectSessionInUrl: true in client config
+      // We just need to wait a moment for it to process
+      if (hasAccessToken) {
+        // Small delay to let Supabase process the URL tokens
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+
+      // Get session (from localStorage or freshly processed from URL)
+      const { data: { session } } = await getSupabase().auth.getSession()
 
       if (session?.user) {
+        // Handle new OAuth sign-ins (sync profile data)
+        if (hasAccessToken && !isRecoveryFromUrl) {
+          await syncProfileFromMetadata(session.user)
+        }
+
         const profile = await fetchProfile(session.user.id)
         setSentryUser({ id: session.user.id, email: session.user.email })
         set({
@@ -71,8 +139,13 @@ export const useAuth = create<AuthStore>((set, get) => ({
           profile,
           isLoading: false,
           isInitialized: true,
-          isRecoveryMode: isRecoveryFromUrl, // Set recovery mode if URL indicates recovery
+          isRecoveryMode: isRecoveryFromUrl,
         })
+
+        // Clear URL hash after processing to prevent re-processing on refresh
+        if (hasAccessToken && window.history.replaceState) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search)
+        }
       } else {
         setSentryUser(null)
         set({
@@ -84,86 +157,6 @@ export const useAuth = create<AuthStore>((set, get) => ({
           isRecoveryMode: false,
         })
       }
-
-      // Listen for auth changes
-      supabase.auth.onAuthStateChange(async (event, session) => {
-        // Check URL hash for recovery token (handles INITIAL_SESSION with recovery)
-        const currentHash = window.location.hash
-        const isRecoveryFromHash = currentHash && currentHash.includes('type=recovery')
-
-        if ((event === 'PASSWORD_RECOVERY' || (event === 'INITIAL_SESSION' && isRecoveryFromHash)) && session?.user) {
-          // User clicked a password reset link - set recovery mode
-          setSentryUser({ id: session.user.id, email: session.user.email })
-          set({
-            user: session.user,
-            session,
-            isLoading: false,
-            isRecoveryMode: true,
-          })
-        } else if (event === 'SIGNED_IN' && session?.user) {
-          // Clear cached data from previous user/session to prevent stale data
-          clearUserCache()
-          
-          // Sync username from user metadata to profile if not set
-          const metadata = session.user.user_metadata
-          
-          // First check if profile already has data
-          const existingProfile = await fetchProfile(session.user.id)
-
-          // Only update if username is not set
-          if (!existingProfile?.username) {
-            let usernameToSet: string | null = null
-            let displayNameToSet: string | null = null
-
-            if (metadata?.username) {
-              // Email signup - use provided username
-              usernameToSet = metadata.username
-              displayNameToSet = existingProfile?.display_name || metadata.display_name || metadata.username
-            } else if (metadata?.full_name) {
-              // Google OAuth - generate username from full_name (e.g., "Chris Bunce" -> "chris_bunce")
-              usernameToSet = metadata.full_name.toLowerCase().replace(/\s+/g, '_')
-              displayNameToSet = existingProfile?.display_name || metadata.full_name
-            }
-
-            if (usernameToSet) {
-              await (supabase
-                .from('profiles') as ReturnType<typeof supabase.from>)
-                .update({
-                  username: usernameToSet,
-                  display_name: displayNameToSet,
-                })
-                .eq('id', session.user.id)
-            }
-          }
-
-          const profile = await fetchProfile(session.user.id)
-          setSentryUser({ id: session.user.id, email: session.user.email })
-          set({
-            user: session.user,
-            session,
-            profile,
-            isLoading: false,
-            isRecoveryMode: false,
-          })
-        } else if (event === 'SIGNED_OUT') {
-          // Clear cached user data to prevent stale data on next login
-          clearUserCache()
-          
-          setSentryUser(null)
-          set({
-            user: null,
-            session: null,
-            profile: null,
-            isLoading: false,
-            isRecoveryMode: false,
-          })
-        } else if (event === 'TOKEN_REFRESHED' && session) {
-          set({ session })
-        } else if (event === 'USER_UPDATED') {
-          // Password was successfully changed, exit recovery mode
-          set({ isRecoveryMode: false })
-        }
-      })
     } catch (error) {
       captureError(error, { component: 'useAuth', action: 'initialize' }, 'fatal')
       set({ isLoading: false, isInitialized: true })
@@ -172,7 +165,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
 
   signIn: async (email: string, password: string) => {
     set({ isLoading: true })
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await getSupabase().auth.signInWithPassword({
       email,
       password,
     })
@@ -182,14 +175,18 @@ export const useAuth = create<AuthStore>((set, get) => ({
       return { error }
     }
 
-    // Immediately update auth state instead of waiting for onAuthStateChange
     if (data.session?.user) {
+      // Clear cached data from previous user/session to prevent stale data
+      clearUserCache()
+
       const profile = await fetchProfile(data.session.user.id)
+      setSentryUser({ id: data.session.user.id, email: data.session.user.email })
       set({
         user: data.session.user,
         session: data.session,
         profile,
         isLoading: false,
+        isRecoveryMode: false,
       })
     }
 
@@ -201,7 +198,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
 
     // Sign up the user - username and display_name stored in user metadata
     // and synced to profile after email confirmation
-    const { error } = await supabase.auth.signUp({
+    const { error } = await getSupabase().auth.signUp({
       email,
       password,
       options: {
@@ -226,7 +223,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
   },
 
   signInWithGoogle: async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await getSupabase().auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/`,
@@ -241,17 +238,22 @@ export const useAuth = create<AuthStore>((set, get) => ({
   },
 
   signOut: async () => {
+    // Clear cached user data to prevent stale data on next login
+    clearUserCache()
+    setSentryUser(null)
+
     // Clear state immediately - no loading state needed for sign out
     set({
       user: null,
       session: null,
       profile: null,
+      isRecoveryMode: false,
     })
-    await supabase.auth.signOut()
+    await getSupabase().auth.signOut()
   },
 
   resetPassword: async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await getSupabase().auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     })
 
@@ -263,7 +265,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
   },
 
   updatePassword: async (newPassword: string) => {
-    const { error } = await supabase.auth.updateUser({
+    const { error } = await getSupabase().auth.updateUser({
       password: newPassword
     })
 
@@ -271,6 +273,8 @@ export const useAuth = create<AuthStore>((set, get) => ({
       return { error }
     }
 
+    // Password updated successfully - exit recovery mode
+    set({ isRecoveryMode: false })
     return { error: null }
   },
 
@@ -280,8 +284,8 @@ export const useAuth = create<AuthStore>((set, get) => ({
       return { error: new Error('Not authenticated') }
     }
 
-    const { error } = await (supabase
-      .from('profiles') as ReturnType<typeof supabase.from>)
+    const { error } = await (getSupabase()
+      .from('profiles') as ReturnType<ReturnType<typeof getSupabase>['from']>)
       .update({
         username: data.username,
         display_name: data.display_name,
@@ -316,7 +320,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
     try {
       // Call the Supabase RPC function to delete the user account
       // This cascades to delete all user data (profiles, user_plans, daily_progress)
-      const { error } = await supabase.rpc('delete_user_account')
+      const { error } = await getSupabase().rpc('delete_user_account')
 
       if (error) {
         captureError(error, { component: 'useAuth', action: 'deleteAccount', userId: user.id })
@@ -339,7 +343,7 @@ export const useAuth = create<AuthStore>((set, get) => ({
       // Try to sign out to clear local session storage, but don't fail if it errors
       // (the user no longer exists on the server, so this may return 403)
       try {
-        await supabase.auth.signOut({ scope: 'local' })
+        await getSupabase().auth.signOut({ scope: 'local' })
       } catch {
         // Ignore signOut errors - user is already deleted
       }

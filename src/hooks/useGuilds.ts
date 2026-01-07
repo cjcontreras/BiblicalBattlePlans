@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase, withTimeout } from '../lib/supabase'
+import { getSupabase, withTimeout } from '../lib/supabase'
 import { useAuth } from './useAuth'
 import type { Guild, GuildMember, GuildWithMembers, UserGuildMembership, Profile, ReadingPlan } from '../types'
 
@@ -11,7 +11,7 @@ export const guildKeys = {
   members: (guildId: string) => [...guildKeys.all, 'members', guildId] as const,
   byInviteCode: (code: string) => [...guildKeys.all, 'byInviteCode', code] as const,
   // Leaderboard and activity keys (for cross-query invalidation)
-  leaderboard: (guildId: string) => ['guildLeaderboard', guildId] as const,
+  leaderboard: (guildId: string) => ['guildChapterCounts', guildId] as const,
   activities: (guildId: string) => ['guildActivities', guildId] as const,
 }
 
@@ -37,7 +37,7 @@ export function useMyGuilds() {
       if (!user) return []
 
       const { data, error } = await withTimeout(() =>
-        supabase
+        getSupabase()
           .from('guild_members')
           .select(`
             *,
@@ -51,7 +51,7 @@ export function useMyGuilds() {
       return data as UserGuildMembership[]
     },
     enabled: !!user && isInitialized,
-    staleTime: 30 * 1000, // 30 seconds
+    // Uses global staleTime (5 minutes) - reduces unnecessary refetches
   })
 }
 
@@ -64,7 +64,7 @@ export function useGuild(guildId: string) {
     queryFn: async () => {
       // Using withTimeout to prevent hanging promises after tab suspension
       const { data, error } = await withTimeout(() =>
-        supabase
+        getSupabase()
           .from('guilds')
           .select(`
             *,
@@ -96,7 +96,7 @@ export function useGuild(guildId: string) {
       return guild
     },
     enabled: !!guildId,
-    staleTime: 30 * 1000, // 30 seconds
+    // Uses global staleTime (5 minutes) - reduces unnecessary refetches
   })
 }
 
@@ -111,7 +111,7 @@ export function useGuildByInviteCode(code: string) {
       // Using withTimeout to prevent hanging promises after tab suspension
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rpcResult = await withTimeout(() =>
-        (supabase.rpc as any)('get_guild_by_invite_code', {
+        (getSupabase().rpc as any)('get_guild_by_invite_code', {
           p_invite_code: code,
         })
       )
@@ -181,8 +181,8 @@ export function useCreateGuild() {
     }) => {
       if (!user) throw new Error('Not authenticated')
 
-      const { data, error } = await (supabase
-        .from('guilds') as ReturnType<typeof supabase.from>)
+      const { data, error } = await (getSupabase()
+        .from('guilds') as ReturnType<ReturnType<typeof getSupabase>['from']>)
         .insert({
           name,
           description: description || null,
@@ -218,7 +218,7 @@ export function useJoinGuild() {
 
       // Use secure RPC function that validates invite code
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase.rpc as any)('join_guild_by_invite_code', {
+      const { data, error } = await (getSupabase().rpc as any)('join_guild_by_invite_code', {
         p_invite_code: inviteCode,
       })
 
@@ -258,7 +258,7 @@ export function useLeaveGuild() {
       if (!user) throw new Error('Not authenticated')
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.rpc as any)('leave_guild', { p_guild_id: guildId })
+      const { error } = await (getSupabase().rpc as any)('leave_guild', { p_guild_id: guildId })
 
       if (error) {
         throw new Error(error.message || 'Failed to leave guild')
@@ -295,8 +295,8 @@ export function useUpdateGuild() {
       if (name !== undefined) updates.name = name
       if (description !== undefined) updates.description = description
 
-      const { data, error } = await (supabase
-        .from('guilds') as ReturnType<typeof supabase.from>)
+      const { data, error } = await (getSupabase()
+        .from('guilds') as ReturnType<ReturnType<typeof getSupabase>['from']>)
         .update(updates)
         .eq('id', guildId)
         .select()
@@ -325,8 +325,8 @@ export function useSetGuildRecommendedPlan() {
       guildId: string
       planId: string | null
     }) => {
-      const { data, error } = await (supabase
-        .from('guilds') as ReturnType<typeof supabase.from>)
+      const { data, error } = await (getSupabase()
+        .from('guilds') as ReturnType<ReturnType<typeof getSupabase>['from']>)
         .update({ recommended_plan_id: planId })
         .eq('id', guildId)
         .select()
@@ -356,7 +356,7 @@ export function useDeleteGuild() {
       if (!user) throw new Error('Not authenticated')
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.rpc as any)('delete_guild', { p_guild_id: guildId })
+      const { error } = await (getSupabase().rpc as any)('delete_guild', { p_guild_id: guildId })
 
       if (error) {
         throw new Error(error.message || 'Failed to delete guild')
@@ -386,8 +386,8 @@ export function useRemoveMember() {
       guildId: string
       userId: string
     }) => {
-      const { error } = await (supabase
-        .from('guild_members') as ReturnType<typeof supabase.from>)
+      const { error } = await (getSupabase()
+        .from('guild_members') as ReturnType<ReturnType<typeof getSupabase>['from']>)
         .delete()
         .eq('guild_id', guildId)
         .eq('user_id', userId)
@@ -415,8 +415,8 @@ export function usePromoteMember() {
       guildId: string
       userId: string
     }) => {
-      const { error } = await (supabase
-        .from('guild_members') as ReturnType<typeof supabase.from>)
+      const { error } = await (getSupabase()
+        .from('guild_members') as ReturnType<ReturnType<typeof getSupabase>['from']>)
         .update({ role: 'admin' })
         .eq('guild_id', guildId)
         .eq('user_id', userId)
@@ -446,7 +446,7 @@ export function useDemoteMember() {
       userId: string
     }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.rpc as any)('demote_guild_member', {
+      const { error } = await (getSupabase().rpc as any)('demote_guild_member', {
         p_guild_id: guildId,
         p_user_id: userId,
       })
@@ -472,8 +472,8 @@ export function useRegenerateInviteCode() {
   return useMutation({
     mutationFn: async (guildId: string) => {
       // Set invite_code to null so the database trigger generates a new one
-      const { data, error } = await (supabase
-        .from('guilds') as ReturnType<typeof supabase.from>)
+      const { data, error } = await (getSupabase()
+        .from('guilds') as ReturnType<ReturnType<typeof getSupabase>['from']>)
         .update({ invite_code: null })
         .eq('id', guildId)
         .select()

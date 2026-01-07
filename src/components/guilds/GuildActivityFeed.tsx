@@ -83,7 +83,7 @@ function formatTimeAgo(dateString: string): string {
 }
 
 export function GuildActivityFeed({ guildId, members }: GuildActivityFeedProps) {
-  const { data: activities, isLoading, error, refetch } = useGuildActivities(guildId)
+  const { data: activities, isLoading, error, refetch, isFetching } = useGuildActivities(guildId)
 
   // Get current member user IDs to identify former members
   const memberUserIds = useMemo(() => new Set(members.map((m) => m.user_id)), [members])
@@ -128,6 +128,21 @@ export function GuildActivityFeed({ guildId, members }: GuildActivityFeedProps) 
 
   return (
     <div className="space-y-3">
+      {/* Refresh button */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="flex items-center gap-1.5 px-2 py-1 text-ink-muted hover:text-ink hover:bg-parchment-dark/50 transition-colors disabled:opacity-50"
+          title="Refresh activity feed"
+        >
+          <RefreshCw className={`w-3 h-3 ${isFetching ? 'animate-spin' : ''}`} />
+          <span className="font-pixel text-[0.5rem]">
+            {isFetching ? 'REFRESHING...' : 'REFRESH'}
+          </span>
+        </button>
+      </div>
+
       {activities.map((activity) => {
         const config = activityConfig[activity.activity_type]
         if (!config) {
