@@ -89,7 +89,6 @@ const supabaseClient = getOrCreateClient()
  * auth state in our Zustand store. Use this for:
  * - Auth operations (signIn, signUp, etc.)
  * - Database queries
- * - Manual token refresh via refreshSession()
  */
 export function getSupabase(): SupabaseClient<Database> {
   return supabaseClient
