@@ -18,7 +18,7 @@ import type { Profile } from '../types'
  * Auth flow:
  * 1. On app init: Check localStorage for existing session via getSession()
  * 2. On sign in/out: Update Zustand state directly after the operation
- * 3. On API calls: safeQuery() refreshes expired tokens on-demand via getSession()
+ * 3. On API calls: safeQuery() refreshes expired tokens on-demand via refreshSession()
  * 4. URL auth flows (OAuth, password reset): Handled in initialize()
  */
 
