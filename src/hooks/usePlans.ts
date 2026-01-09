@@ -1411,40 +1411,45 @@ export function useAutoAdvanceCompletedPlans() {
       })
 
       for (const userPlan of dayBasedPlans) {
-        // Check if there's completed progress for the current day from a previous date
-        const { data: progressData } = await safeQuery(() =>
-          getSupabase()
-            .from('daily_progress')
-            .select('*')
-            .eq('user_plan_id', userPlan.id)
-            .eq('day_number', userPlan.current_day)
-            .eq('is_complete', true)
-            .lt('date', today) // Completed on a day before today
-            .order('date', { ascending: false })
-            .limit(1)
-            .maybeSingle()
-        )
-
-        if (progressData) {
-          // This plan has completed progress from a previous day - auto-advance
-          const maxDay = userPlan.plan.duration_days || 365
-          const newDay = Math.min(userPlan.current_day + 1, maxDay)
-          // Only mark as complete if the day actually advanced AND reached the max day
-          const dayAdvanced = newDay > userPlan.current_day
-          const isNowComplete = dayAdvanced && newDay >= maxDay
-
-          await safeQuery(() =>
-            (getSupabase()
-              .from('user_plans') as ReturnType<ReturnType<typeof getSupabase>['from']>)
-              .update({
-                current_day: newDay,
-                is_completed: isNowComplete,
-                completed_at: isNowComplete ? new Date().toISOString() : null,
-              })
-              .eq('id', userPlan.id)
+        try {
+          // Check if there's completed progress for the current day from a previous date
+          const { data: progressData } = await safeQuery(() =>
+            getSupabase()
+              .from('daily_progress')
+              .select('*')
+              .eq('user_plan_id', userPlan.id)
+              .eq('day_number', userPlan.current_day)
+              .eq('is_complete', true)
+              .lt('date', today) // Completed on a day before today
+              .order('date', { ascending: false })
+              .limit(1)
+              .maybeSingle()
           )
 
-          advancedPlanIds.push(userPlan.id)
+          if (progressData) {
+            // This plan has completed progress from a previous day - auto-advance
+            const maxDay = userPlan.plan.duration_days || 365
+            const newDay = Math.min(userPlan.current_day + 1, maxDay)
+            // Only mark as complete if the day actually advanced AND reached the max day
+            const dayAdvanced = newDay > userPlan.current_day
+            const isNowComplete = dayAdvanced && newDay >= maxDay
+
+            await safeQuery(() =>
+              (getSupabase()
+                .from('user_plans') as ReturnType<ReturnType<typeof getSupabase>['from']>)
+                .update({
+                  current_day: newDay,
+                  is_completed: isNowComplete,
+                  completed_at: isNowComplete ? new Date().toISOString() : null,
+                })
+                .eq('id', userPlan.id)
+            )
+
+            advancedPlanIds.push(userPlan.id)
+          }
+        } catch (error) {
+          // Log and continue - failure on one plan shouldn't prevent others from advancing
+          console.error('[autoAdvance] Failed to process plan:', userPlan.id, error)
         }
       }
 

@@ -24,7 +24,8 @@ export function Dashboard() {
       hasAutoAdvanced.current = true
       autoAdvance.mutate(userPlans)
     }
-  }, [userPlans, autoAdvance])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- autoAdvance.mutate is stable, only run when userPlans changes
+  }, [userPlans])
 
   const isLoading = plansLoading || statsLoading
   const error = plansError || statsError
