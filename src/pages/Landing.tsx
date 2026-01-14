@@ -7,7 +7,10 @@ export function Landing() {
     <div className="min-h-screen bg-parchment-dark">
       {/* Hero Section */}
       <header className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}
+        >
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
             <div className="w-28 h-28 flex items-center justify-center mb-6">

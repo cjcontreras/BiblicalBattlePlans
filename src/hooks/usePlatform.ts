@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core'
+
 export type Platform = 'ios' | 'android' | 'desktop'
 
 /**
@@ -5,6 +7,13 @@ export type Platform = 'ios' | 'android' | 'desktop'
  * Detection is done synchronously to avoid flicker on initial render
  */
 function detectPlatform(): Platform {
+  // If running in Capacitor native app, use its platform detection (most accurate)
+  if (Capacitor.isNativePlatform()) {
+    const platform = Capacitor.getPlatform()
+    if (platform === 'ios') return 'ios'
+    if (platform === 'android') return 'android'
+  }
+
   if (typeof navigator === 'undefined') return 'ios'
 
   const userAgent = navigator.userAgent || navigator.vendor || ''

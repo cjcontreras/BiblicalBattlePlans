@@ -1,5 +1,6 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import type { ButtonVariant, ButtonSize } from '../../types'
+import { useHaptics } from '../../hooks'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
@@ -68,16 +69,33 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       disabled,
       className = '',
       children,
+      onClick,
       ...props
     },
     ref
   ) => {
     const isDisabled = disabled || isLoading
+    const haptics = useHaptics()
+
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      // Trigger haptic feedback based on button variant
+      if (variant === 'danger') {
+        haptics.heavy()
+      } else if (variant === 'primary') {
+        haptics.medium()
+      } else {
+        haptics.light()
+      }
+
+      // Call original onClick handler
+      onClick?.(e)
+    }
 
     return (
       <button
         ref={ref}
         disabled={isDisabled}
+        onClick={handleClick}
         className={`
           inline-flex items-center justify-center gap-2
           font-pixel

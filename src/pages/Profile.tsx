@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Trash2, Shield } from 'lucide-react'
+import { Trash2, Shield, Bell, BellOff } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useStats } from '../hooks/useStats'
+import { useLocalNotifications } from '../hooks'
 import { captureError } from '../lib/errorLogger'
 import { ProfileHeader, ProfileStats, CampaignHistory } from '../components/profile'
 import { Card, CardHeader, CardContent, CardFooter, Button, Input, LoadingSpinner, Modal } from '../components/ui'
@@ -41,6 +42,7 @@ export function Profile() {
   const navigate = useNavigate()
   const { profile, updateProfile, deleteAccount } = useAuth()
   const { data: stats, isLoading: statsLoading } = useStats()
+  const notifications = useLocalNotifications()
   const [isEditing, setIsEditing] = useState(false)
   const [displayName, setDisplayName] = useState(profile?.display_name || '')
   const [streakMinimumInput, setStreakMinimumInput] = useState(String(profile?.streak_minimum || 3))
@@ -48,11 +50,35 @@ export function Profile() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [notificationEnabled, setNotificationEnabled] = useState(false)
+  const [reminderHour, setReminderHour] = useState('09')
+  const [reminderMinute, setReminderMinute] = useState('00')
 
   // Scroll to top when component mounts
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
+
+  // Load saved notification time from localStorage on mount
+  useEffect(() => {
+    if (!notifications.isNative) return
+
+    const savedHour = localStorage.getItem('dailyReminderHour')
+    const savedMinute = localStorage.getItem('dailyReminderMinute')
+
+    if (savedHour) setReminderHour(savedHour.padStart(2, '0'))
+    if (savedMinute) setReminderMinute(savedMinute.padStart(2, '0'))
+  }, [notifications.isNative])
+
+  // Check if notifications are scheduled on mount
+  useEffect(() => {
+    const checkNotifications = async () => {
+      if (!notifications.isNative || !notifications.hasPermission) return
+      const pending = await notifications.getPending()
+      setNotificationEnabled(pending.length > 0)
+    }
+    checkNotifications()
+  }, [notifications.isNative, notifications.hasPermission])
 
   // Parse streak minimum with validation, clamping between 1-20
   const getValidStreakMinimum = (value: string): number => {
@@ -77,6 +103,63 @@ export function Profile() {
     }
     setIsSaving(false)
     setIsEditing(false)
+  }
+
+  const handleEnableNotifications = async () => {
+    if (!notifications.isNative) {
+      toast.error('Notifications are only available on the native app')
+      return
+    }
+
+    if (!notifications.hasPermission) {
+      const granted = await notifications.requestPermission()
+      if (!granted) {
+        toast.error('Notification permission denied')
+        return
+      }
+    }
+
+    // Pad hour and minutes to ensure 2 digits
+    const hour = parseInt(reminderHour, 10)
+    const minute = parseInt(reminderMinute, 10)
+    setReminderHour(hour.toString().padStart(2, '0'))
+    setReminderMinute(minute.toString().padStart(2, '0'))
+
+    const success = await notifications.scheduleDailyReminder(hour, minute)
+
+    if (success) {
+      setNotificationEnabled(true)
+      toast.success(`Daily reminder set for ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`)
+    } else {
+      toast.error('Failed to schedule notification')
+    }
+  }
+
+  const handleDisableNotifications = async () => {
+    await notifications.cancelDailyReminder()
+    setNotificationEnabled(false)
+    toast.success('Daily reminder disabled')
+  }
+
+  const handleTestNotification = async () => {
+    if (!notifications.hasPermission) {
+      const granted = await notifications.requestPermission()
+      if (!granted) {
+        toast.error('Notification permission denied')
+        return
+      }
+    }
+
+    const success = await notifications.sendNow(
+      'Daily Quest Awaits',
+      "Time to continue your journey through God's Word"
+    )
+
+    if (success) {
+      toast.success('Test notification sent!')
+    } else {
+      toast.error('Failed to send notification')
+    }
   }
 
   const handleDeleteAccount = async () => {
@@ -363,6 +446,201 @@ export function Profile() {
               </div>
             )
           })}
+        </div>
+      </Card>
+
+      {/* Notification Settings */}
+      <Card noPadding>
+        <div className="bg-gradient-to-r from-parchment-dark/40 to-transparent px-4 py-3 border-b border-border-subtle">
+          <div className="flex items-center justify-between">
+            <div className="font-pixel text-[0.625rem] text-ink">
+              DAILY REMINDERS
+            </div>
+            {notifications.isNative ? (
+              notificationEnabled ? (
+                <Bell className="w-4 h-4 text-sage" />
+              ) : (
+                <BellOff className="w-4 h-4 text-ink-muted" />
+              )
+            ) : (
+              <span className="font-pixel text-[0.5rem] text-ink-muted">WEB ONLY</span>
+            )}
+          </div>
+        </div>
+        <div className="p-4">
+          {!notifications.isNative ? (
+            <div className="p-4 bg-parchment-light border border-border-subtle">
+              <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">
+                Daily notifications are only available in the native iOS app. Download the app to enable reminders.
+              </p>
+            </div>
+          ) : notificationEnabled ? (
+            /* ENABLED STATE */
+            <div className="space-y-4">
+              {/* Active Status */}
+              <div className="p-4 bg-sage/10 border-2 border-sage">
+                <div className="flex items-center gap-2 mb-3">
+                  <Bell className="w-5 h-5 text-sage" />
+                  <span className="font-pixel text-[0.75rem] text-sage">
+                    REMINDER ACTIVE
+                  </span>
+                </div>
+                <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">
+                  You'll receive a daily notification at {reminderHour.padStart(2, '0')}:{reminderMinute.padStart(2, '0')} to continue your Bible reading quest.
+                </p>
+              </div>
+
+              {/* Edit Time */}
+              <div className="space-y-3">
+                <label className="font-pixel text-[0.625rem] text-ink">
+                  CHANGE REMINDER TIME
+                </label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min="0"
+                    max="23"
+                    value={reminderHour}
+                    onChange={(e) => setReminderHour(e.target.value)}
+                    onBlur={(e) => {
+                      const val = parseInt(e.target.value, 10)
+                      if (!isNaN(val)) {
+                        setReminderHour(val.toString().padStart(2, '0'))
+                      }
+                    }}
+                    className="flex-1"
+                    placeholder="Hour"
+                  />
+                  <span className="font-pixel text-ink text-lg">:</span>
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min="0"
+                    max="59"
+                    value={reminderMinute}
+                    onChange={(e) => setReminderMinute(e.target.value)}
+                    onBlur={(e) => {
+                      const val = parseInt(e.target.value, 10)
+                      if (!isNaN(val)) {
+                        setReminderMinute(val.toString().padStart(2, '0'))
+                      }
+                    }}
+                    className="flex-1"
+                    placeholder="Min"
+                  />
+                </div>
+                <p className="font-pixel text-[0.5rem] text-ink-muted">
+                  Example: 9:00 for 9:00 AM, 21:00 for 9:00 PM
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="primary"
+                  onClick={handleEnableNotifications}
+                  leftIcon={<Bell className="w-4 h-4" />}
+                >
+                  UPDATE REMINDER
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={handleTestNotification}
+                  leftIcon={<Bell className="w-4 h-4" />}
+                  size="sm"
+                >
+                  SEND TEST NOTIFICATION
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={handleDisableNotifications}
+                  leftIcon={<BellOff className="w-4 h-4" />}
+                  size="sm"
+                >
+                  TURN OFF REMINDER
+                </Button>
+              </div>
+            </div>
+          ) : (
+            /* DISABLED STATE */
+            <div className="space-y-4">
+              {/* Inactive Status */}
+              <div className="p-4 bg-parchment-light border border-border-subtle">
+                <div className="flex items-center gap-2 mb-3">
+                  <BellOff className="w-5 h-5 text-ink-muted" />
+                  <span className="font-pixel text-[0.75rem] text-ink-muted">
+                    NO REMINDER SET
+                  </span>
+                </div>
+                {!notifications.hasPermission && (
+                  <div className="mb-3 p-2 bg-warning/10 border border-warning/30">
+                    <span className="font-pixel text-[0.5rem] text-warning">
+                      PERMISSION NEEDED
+                    </span>
+                  </div>
+                )}
+                <p className="font-pixel text-[0.625rem] text-ink-muted leading-relaxed">
+                  Set a daily reminder to help you stay consistent with Bible reading.
+                </p>
+              </div>
+
+              {/* Time Picker */}
+              <div className="space-y-3">
+                <label className="font-pixel text-[0.625rem] text-ink">
+                  SET REMINDER TIME
+                </label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min="0"
+                    max="23"
+                    value={reminderHour}
+                    onChange={(e) => setReminderHour(e.target.value)}
+                    onBlur={(e) => {
+                      const val = parseInt(e.target.value, 10)
+                      if (!isNaN(val)) {
+                        setReminderHour(val.toString().padStart(2, '0'))
+                      }
+                    }}
+                    className="flex-1"
+                    placeholder="Hour"
+                  />
+                  <span className="font-pixel text-ink text-lg">:</span>
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min="0"
+                    max="59"
+                    value={reminderMinute}
+                    onChange={(e) => setReminderMinute(e.target.value)}
+                    onBlur={(e) => {
+                      const val = parseInt(e.target.value, 10)
+                      if (!isNaN(val)) {
+                        setReminderMinute(val.toString().padStart(2, '0'))
+                      }
+                    }}
+                    className="flex-1"
+                    placeholder="Min"
+                  />
+                </div>
+                <p className="font-pixel text-[0.5rem] text-ink-muted">
+                  Example: 9:00 for 9:00 AM, 21:00 for 9:00 PM
+                </p>
+              </div>
+
+              {/* Actions */}
+              <Button
+                variant="primary"
+                onClick={handleEnableNotifications}
+                leftIcon={<Bell className="w-4 h-4" />}
+                className="w-full"
+              >
+                ENABLE REMINDER
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
 
