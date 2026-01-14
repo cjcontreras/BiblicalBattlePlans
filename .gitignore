@@ -15,6 +15,7 @@ dist-ssr
 # Environment files
 .env
 .env.local
+.env.production
 .env.*.local
 
 # Claude Code
@@ -23,6 +24,11 @@ dist-ssr
 # Supabase Local Development
 .supabase/
 supabase/.temp/
+
+# Capacitor iOS
+ios/App/App/public
+ios/App/Pods
+ios/App/*.xcworkspace/xcuserdata
 
 # Editor directories and files
 .vscode/*

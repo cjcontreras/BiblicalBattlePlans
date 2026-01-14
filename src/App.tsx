@@ -4,6 +4,8 @@ import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Analytics } from '@vercel/analytics/react'
 import { Toaster } from 'sonner'
 import { useAuth } from './hooks/useAuth'
+import { useCapacitorApp } from './hooks/useCapacitorApp'
+import { useNotificationOnComplete } from './hooks/useNotificationOnComplete'
 import { ProtectedRoute } from './components/auth'
 import { Layout } from './components/Layout'
 import { Landing, Login, Signup, ForgotPassword, ResetPassword, Dashboard, Plans, PlanDetail, ActivePlan, Profile, Acknowledgements, About, Feedback, GuildHub, Guild, GuildJoin } from './pages'
@@ -69,8 +71,14 @@ function ScrollToTop() {
 function App() {
   const { initialize, isInitialized, user } = useAuth()
 
+  // Initialize Capacitor native plugins and lifecycle handlers
+  useCapacitorApp()
+
   // Handle tab visibility changes with tiered recovery strategy
   useTabRecoveryHandler()
+
+  // Auto-cancel notification when daily reading goal is met
+  useNotificationOnComplete()
 
   useEffect(() => {
     initialize()

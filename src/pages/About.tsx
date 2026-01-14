@@ -8,7 +8,10 @@ export function About() {
   const backLink = user ? '/dashboard' : '/'
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 p-4">
+    <div
+      className="max-w-3xl mx-auto space-y-6 px-4 pb-4"
+      style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+    >
       {/* Back button */}
       <Link
         to={backLink}

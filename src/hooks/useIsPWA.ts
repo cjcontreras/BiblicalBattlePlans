@@ -1,15 +1,24 @@
 import { useState, useEffect } from 'react'
+import { Capacitor } from '@capacitor/core'
 
 /**
  * Detects if the app is running as an installed PWA (standalone mode)
- * vs running in a browser tab.
+ * or as a native Capacitor app vs running in a browser tab.
  *
- * Returns true if running as PWA, false if running in browser
+ * Returns true if running as PWA or native app, false if running in browser
  */
 export function useIsPWA(): boolean {
-  const [isPWA, setIsPWA] = useState(false)
+  const [isPWA, setIsPWA] = useState(() => {
+    // Native apps are always considered "installed"
+    return Capacitor.isNativePlatform()
+  })
 
   useEffect(() => {
+    // Native apps are always "installed" - no need for detection
+    if (Capacitor.isNativePlatform()) {
+      setIsPWA(true)
+      return
+    }
     // Check if running in standalone mode (PWA)
     const isStandalone =
       // Standard check for most browsers

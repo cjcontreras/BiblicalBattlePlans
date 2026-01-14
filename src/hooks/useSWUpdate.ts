@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { registerSW } from 'virtual:pwa-register'
+import { Capacitor } from '@capacitor/core'
 
 interface SWUpdateState {
   needRefresh: boolean
@@ -22,6 +23,12 @@ export function useSWUpdate(): SWUpdateState {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
+    // Skip service worker registration on native platforms
+    // Native apps don't need/support service workers
+    if (Capacitor.isNativePlatform()) {
+      return
+    }
+
     const updateServiceWorker = registerSW({
       onNeedRefresh() {
         setNeedRefresh(true)

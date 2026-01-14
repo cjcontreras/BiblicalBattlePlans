@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Modal } from './ui'
 import { usePlatform } from '../hooks/usePlatform'
+import { useIsNative } from '../hooks/useIsNative'
 import { Smartphone, Monitor } from 'lucide-react'
 
 interface InstallModalProps {
@@ -30,10 +31,16 @@ const INSTRUCTIONS = {
 }
 
 export function InstallModal({ isOpen, onClose }: InstallModalProps) {
+  const isNative = useIsNative()
   const detectedPlatform = usePlatform()
   const [selectedPlatform, setSelectedPlatform] = useState<'ios' | 'android'>(
     detectedPlatform === 'ios' ? 'ios' : 'android'
   )
+
+  // Never show install modal on native apps - they're already installed
+  if (isNative) {
+    return null
+  }
 
   const instructions = INSTRUCTIONS[selectedPlatform]
   const videoPath = VIDEO_PATHS[selectedPlatform]

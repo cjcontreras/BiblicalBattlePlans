@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Trophy, Flame, BookOpen, Shield, Swords } from 'lucide-react'
+import { useHaptics } from '../hooks'
 
 export type AchievementType =
   | 'quest_complete'
@@ -62,9 +63,13 @@ const ACHIEVEMENT_CONFIG: Record<AchievementType, {
 export function AchievementModal({ achievement, onDismiss }: AchievementModalProps) {
   const [isVisible, setIsVisible] = useState(false)
   const [isLeaving, setIsLeaving] = useState(false)
+  const haptics = useHaptics()
 
   useEffect(() => {
     if (achievement) {
+      // Trigger success haptic feedback for achievement
+      haptics.success()
+
       // Small delay for animation
       const showTimer = setTimeout(() => setIsVisible(true), 50)
 
