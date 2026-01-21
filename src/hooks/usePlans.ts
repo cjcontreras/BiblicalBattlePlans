@@ -908,6 +908,21 @@ export function useMarkSectionComplete() {
     },
     onSuccess: (data, variables) => {
       const today = getLocalDate()
+
+      // Directly update the query cache with the returned data to ensure
+      // immediate UI update without waiting for refetch. This fixes the
+      // "double-click to mark complete" bug where the checkbox wouldn't
+      // update on the first click due to stale cached data.
+      queryClient.setQueryData(
+        ['progressForPlanDay', variables.userPlanId, variables.dayNumber],
+        data
+      )
+      queryClient.setQueryData(
+        planKeys.dailyProgress(variables.userPlanId, today),
+        data
+      )
+
+      // Also invalidate to ensure background refetch for consistency
       queryClient.invalidateQueries({
         queryKey: planKeys.dailyProgress(variables.userPlanId, today),
       })
@@ -920,13 +935,42 @@ export function useMarkSectionComplete() {
       if (user) {
         queryClient.invalidateQueries({ queryKey: ['stats', user.id] })
         queryClient.invalidateQueries({ queryKey: planKeys.todaysTotalProgress(user.id, today) })
-        
+
+        // Update progressByDayNumber cache directly so Dashboard shows correct data
+        // on navigation. This fixes the "incorrect next reading" bug where stale
+        // cached data would show old readings after returning to Dashboard.
+        queryClient.setQueryData(
+          ['progressByDayNumber', user.id],
+          (oldData: Record<string, Record<number, DailyProgress>> | undefined) => {
+            if (!oldData) return oldData
+            return {
+              ...oldData,
+              [variables.userPlanId]: {
+                ...oldData[variables.userPlanId],
+                [variables.dayNumber]: data,
+              },
+            }
+          }
+        )
+
+        // Update allTodayProgress cache for today's date as well
+        queryClient.setQueryData(
+          ['allTodayProgress', user.id, today],
+          (oldData: Record<string, DailyProgress> | undefined) => {
+            if (!oldData) return { [variables.userPlanId]: data }
+            return {
+              ...oldData,
+              [variables.userPlanId]: data,
+            }
+          }
+        )
+
         // Dashboard-only queries - mark stale but don't refetch until Dashboard is visited
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: ['allTodayProgress', user.id, today],
           refetchType: 'none'
         })
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: ['progressByDayNumber', user.id],
           refetchType: 'none'
         })
