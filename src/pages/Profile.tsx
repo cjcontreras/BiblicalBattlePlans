@@ -515,7 +515,8 @@ export function Profile() {
                   type="time"
                   value={reminderTime}
                   onChange={(e) => setReminderTime(e.target.value)}
-                  className="w-full px-4 py-3 bg-parchment-light border-2 border-border-subtle font-pixel text-[0.75rem] text-ink focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20"
+                  className="w-full max-w-full px-4 py-3 bg-parchment-light border-2 border-border-subtle font-pixel text-[0.75rem] text-ink focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 appearance-none box-border"
+                  style={{ WebkitAppearance: 'none' }}
                 />
               </div>
 
@@ -579,7 +580,8 @@ export function Profile() {
                   type="time"
                   value={reminderTime}
                   onChange={(e) => setReminderTime(e.target.value)}
-                  className="w-full px-4 py-3 bg-parchment-light border-2 border-border-subtle font-pixel text-[0.75rem] text-ink focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20"
+                  className="w-full max-w-full px-4 py-3 bg-parchment-light border-2 border-border-subtle font-pixel text-[0.75rem] text-ink focus:outline-none focus:border-sage focus:ring-2 focus:ring-sage/20 appearance-none box-border"
+                  style={{ WebkitAppearance: 'none' }}
                 />
               </div>
 

@@ -1,5 +1,7 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useCallback, type ReactNode } from 'react'
 import { X } from 'lucide-react'
+import { Capacitor } from '@capacitor/core'
+import { Keyboard } from '@capacitor/keyboard'
 
 interface ModalProps {
   isOpen: boolean
@@ -17,6 +19,25 @@ const sizeStyles = {
 
 export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  // Dismiss keyboard when tapping outside of input fields
+  const handleContentClick = useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement
+    const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
+
+    // If tapping on non-input area, blur active element to dismiss keyboard
+    if (!isInput && Capacitor.isNativePlatform()) {
+      const activeElement = document.activeElement as HTMLElement
+      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+        activeElement.blur()
+        // Also explicitly hide keyboard on iOS
+        Keyboard.hide().catch(() => {
+          // Keyboard hide can fail if no keyboard is shown, ignore
+        })
+      }
+    }
+  }, [])
 
   // Handle escape key
   useEffect(() => {
@@ -48,6 +69,15 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
     }
   }, [isOpen])
 
+  // Hide keyboard when modal closes
+  useEffect(() => {
+    if (!isOpen && Capacitor.isNativePlatform()) {
+      Keyboard.hide().catch(() => {
+        // Ignore errors
+      })
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   return (
@@ -71,10 +101,11 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
           border-4 border-border
           shadow-[0_8px_32px_var(--shadow-color)]
           animate-in fade-in zoom-in-95 duration-200
+          max-h-[90vh] overflow-y-auto
         `}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b-2 border-border bg-parchment-dark/30">
+        <div className="flex items-center justify-between px-4 py-3 border-b-2 border-border bg-parchment-dark/30 sticky top-0 z-10">
           <h2 id="modal-title" className="font-pixel text-[0.75rem] text-ink">
             {title}
           </h2>
@@ -87,8 +118,12 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-4">
+        {/* Content - tap to dismiss keyboard */}
+        <div
+          ref={contentRef}
+          className="p-4"
+          onClick={handleContentClick}
+        >
           {children}
         </div>
       </div>

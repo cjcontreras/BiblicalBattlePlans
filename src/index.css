@@ -350,6 +350,22 @@ body {
   cursor: not-allowed;
 }
 
+/* Time Input - iOS specific fixes */
+input[type="time"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Prevent iOS time picker from overflowing container */
+input[type="time"]::-webkit-date-and-time-value {
+  text-align: left;
+  padding: 0;
+}
+
 /* Badge */
 .parchment-badge {
   display: inline-flex;

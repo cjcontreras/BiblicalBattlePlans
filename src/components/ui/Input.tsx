@@ -18,6 +18,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       rightElement,
       className = '',
       id,
+      enterKeyHint = 'done',
       ...props
     },
     ref
@@ -43,6 +44,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={inputId}
+            enterKeyHint={enterKeyHint}
             className={`
               w-full
               bg-parchment-light

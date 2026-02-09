@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "YOUR_TEAM_ID.com.shirepathsolutions.biblicalbattleplans",
+        "paths": [
+          "/guild/join/*",
+          "/guild/*",
+          "/dashboard",
+          "/profile",
+          "/plans"
+        ]
+      }
+    ]
+  }
+}

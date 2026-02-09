@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Capacitor } from '@capacitor/core'
 import { getSupabase, safeQuery } from '../lib/supabase'
 import { useAuth } from './useAuth'
 import type { Guild, GuildMember, GuildWithMembers, UserGuildMembership, Profile, ReadingPlan } from '../types'
@@ -492,6 +493,10 @@ export function useRegenerateInviteCode() {
  * Get the shareable invite link for a guild
  */
 export function getInviteLink(inviteCode: string): string {
-  const baseUrl = window.location.origin
+  // Use production URL in native app so links can be shared with others
+  // In web/browser, use the current origin for local development
+  const baseUrl = Capacitor.isNativePlatform()
+    ? 'https://biblicalbattleplans.com'
+    : window.location.origin
   return `${baseUrl}/guild/join/${inviteCode}`
 }

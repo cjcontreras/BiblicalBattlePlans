@@ -19,15 +19,17 @@ BEGIN
   END IF;
 
   -- Lock the guild_members rows for this guild to prevent race conditions
-  -- Get counts in a single atomic read
+  -- FOR UPDATE cannot be used with aggregates, so we lock first, then aggregate
+  PERFORM 1 FROM guild_members WHERE guild_id = p_guild_id FOR UPDATE;
+
+  -- Now compute aggregates (rows are locked)
   SELECT
     COUNT(*) FILTER (WHERE role = 'admin'),
     COUNT(*),
     bool_or(user_id = v_user_id AND role = 'admin')
   INTO v_admin_count, v_member_count, v_is_admin
   FROM guild_members
-  WHERE guild_id = p_guild_id
-  FOR UPDATE;
+  WHERE guild_id = p_guild_id;
 
   -- Check if user is a member
   IF NOT EXISTS (SELECT 1 FROM guild_members WHERE guild_id = p_guild_id AND user_id = v_user_id) THEN
@@ -66,14 +68,17 @@ BEGIN
     RAISE EXCEPTION 'Not authenticated';
   END IF;
 
-  -- Lock and get counts atomically
+  -- Lock rows first to prevent race conditions
+  -- FOR UPDATE cannot be used with aggregates, so we lock first, then aggregate
+  PERFORM 1 FROM guild_members WHERE guild_id = p_guild_id FOR UPDATE;
+
+  -- Now compute aggregates (rows are locked)
   SELECT
     COUNT(*),
     bool_or(user_id = v_user_id AND role = 'admin')
   INTO v_member_count, v_is_admin
   FROM guild_members
-  WHERE guild_id = p_guild_id
-  FOR UPDATE;
+  WHERE guild_id = p_guild_id;
 
   -- Must be admin
   IF NOT v_is_admin THEN
@@ -110,12 +115,15 @@ BEGIN
     RAISE EXCEPTION 'Only admins can demote members.';
   END IF;
 
-  -- Lock and count admins atomically
+  -- Lock rows first to prevent race conditions
+  -- FOR UPDATE cannot be used with aggregates, so we lock first, then count
+  PERFORM 1 FROM guild_members WHERE guild_id = p_guild_id AND role = 'admin' FOR UPDATE;
+
+  -- Now count admins (rows are locked)
   SELECT COUNT(*)
   INTO v_admin_count
   FROM guild_members
-  WHERE guild_id = p_guild_id AND role = 'admin'
-  FOR UPDATE;
+  WHERE guild_id = p_guild_id AND role = 'admin';
 
   -- Cannot demote last admin
   IF v_admin_count <= 1 THEN
