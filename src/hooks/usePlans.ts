@@ -683,9 +683,17 @@ export function useMarkChapterRead() {
       // Note: We do NOT advance list_positions here - that's done explicitly
       // via useAdvanceList when the user wants to continue to the next chapter
 
-      return { completedSections }
+      // Sync stats within the mutation so the promise is properly awaited
+      let syncedStats: Partial<UserStats> | null = null
+      try {
+        syncedStats = await callSyncReadingStats(user.id, today, profile?.streak_minimum ?? 3)
+      } catch (e) {
+        console.error('Failed to sync reading stats after marking chapter', e)
+      }
+
+      return { completedSections, syncedStats }
     },
-    onSuccess: async (_, variables) => {
+    onSuccess: (data, variables) => {
       const today = getLocalDate()
       // Critical queries for current page - refetch immediately
       queryClient.invalidateQueries({ queryKey: planKeys.dailyProgress(variables.userPlanId, today) })
@@ -693,12 +701,10 @@ export function useMarkChapterRead() {
       queryClient.invalidateQueries({ queryKey: ['progressForPlanDay', variables.userPlanId] })
 
       if (user) {
-        // Call RPC for incremental streak update instead of invalidating stats
-        const newStats = await callSyncReadingStats(user.id, today, profile?.streak_minimum ?? 3)
-        if (newStats) {
+        if (data.syncedStats) {
           queryClient.setQueryData(['stats', user.id], (prev: UserStats | undefined) => ({
             ...(prev ?? {}),
-            ...newStats,
+            ...data.syncedStats,
           }))
         }
 
@@ -905,6 +911,8 @@ export function useMarkSectionComplete() {
       const actualCompletedSections = toggleSection(actualExisting?.completed_sections || [], sectionId)
       const actualIsComplete = actualCompletedSections.length >= totalSections
 
+      let result: DailyProgress
+
       if (actualExisting) {
         // Update existing record for this day_number
         const { data, error } = await (getSupabase()
@@ -920,28 +928,38 @@ export function useMarkSectionComplete() {
           .single()
 
         if (error) throw error
-        return data as DailyProgress
+        result = data as DailyProgress
+      } else {
+        // No existing record - insert new one
+        const { data, error } = await (getSupabase()
+          .from('daily_progress') as ReturnType<ReturnType<typeof getSupabase>['from']>)
+          .insert({
+            user_id: user.id,
+            user_plan_id: userPlanId,
+            day_number: dayNumber,
+            date: today,
+            completed_sections: actualCompletedSections,
+            is_complete: actualIsComplete,
+            streak_minimum: profile?.streak_minimum ?? 3,
+          })
+          .select()
+          .single()
+
+        if (error) throw error
+        result = data as DailyProgress
       }
 
-      // No existing record - insert new one
-      const { data, error } = await (getSupabase()
-        .from('daily_progress') as ReturnType<ReturnType<typeof getSupabase>['from']>)
-        .insert({
-          user_id: user.id,
-          user_plan_id: userPlanId,
-          day_number: dayNumber,
-          date: today,
-          completed_sections: actualCompletedSections,
-          is_complete: actualIsComplete,
-          streak_minimum: profile?.streak_minimum ?? 3,
-        })
-        .select()
-        .single()
+      // Sync stats within the mutation so the promise is properly awaited
+      let syncedStats: Partial<UserStats> | null = null
+      try {
+        syncedStats = await callSyncReadingStats(user.id, today, profile?.streak_minimum ?? 3)
+      } catch (e) {
+        console.error('Failed to sync reading stats after marking section', e)
+      }
 
-      if (error) throw error
-      return data as DailyProgress
+      return { ...result, syncedStats }
     },
-    onSuccess: async (data, variables) => {
+    onSuccess: (data, variables) => {
       const today = getLocalDate()
       queryClient.invalidateQueries({
         queryKey: planKeys.dailyProgress(variables.userPlanId, today),
@@ -952,12 +970,10 @@ export function useMarkSectionComplete() {
       queryClient.invalidateQueries({ queryKey: ['progressForPlanDay', variables.userPlanId, variables.dayNumber] })
 
       if (user) {
-        // Call RPC for incremental streak update instead of invalidating stats
-        const newStats = await callSyncReadingStats(user.id, today, profile?.streak_minimum ?? 3)
-        if (newStats) {
+        if (data.syncedStats) {
           queryClient.setQueryData(['stats', user.id], (prev: UserStats | undefined) => ({
             ...(prev ?? {}),
-            ...newStats,
+            ...data.syncedStats,
           }))
         }
 

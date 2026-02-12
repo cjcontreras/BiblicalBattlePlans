@@ -214,7 +214,9 @@ $$ LANGUAGE plpgsql STABLE;
 -- PHASE 4: NEW COLUMNS FOR INCREMENTAL TRACKING
 -- ============================================
 
--- Stamp each daily_progress record with the active streak_minimum
+-- Stamp each daily_progress record with the active streak_minimum.
+-- Nullable: pre-migration records may be NULL until backfilled (Phase 5).
+-- All new records are stamped by the client, so NULL is transitional only.
 ALTER TABLE daily_progress
 ADD COLUMN IF NOT EXISTS streak_minimum INTEGER;
 
@@ -286,11 +288,10 @@ BEGIN
   INTO v_profile_minimum
   FROM profiles WHERE id = p_user_id;
 
-  -- Drop temp table if it exists
+  -- Aggregate chapters by date, using per-record minimum.
+  -- ON COMMIT DROP ensures cleanup even if the session is reused (pgbouncer).
   DROP TABLE IF EXISTS temp_daily_chapters;
-
-  -- Aggregate chapters by date, using per-record minimum
-  CREATE TEMP TABLE temp_daily_chapters AS
+  CREATE TEMP TABLE temp_daily_chapters ON COMMIT DROP AS
   SELECT
     dp.date,
     SUM(calculate_chapters_for_progress(dp.completed_sections, dp.user_plan_id)) as chapters,
@@ -459,6 +460,7 @@ DECLARE
   v_new_shields INTEGER;
   v_new_last_reading DATE;
   v_new_shield_used_date DATE;
+  v_stamped_min INTEGER;
 BEGIN
   -- 1. Read current profile state
   SELECT
@@ -563,46 +565,42 @@ BEGIN
     -- Possible UNDO case: was counted today, now below the passed-in minimum.
     -- But is this a genuine undo (user un-marked chapters) or just a minimum change?
     -- Check if today's chapters still meet the stamped minimum from daily_progress.
-    DECLARE
-      v_stamped_min INTEGER;
-    BEGIN
-      SELECT COALESCE(MIN(dp.streak_minimum), p_streak_minimum)
-      INTO v_stamped_min
-      FROM daily_progress dp
-      WHERE dp.user_id = p_user_id AND dp.date = p_today
-        AND dp.streak_minimum IS NOT NULL;
+    SELECT COALESCE(MIN(dp.streak_minimum), p_streak_minimum)
+    INTO v_stamped_min
+    FROM daily_progress dp
+    WHERE dp.user_id = p_user_id AND dp.date = p_today
+      AND dp.streak_minimum IS NOT NULL;
 
-      IF v_today_chapters >= v_stamped_min THEN
-        -- Still meets the stamped minimum. Not a real undo.
-        -- This is just a minimum change — streak should be preserved.
-        NULL;
-      ELSE
-        -- Genuinely below even the stamped minimum. Real undo.
-        PERFORM recalculate_user_stats(p_user_id, p_today);
+    IF v_today_chapters >= v_stamped_min THEN
+      -- Still meets the stamped minimum. Not a real undo.
+      -- This is just a minimum change — streak should be preserved.
+      NULL;
+    ELSE
+      -- Genuinely below even the stamped minimum. Real undo.
+      PERFORM recalculate_user_stats(p_user_id, p_today);
 
-        -- Re-read the updated profile
-        SELECT
-          current_streak, longest_streak, total_chapters_read, total_days_reading,
-          last_reading_date, streak_shields, last_shield_used_date,
-          reading_days_in_streak, shields_used_in_streak
-        INTO v_profile
-        FROM profiles
-        WHERE id = p_user_id;
+      -- Re-read the updated profile
+      SELECT
+        current_streak, longest_streak, total_chapters_read, total_days_reading,
+        last_reading_date, streak_shields, last_shield_used_date,
+        reading_days_in_streak, shields_used_in_streak
+      INTO v_profile
+      FROM profiles
+      WHERE id = p_user_id;
 
-        -- Return the recalculated values directly
-        RETURN jsonb_build_object(
-          'current_streak', v_profile.current_streak,
-          'longest_streak', v_profile.longest_streak,
-          'total_chapters_read', v_profile.total_chapters_read,
-          'total_days_reading', v_profile.total_days_reading,
-          'last_reading_date', v_profile.last_reading_date,
-          'streak_shields', v_profile.streak_shields,
-          'last_shield_used_date', v_profile.last_shield_used_date,
-          'reading_days_in_streak', v_profile.reading_days_in_streak,
-          'shields_used_in_streak', v_profile.shields_used_in_streak
-        );
-      END IF;
-    END;
+      -- Return the recalculated values directly
+      RETURN jsonb_build_object(
+        'current_streak', v_profile.current_streak,
+        'longest_streak', v_profile.longest_streak,
+        'total_chapters_read', v_profile.total_chapters_read,
+        'total_days_reading', v_profile.total_days_reading,
+        'last_reading_date', v_profile.last_reading_date,
+        'streak_shields', v_profile.streak_shields,
+        'last_shield_used_date', v_profile.last_shield_used_date,
+        'reading_days_in_streak', v_profile.reading_days_in_streak,
+        'shields_used_in_streak', v_profile.shields_used_in_streak
+      );
+    END IF;
 
   ELSE
     -- Not meeting minimum, not previously counted today

@@ -9,6 +9,10 @@ import { Card, CardContent, Button, StreakBadge, LoadingSpinner, ProgressBar } f
 import { queryClient } from '../lib/queryClient'
 import type { UserStats } from '../types'
 
+// Module-level flag so the stale-streak sync fires once per session,
+// not every time Dashboard mounts/unmounts during navigation.
+let _hasSyncedStatsThisSession = false
+
 export function Dashboard() {
   const { profile, user } = useAuth()
   const { data: userPlans, isLoading: plansLoading, error: plansError } = useUserPlans()
@@ -28,9 +32,8 @@ export function Dashboard() {
   }, [userPlans, autoAdvance.isPending, autoAdvance.mutate])
 
   // Stale streak detection: sync stats on mount to catch streaks broken while app was closed
-  const hasSyncedStats = useRef(false)
   useEffect(() => {
-    if (user && profile && !hasSyncedStats.current) {
+    if (user && profile && !_hasSyncedStatsThisSession) {
       const syncStats = async () => {
         try {
           const data = await callSyncReadingStats(user.id, getLocalDate(), profile.streak_minimum ?? 3)
@@ -40,9 +43,9 @@ export function Dashboard() {
               ...data,
             }))
           }
-          hasSyncedStats.current = true
+          _hasSyncedStatsThisSession = true
         } catch (error) {
-          // Don't flip hasSyncedStats so a future render can retry
+          // Don't flip the flag so a future render can retry
           console.error('Failed to sync reading stats on dashboard mount', error)
         }
       }

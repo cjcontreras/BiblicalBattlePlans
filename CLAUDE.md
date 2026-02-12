@@ -42,7 +42,7 @@ src/
     supabase.ts      # Supabase client setup
     database.types.ts # Auto-generated Supabase types (DO NOT edit manually)
 supabase/
-  migrations/        # Sequential SQL migrations (001-024)
+  migrations/        # Sequential SQL migrations (001-023)
   seed.sql           # Seed data (reading plans)
   config.toml        # Local Supabase config
 docs/                # Project documentation
@@ -56,7 +56,7 @@ docs/                # Project documentation
 - These two often conflict. The generated types use `| null` everywhere and `Json` for JSONB columns, while app types use concrete types.
 - **Do NOT regenerate `database.types.ts` casually.** It will introduce type errors across the codebase because the app casts through hand-written types. Only regenerate when adding new RPC functions, and expect to fix cascading type issues.
 
-### Streak System (as of migration 024)
+### Streak System (as of migration 023)
 - Triggers are **removed**. No auto-recalculation on writes.
 - Client calls `sync_reading_stats()` RPC after each reading mutation.
 - Each `daily_progress` record is stamped with `streak_minimum` at write time.
