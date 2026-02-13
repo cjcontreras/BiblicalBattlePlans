@@ -59,6 +59,7 @@ export function Layout() {
         <UpdateBanner
           onUpdate={updateServiceWorker}
           onDismiss={dismissUpdate}
+          topOffset={isOutage ? 52 : 0}
         />
       )}
 

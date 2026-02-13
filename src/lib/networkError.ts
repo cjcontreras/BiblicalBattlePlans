@@ -6,6 +6,7 @@
  * - Safari: "TypeError: Load failed"
  * - Firefox: "TypeError: NetworkError when attempting to fetch resource"
  * - AbortError from fetch timeouts
+ * - safeQuery() timeout: "Request timed out" (from src/lib/supabase.ts withTimeout)
  */
 export function isNetworkError(error: unknown): boolean {
   if (!(error instanceof Error)) return false
@@ -15,6 +16,7 @@ export function isNetworkError(error: unknown): boolean {
     message.includes('failed to fetch') ||
     message.includes('load failed') ||
     message.includes('networkerror') ||
+    message.includes('request timed out') ||
     error.name === 'AbortError'
   )
 }
