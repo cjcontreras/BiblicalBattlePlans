@@ -4,6 +4,7 @@ import { Mail } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { AuthForm, GoogleAuthButton, type AuthFormData } from '../components/auth'
 import { Card, CardHeader, CardContent, CardFooter } from '../components/ui'
+import { isNetworkError } from '../lib/networkError'
 
 export function Login() {
   const navigate = useNavigate()
@@ -57,6 +58,13 @@ export function Login() {
           return
         }
 
+        // Check if this is a network/outage error
+        if (isNetworkError(error)) {
+          setError('Our servers are currently unreachable. Please check your connection and try again.')
+          setIsLoading(false)
+          return
+        }
+
         // Show any other error message
         setError(error.message || 'An error occurred. Please try again.')
         setIsLoading(false)
@@ -64,8 +72,12 @@ export function Login() {
       // Success case: isLoading will remain true while useEffect handles navigation
       // This is intentional - keeps the button in loading state during redirect
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
-      setError(errorMessage)
+      if (isNetworkError(err)) {
+        setError('Our servers are currently unreachable. Please check your connection and try again.')
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
+        setError(errorMessage)
+      }
       setIsLoading(false)
     }
   }

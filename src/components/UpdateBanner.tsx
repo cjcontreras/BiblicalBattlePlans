@@ -3,18 +3,20 @@ import { RefreshCw, X } from 'lucide-react'
 interface UpdateBannerProps {
   onUpdate: () => void | Promise<void>
   onDismiss: () => void
+  topOffset?: number
 }
 
 /**
  * Banner shown when a new version of the app is available.
  * Prompts the user to refresh to get the latest updates.
  */
-export function UpdateBanner({ onUpdate, onDismiss }: UpdateBannerProps) {
+export function UpdateBanner({ onUpdate, onDismiss, topOffset = 0 }: UpdateBannerProps) {
   return (
     <div
       role="status"
       aria-live="polite"
-      className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-sage to-sage-dark text-white shadow-lg"
+      style={topOffset ? { top: `${topOffset}px` } : undefined}
+      className={`fixed ${topOffset ? '' : 'top-0'} left-0 right-0 z-50 bg-gradient-to-r from-sage to-sage-dark text-white shadow-lg transition-[top] duration-200`}
     >
       <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between gap-4">
