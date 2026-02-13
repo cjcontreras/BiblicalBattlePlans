@@ -70,6 +70,8 @@ export function Profile() {
         display_name: displayName,
         streak_minimum: validStreakMinimum
       })
+      // Stats will update naturally on next reading — old days keep their stamped minimum,
+      // new days use the new one. No retroactive recalculation needed.
       setStreakMinimumInput(String(validStreakMinimum))
       toast.success('Profile updated successfully!')
     } catch (error) {
@@ -119,6 +121,8 @@ export function Profile() {
     total_days_reading: 0,
     streak_shields: 0,
     last_shield_used_date: null,
+    reading_days_in_streak: 0,
+    shields_used_in_streak: 0,
   }
 
   const currentRank = getCurrentRank(userStats.current_streak)
@@ -267,13 +271,13 @@ export function Profile() {
                     PROGRESS TO NEXT SHIELD
                   </span>
                   <span className="font-pixel text-[0.625rem] text-ink-muted">
-                    {userStats.current_streak % 14} / 14 DAYS
+                    {(userStats.reading_days_in_streak ?? userStats.current_streak) % 14} / 14 DAYS
                   </span>
                 </div>
                 <div className="h-2 bg-parchment border border-border-subtle overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-sage to-sage-light transition-all duration-500"
-                    style={{ width: `${((userStats.current_streak % 14) / 14) * 100}%` }}
+                    style={{ width: `${(((userStats.reading_days_in_streak ?? userStats.current_streak) % 14) / 14) * 100}%` }}
                   />
                 </div>
               </div>

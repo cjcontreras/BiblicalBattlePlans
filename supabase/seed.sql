@@ -170,7 +170,7 @@ VALUES (
 INSERT INTO reading_plans (name, description, duration_days, daily_structure)
 VALUES (
   'Canonical One-Year Campaign',
-  'March through the entire Bible from Genesis to Revelation in chronological book order. Complete the mission in 365 days with approximately 3-4 chapters daily.',
+  'March through the entire Bible from Genesis to Revelation in canonical book order. Complete the mission in 365 days with 3-4 chapters daily.',
   365,
   '{
     "type": "sequential",

@@ -133,7 +133,7 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 ### To use PRODUCTION:
 ```bash
 # .env.local
-VITE_SUPABASE_URL=https://bbdcphcopiooximpxbnv.supabase.co
+VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
 VITE_SUPABASE_ANON_KEY=<your-production-anon-key>
 ```
 
@@ -147,7 +147,7 @@ If production has changes not in your migrations, you can pull them:
 
 ```bash
 # Link to your project (one-time setup)
-supabase link --project-ref bbdcphcopiooximpxbnv
+supabase link --project-ref <your-project-ref>
 
 # Pull remote schema as a new migration
 supabase db pull

@@ -28,15 +28,17 @@ export function useStats() {
           total_days_reading: 0,
           streak_shields: 0,
           last_shield_used_date: null,
+          reading_days_in_streak: 0,
+          shields_used_in_streak: 0,
         }
       }
 
-      // Fetch fresh profile stats from database (updated by triggers)
+      // Fetch fresh profile stats from database (updated by RPC)
       // Using safeQuery to prevent hanging promises after tab suspension
       const profileResult = await safeQuery(() =>
         getSupabase()
           .from('profiles')
-          .select('current_streak, longest_streak, total_chapters_read, total_days_reading, streak_shields, last_shield_used_date')
+          .select('current_streak, longest_streak, total_chapters_read, total_days_reading, streak_shields, last_shield_used_date, reading_days_in_streak, shields_used_in_streak')
           .eq('id', user.id)
           .single()
       )
@@ -62,6 +64,8 @@ export function useStats() {
         total_days_reading: number
         streak_shields: number
         last_shield_used_date: string | null
+        reading_days_in_streak: number
+        shields_used_in_streak: number
       } | null
 
       return {
@@ -73,6 +77,8 @@ export function useStats() {
         total_days_reading: profile?.total_days_reading ?? 0,
         streak_shields: profile?.streak_shields ?? 0,
         last_shield_used_date: profile?.last_shield_used_date ?? null,
+        reading_days_in_streak: profile?.reading_days_in_streak ?? 0,
+        shields_used_in_streak: profile?.shields_used_in_streak ?? 0,
       }
     },
     enabled: !!user,

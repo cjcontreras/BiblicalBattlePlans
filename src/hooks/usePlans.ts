@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getSupabase, safeQuery } from '../lib/supabase'
 import { useAuth } from './useAuth'
-import type { ReadingPlan, UserPlan, DailyProgress, DailyStructure, CyclingListsStructure, ListPositions, WeeklySectionalStructure } from '../types'
+import type { ReadingPlan, UserPlan, DailyProgress, DailyStructure, CyclingListsStructure, ListPositions, WeeklySectionalStructure, UserStats } from '../types'
 
 // Helper type for today's reading result
 export interface TodaySection {
@@ -27,6 +27,31 @@ export const planKeys = {
 // Get today's date in user's local timezone (YYYY-MM-DD)
 export function getLocalDate(): string {
   return new Date().toLocaleDateString('en-CA') // Returns YYYY-MM-DD format
+}
+
+// Call the sync_reading_stats RPC and return typed stats.
+// Uses explicit cast because the generated Supabase types don't include this function yet.
+export async function callSyncReadingStats(
+  userId: string,
+  today: string,
+  streakMinimum: number
+): Promise<Partial<UserStats> | null> {
+  const { data, error } = await safeQuery<{ data: unknown; error: { message: string } | null }>(() =>
+    (getSupabase().rpc as Function)('sync_reading_stats', {
+      p_user_id: userId,
+      p_today: today,
+      p_streak_minimum: streakMinimum,
+    })
+  )
+
+  if (error) throw error
+
+  // Guard against the RPC returning an error payload inside the JSON
+  if (data && typeof data === 'object' && 'error' in (data as Record<string, unknown>)) {
+    throw new Error(String((data as Record<string, unknown>).error) || 'sync_reading_stats returned an error')
+  }
+
+  return data as Partial<UserStats> | null
 }
 
 // Parse a passage string and count the chapters
@@ -583,7 +608,7 @@ async function handleDuplicateKeyAndUpdate(
 // Mark a chapter as read (for cycling plans)
 export function useMarkChapterRead() {
   const queryClient = useQueryClient()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
 
   return useMutation({
     mutationFn: async ({
@@ -619,6 +644,7 @@ export function useMarkChapterRead() {
           .from('daily_progress') as ReturnType<ReturnType<typeof getSupabase>['from']>)
           .update({
             completed_sections: completedSections,
+            streak_minimum: profile?.streak_minimum ?? 3,
             updated_at: new Date().toISOString(),
           })
           .eq('id', existingProgress.id)
@@ -635,6 +661,7 @@ export function useMarkChapterRead() {
             date: today,
             completed_sections: completedSections,
             is_complete: false,
+            streak_minimum: profile?.streak_minimum ?? 3,
           })
 
         if (insertError) {
@@ -656,32 +683,45 @@ export function useMarkChapterRead() {
       // Note: We do NOT advance list_positions here - that's done explicitly
       // via useAdvanceList when the user wants to continue to the next chapter
 
-      return { completedSections }
+      // Sync stats within the mutation so the promise is properly awaited
+      let syncedStats: Partial<UserStats> | null = null
+      try {
+        syncedStats = await callSyncReadingStats(user.id, today, profile?.streak_minimum ?? 3)
+      } catch (e) {
+        console.error('Failed to sync reading stats after marking chapter', e)
+      }
+
+      return { completedSections, syncedStats }
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
       const today = getLocalDate()
       // Critical queries for current page - refetch immediately
       queryClient.invalidateQueries({ queryKey: planKeys.dailyProgress(variables.userPlanId, today) })
       queryClient.invalidateQueries({ queryKey: planKeys.userPlan(variables.userPlanId) })
       queryClient.invalidateQueries({ queryKey: ['progressForPlanDay', variables.userPlanId] })
-      
+
       if (user) {
-        // Stats and total progress needed for streak display on ActivePlan - refetch immediately
+        if (data.syncedStats) {
+          queryClient.setQueryData(['stats', user.id], (prev: UserStats | undefined) => ({
+            ...(prev ?? {}),
+            ...data.syncedStats,
+          }))
+        }
+
         queryClient.invalidateQueries({ queryKey: planKeys.todaysTotalProgress(user.id, today) })
-        queryClient.invalidateQueries({ queryKey: ['stats', user.id] })
-        
+
         // Dashboard-only queries - mark stale but don't refetch until Dashboard is visited
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: planKeys.userPlans(user.id),
-          refetchType: 'none' // Only refetch when Dashboard component mounts
+          refetchType: 'none'
         })
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: ['allTodayProgress', user.id, today],
-          refetchType: 'none' // Only refetch when Dashboard component mounts
+          refetchType: 'none'
         })
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: ['progressByDayNumber', user.id],
-          refetchType: 'none' // Only refetch when Dashboard component mounts
+          refetchType: 'none'
         })
       }
     },
@@ -833,7 +873,7 @@ export function useMarkPlanComplete() {
 // Legacy: Mark a section complete (for non-cycling plans)
 export function useMarkSectionComplete() {
   const queryClient = useQueryClient()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
 
   return useMutation({
     mutationFn: async ({
@@ -853,32 +893,34 @@ export function useMarkSectionComplete() {
 
       const today = getLocalDate()
 
-      // Always fetch existing progress by date (not day_number) to handle
-      // advancing to next reading on same day. The existingProgress param may be
-      // null if queried by day_number but record exists for same date.
+      // Look up existing progress by day_number AND date to avoid overwriting
+      // records from other days completed on the same calendar date.
       let actualExisting = existingProgress
       if (!actualExisting) {
-        const { data: existingByDate } = await getSupabase()
+        const { data: existingByDay } = await getSupabase()
           .from('daily_progress')
           .select('*')
           .eq('user_plan_id', userPlanId)
+          .eq('day_number', dayNumber)
           .eq('date', today)
           .maybeSingle()
-        actualExisting = existingByDate as DailyProgress | null
+        actualExisting = existingByDay as DailyProgress | null
       }
 
       // Re-calculate sections based on actual existing data
       const actualCompletedSections = toggleSection(actualExisting?.completed_sections || [], sectionId)
       const actualIsComplete = actualCompletedSections.length >= totalSections
 
+      let result: DailyProgress
+
       if (actualExisting) {
-        // Update existing record
+        // Update existing record for this day_number
         const { data, error } = await (getSupabase()
           .from('daily_progress') as ReturnType<ReturnType<typeof getSupabase>['from']>)
           .update({
             completed_sections: actualCompletedSections,
             is_complete: actualIsComplete,
-            day_number: dayNumber, // Update to current day position
+            streak_minimum: profile?.streak_minimum ?? 3,
             updated_at: new Date().toISOString(),
           })
           .eq('id', actualExisting.id)
@@ -886,25 +928,36 @@ export function useMarkSectionComplete() {
           .single()
 
         if (error) throw error
-        return data as DailyProgress
+        result = data as DailyProgress
+      } else {
+        // No existing record - insert new one
+        const { data, error } = await (getSupabase()
+          .from('daily_progress') as ReturnType<ReturnType<typeof getSupabase>['from']>)
+          .insert({
+            user_id: user.id,
+            user_plan_id: userPlanId,
+            day_number: dayNumber,
+            date: today,
+            completed_sections: actualCompletedSections,
+            is_complete: actualIsComplete,
+            streak_minimum: profile?.streak_minimum ?? 3,
+          })
+          .select()
+          .single()
+
+        if (error) throw error
+        result = data as DailyProgress
       }
 
-      // No existing record - insert new one
-      const { data, error } = await (getSupabase()
-        .from('daily_progress') as ReturnType<ReturnType<typeof getSupabase>['from']>)
-        .insert({
-          user_id: user.id,
-          user_plan_id: userPlanId,
-          day_number: dayNumber,
-          date: today,
-          completed_sections: actualCompletedSections,
-          is_complete: actualIsComplete,
-        })
-        .select()
-        .single()
+      // Sync stats within the mutation so the promise is properly awaited
+      let syncedStats: Partial<UserStats> | null = null
+      try {
+        syncedStats = await callSyncReadingStats(user.id, today, profile?.streak_minimum ?? 3)
+      } catch (e) {
+        console.error('Failed to sync reading stats after marking section', e)
+      }
 
-      if (error) throw error
-      return data as DailyProgress
+      return { ...result, syncedStats }
     },
     onSuccess: (data, variables) => {
       const today = getLocalDate()
@@ -916,27 +969,32 @@ export function useMarkSectionComplete() {
       // Invalidate the specific day_number query as well
       queryClient.invalidateQueries({ queryKey: ['progressForPlanDay', variables.userPlanId, variables.dayNumber] })
 
-      // Always invalidate stats and todaysTotalProgress when sections are marked (needed for ActivePlan)
       if (user) {
-        queryClient.invalidateQueries({ queryKey: ['stats', user.id] })
+        if (data.syncedStats) {
+          queryClient.setQueryData(['stats', user.id], (prev: UserStats | undefined) => ({
+            ...(prev ?? {}),
+            ...data.syncedStats,
+          }))
+        }
+
         queryClient.invalidateQueries({ queryKey: planKeys.todaysTotalProgress(user.id, today) })
-        
+
         // Dashboard-only queries - mark stale but don't refetch until Dashboard is visited
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: ['allTodayProgress', user.id, today],
           refetchType: 'none'
         })
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: ['progressByDayNumber', user.id],
           refetchType: 'none'
         })
-        
+
         // Guild queries - mark stale but don't refetch until Guild page is visited
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: ['guildChapterCounts'],
           refetchType: 'none'
         })
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: ['guilds', 'detail'],
           refetchType: 'none'
         })
@@ -945,7 +1003,7 @@ export function useMarkSectionComplete() {
       if (data.is_complete && user) {
         queryClient.invalidateQueries({ queryKey: planKeys.userPlan(variables.userPlanId) })
         // Mark userPlans stale but don't refetch until Dashboard is visited
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: planKeys.userPlans(user.id),
           refetchType: 'none'
         })
@@ -1057,9 +1115,21 @@ export function getTodaysReading(
 
   if (structure.type === 'sequential') {
     const seqStructure = structure as unknown as SequentialPlanStructure
-    const chaptersPerDay = seqStructure.chapters_per_day || 3
-    const startChapter = (dayNumber - 1) * chaptersPerDay + 1
-    const endChapter = startChapter + chaptersPerDay - 1
+    const totalChapters = seqStructure.total_chapters || seqStructure.books?.reduce((sum, b) => sum + b.chapters, 0) || 0
+    const durationDays = plan.duration_days
+
+    // Use even distribution when duration is available: some days get 3 chapters, some get 4
+    // Formula: chapters for day N = floor(N * total / duration) - floor((N-1) * total / duration)
+    let startChapter: number
+    let endChapter: number
+    if (durationDays > 0 && totalChapters > 0) {
+      startChapter = Math.floor((dayNumber - 1) * totalChapters / durationDays) + 1
+      endChapter = Math.floor(dayNumber * totalChapters / durationDays)
+    } else {
+      const chaptersPerDay = seqStructure.chapters_per_day || 3
+      startChapter = (dayNumber - 1) * chaptersPerDay + 1
+      endChapter = startChapter + chaptersPerDay - 1
+    }
 
     let currentChapter = 0
     const passages: string[] = []

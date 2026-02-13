@@ -2,11 +2,16 @@ import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { BookOpen, Swords, Trophy, Plus, Book, Play } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
-import { useUserPlans, useAllTodayProgress, useProgressByDayNumber, getProgressForCurrentDay, getCurrentReadings, getTodaysReading, calculatePlanProgress, useAutoAdvanceCompletedPlans } from '../hooks/usePlans'
+import { useUserPlans, useAllTodayProgress, useProgressByDayNumber, getProgressForCurrentDay, getCurrentReadings, getTodaysReading, calculatePlanProgress, useAutoAdvanceCompletedPlans, getLocalDate, callSyncReadingStats } from '../hooks/usePlans'
 import { useStats } from '../hooks/useStats'
 import { useVerseOfDay } from '../hooks/useVerseOfDay'
 import { Card, CardContent, Button, StreakBadge, LoadingSpinner, ProgressBar } from '../components/ui'
 import { queryClient } from '../lib/queryClient'
+import type { UserStats } from '../types'
+
+// Module-level flag so the stale-streak sync fires once per session,
+// not every time Dashboard mounts/unmounts during navigation.
+let _hasSyncedStatsThisSession = false
 
 export function Dashboard() {
   const { profile, user } = useAuth()
@@ -25,6 +30,28 @@ export function Dashboard() {
       autoAdvance.mutate(userPlans)
     }
   }, [userPlans, autoAdvance.isPending, autoAdvance.mutate])
+
+  // Stale streak detection: sync stats on mount to catch streaks broken while app was closed
+  useEffect(() => {
+    if (user && profile && !_hasSyncedStatsThisSession) {
+      const syncStats = async () => {
+        try {
+          const data = await callSyncReadingStats(user.id, getLocalDate(), profile.streak_minimum ?? 3)
+          if (data) {
+            queryClient.setQueryData(['stats', user.id], (prev: UserStats | undefined) => ({
+              ...(prev ?? {}),
+              ...data,
+            }))
+          }
+          _hasSyncedStatsThisSession = true
+        } catch (error) {
+          // Don't flip the flag so a future render can retry
+          console.error('Failed to sync reading stats on dashboard mount', error)
+        }
+      }
+      syncStats()
+    }
+  }, [user, profile])
 
   const isLoading = plansLoading || statsLoading
   const error = plansError || statsError

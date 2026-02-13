@@ -15,6 +15,9 @@ export interface Profile {
   // Streak shields (earned every 14 consecutive days, max 3)
   streak_shields: number
   last_shield_used_date: string | null
+  // Incremental streak tracking
+  reading_days_in_streak: number
+  shields_used_in_streak: number
   created_at: string
   updated_at: string
 }
@@ -138,6 +141,7 @@ export interface DailyProgress {
   date: string // Primary key for tracking - user's local date
   completed_sections: string[] // Format: ["listId:chapterIndex", ...] e.g. ["list1:5", "list1:6", "list2:0"]
   is_complete: boolean // For non-cycling plans; cycling plans ignore this
+  streak_minimum?: number // The active streak_minimum when this record was created/updated
   notes: string | null
   created_at: string
   updated_at: string
@@ -266,6 +270,8 @@ export interface UserStats {
   total_days_reading: number
   streak_shields: number
   last_shield_used_date: string | null
+  reading_days_in_streak: number
+  shields_used_in_streak: number
 }
 
 // Auth Types

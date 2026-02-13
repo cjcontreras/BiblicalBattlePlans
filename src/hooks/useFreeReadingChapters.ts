@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getSupabase, safeQuery } from '../lib/supabase'
 import { useAuth } from './useAuth'
-import { getLocalDate, planKeys } from './usePlans'
-import type { FreeReadingChapter, BookCompletionStatus, ReadingPlan, FreeReadingStructure, DailyProgress } from '../types'
+import { getLocalDate, planKeys, callSyncReadingStats } from './usePlans'
+import type { FreeReadingChapter, BookCompletionStatus, ReadingPlan, FreeReadingStructure, DailyProgress, UserStats } from '../types'
 import { 
   BIBLE_BOOKS, 
   APOCRYPHA_BOOKS, 
@@ -227,7 +227,7 @@ export function useToggleBook() {
  */
 export function useSyncDailyProgress() {
   const queryClient = useQueryClient()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
 
   return useMutation({
     mutationFn: async ({
@@ -243,6 +243,7 @@ export function useSyncDailyProgress() {
       if (chaptersChanged <= 0) return { synced: false }
 
       const today = getLocalDate()
+      const streakMinimum = profile?.streak_minimum ?? 3
 
       // Get today's progress
       const { data: progressData, error: fetchError } = await getSupabase()
@@ -276,6 +277,7 @@ export function useSyncDailyProgress() {
         const { error: updateError } = await (getSupabase().from('daily_progress') as SupabaseFrom)
           .update({
             completed_sections: completedSections,
+            streak_minimum: streakMinimum,
             updated_at: new Date().toISOString(),
           })
           .eq('id', existingProgress.id)
@@ -293,6 +295,7 @@ export function useSyncDailyProgress() {
             date: today,
             completed_sections: completedSections,
             is_complete: false,
+            streak_minimum: streakMinimum,
           })
 
         if (insertError) {
@@ -330,6 +333,15 @@ export function useSyncDailyProgress() {
         throw updatePlanError
       }
 
+      // Call RPC for incremental streak update
+      const newStats = await callSyncReadingStats(user.id, today, streakMinimum)
+      if (newStats) {
+        queryClient.setQueryData(['stats', user.id], (prev: UserStats | undefined) => ({
+          ...(prev ?? {}),
+          ...newStats,
+        }))
+      }
+
       console.log('[syncDailyProgress] Success:', { action, chaptersChanged, newTotal, completedSections: completedSections.length })
       return { synced: true, newTotal }
     },
@@ -341,18 +353,19 @@ export function useSyncDailyProgress() {
       queryClient.invalidateQueries({ queryKey: planKeys.userPlan(variables.userPlanId) })
       if (user) {
         queryClient.invalidateQueries({ queryKey: planKeys.todaysTotalProgress(user.id, today) })
-        queryClient.invalidateQueries({ queryKey: ['stats', user.id] })
+        // Stats are already updated via RPC setQueryData above, but mark stale for consistency
+        queryClient.invalidateQueries({ queryKey: ['stats', user.id], refetchType: 'none' })
         // Dashboard-only queries - mark stale but don't refetch until Dashboard is visited
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: planKeys.userPlans(user.id),
           refetchType: 'none'
         })
         // Guild queries - mark stale but don't refetch until Guild page is visited
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: ['guildChapterCounts'],
           refetchType: 'none'
         })
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: ['guilds', 'detail'],
           refetchType: 'none'
         })
