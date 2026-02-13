@@ -13,6 +13,7 @@ import { AchievementModal } from './AchievementModal'
 import { MilestoneWatcher } from './MilestoneWatcher'
 import { WelcomeModal } from './WelcomeModal'
 import { UpdateBanner } from './UpdateBanner'
+import { useIsOutage } from '../hooks/useSupabaseStatus'
 
 const WELCOME_MODAL_KEY = 'hasSeenWelcomeModal'
 
@@ -21,6 +22,7 @@ export function Layout() {
   const { data: stats } = useStats()
   const isPWA = useIsPWA()
   const { needRefresh, updateServiceWorker, close: dismissUpdate } = useSWUpdate()
+  const isOutage = useIsOutage()
   const currentAchievement = useCurrentAchievement()
   const dismissAchievement = useDismissAchievement()
   const [showUserMenu, setShowUserMenu] = useState(false)
@@ -61,7 +63,7 @@ export function Layout() {
       )}
 
       {/* Header */}
-      <header className={`sticky ${needRefresh ? 'top-[52px]' : 'top-0'} z-40 bg-gradient-to-br from-parchment to-parchment-light border-b-2 border-border-subtle shadow-[0_4px_12px_var(--shadow-color)] transition-[top] duration-200`}>
+      <header className={`sticky ${isOutage && needRefresh ? 'top-[104px]' : isOutage || needRefresh ? 'top-[52px]' : 'top-0'} z-40 bg-gradient-to-br from-parchment to-parchment-light border-b-2 border-border-subtle shadow-[0_4px_12px_var(--shadow-color)] transition-[top] duration-200`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}

@@ -4,6 +4,7 @@ import { Mail } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { AuthForm, GoogleAuthButton, type AuthFormData } from '../components/auth'
 import { Card, CardHeader, CardContent, CardFooter } from '../components/ui'
+import { isNetworkError } from '../lib/networkError'
 
 export function Signup() {
   const { signUp } = useAuth()
@@ -15,13 +16,27 @@ export function Signup() {
     setIsLoading(true)
     setError(null)
 
-    const { error } = await signUp(data.email, data.password!, data.username!, data.displayName!)
+    try {
+      const { error } = await signUp(data.email, data.password!, data.username!, data.displayName!)
 
-    if (error) {
-      setError(error.message)
-      setIsLoading(false)
-    } else {
-      setSuccess(true)
+      if (error) {
+        if (isNetworkError(error)) {
+          setError('Our servers are currently unreachable. Please check your connection and try again.')
+        } else {
+          setError(error.message)
+        }
+        setIsLoading(false)
+      } else {
+        setSuccess(true)
+        setIsLoading(false)
+      }
+    } catch (err) {
+      if (isNetworkError(err)) {
+        setError('Our servers are currently unreachable. Please check your connection and try again.')
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
+        setError(errorMessage)
+      }
       setIsLoading(false)
     }
   }

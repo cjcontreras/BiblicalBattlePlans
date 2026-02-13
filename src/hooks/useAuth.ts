@@ -3,6 +3,8 @@ import { getSupabase } from '../lib/supabase'
 import { setSentryUser } from '../lib/sentry'
 import { captureError } from '../lib/errorLogger'
 import { clearUserCache } from '../lib/queryClient'
+import { isNetworkError } from '../lib/networkError'
+import { useSupabaseStatus } from './useSupabaseStatus'
 import type { User, Session } from '@supabase/supabase-js'
 import type { Profile } from '../types'
 
@@ -173,6 +175,9 @@ export const useAuth = create<AuthStore>((set, get) => ({
         })
       }
     } catch (error) {
+      if (isNetworkError(error)) {
+        useSupabaseStatus.getState().reportNetworkError()
+      }
       captureError(error, { component: 'useAuth', action: 'initialize' }, 'fatal')
       set({ isLoading: false, isInitialized: true })
     }
@@ -180,61 +185,83 @@ export const useAuth = create<AuthStore>((set, get) => ({
 
   signIn: async (email: string, password: string) => {
     set({ isLoading: true })
-    const { data, error } = await getSupabase().auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
-      set({ isLoading: false })
-      return { error }
-    }
-
-    if (data.session?.user) {
-      // Clear cached data from previous user/session to prevent stale data
-      clearUserCache()
-
-      const profile = await fetchProfile(data.session.user.id)
-      setSentryUser({ id: data.session.user.id, email: data.session.user.email })
-      set({
-        user: data.session.user,
-        session: data.session,
-        profile,
-        isLoading: false,
-        isRecoveryMode: false,
+    try {
+      const { data, error } = await getSupabase().auth.signInWithPassword({
+        email,
+        password,
       })
-    }
 
-    return { error: null }
+      if (error) {
+        set({ isLoading: false })
+        if (isNetworkError(error)) {
+          useSupabaseStatus.getState().reportNetworkError()
+        }
+        return { error }
+      }
+
+      if (data.session?.user) {
+        // Clear cached data from previous user/session to prevent stale data
+        clearUserCache()
+
+        const profile = await fetchProfile(data.session.user.id)
+        setSentryUser({ id: data.session.user.id, email: data.session.user.email })
+        set({
+          user: data.session.user,
+          session: data.session,
+          profile,
+          isLoading: false,
+          isRecoveryMode: false,
+        })
+      }
+
+      return { error: null }
+    } catch (error) {
+      set({ isLoading: false })
+      if (isNetworkError(error)) {
+        useSupabaseStatus.getState().reportNetworkError()
+      }
+      return { error: error instanceof Error ? error : new Error('Sign in failed') }
+    }
   },
 
   signUp: async (email: string, password: string, username: string, displayName: string) => {
     set({ isLoading: true })
 
-    // Sign up the user - username and display_name stored in user metadata
-    // and synced to profile after email confirmation
-    const { error } = await getSupabase().auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username,
-          display_name: displayName,
+    try {
+      // Sign up the user - username and display_name stored in user metadata
+      // and synced to profile after email confirmation
+      const { error } = await getSupabase().auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+            display_name: displayName,
+          },
         },
-      },
-    })
+      })
 
-    if (error) {
+      if (error) {
+        set({ isLoading: false })
+        if (isNetworkError(error)) {
+          useSupabaseStatus.getState().reportNetworkError()
+        }
+        return { error }
+      }
+
+      // Note: Profile update happens after email confirmation
+      // The profile will be created/updated when the user confirms their email
+      // and the auth state change handler runs
+
       set({ isLoading: false })
-      return { error }
+      return { error: null }
+    } catch (error) {
+      set({ isLoading: false })
+      if (isNetworkError(error)) {
+        useSupabaseStatus.getState().reportNetworkError()
+      }
+      return { error: error instanceof Error ? error : new Error('Sign up failed') }
     }
-
-    // Note: Profile update happens after email confirmation
-    // The profile will be created/updated when the user confirms their email
-    // and the auth state change handler runs
-
-    set({ isLoading: false })
-    return { error: null }
   },
 
   signInWithGoogle: async () => {

@@ -8,6 +8,7 @@ import { ProtectedRoute } from './components/auth'
 import { Layout } from './components/Layout'
 import { Landing, Login, Signup, ForgotPassword, ResetPassword, Dashboard, Plans, PlanDetail, ActivePlan, Profile, Acknowledgements, About, Feedback, GuildHub, Guild, GuildJoin } from './pages'
 import { LoadingOverlay } from './components/ui'
+import { OutageBanner } from './components/OutageBanner'
 import { queryClient } from './lib/queryClient'
 
 /**
@@ -78,7 +79,12 @@ function App() {
 
   // Show loading only while initializing auth (not during sign in/out operations)
   if (!isInitialized) {
-    return <LoadingOverlay message="INITIALIZING..." />
+    return (
+      <>
+        <OutageBanner />
+        <LoadingOverlay message="INITIALIZING..." />
+      </>
+    )
   }
 
   return (
@@ -86,6 +92,7 @@ function App() {
       <ScrollToTop />
       <SpeedInsights />
       <Analytics />
+      <OutageBanner />
       <Toaster
         position="bottom-center"
         toastOptions={{
