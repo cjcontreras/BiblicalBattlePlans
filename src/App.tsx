@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 import { Analytics } from '@vercel/analytics/react'
@@ -6,10 +6,39 @@ import { Toaster } from 'sonner'
 import { useAuth } from './hooks/useAuth'
 import { ProtectedRoute } from './components/auth'
 import { Layout } from './components/Layout'
-import { Landing, Login, Signup, ForgotPassword, ResetPassword, Dashboard, Plans, PlanDetail, ActivePlan, Profile, Acknowledgements, About, Feedback, GuildHub, Guild, GuildJoin } from './pages'
-import { LoadingOverlay } from './components/ui'
+import { Landing, Login, Signup, ForgotPassword, ResetPassword, About } from './pages'
+import { LoadingOverlay, LoadingSpinner } from './components/ui'
 import { OutageBanner } from './components/OutageBanner'
+import { RouteErrorBoundary } from './components/ErrorBoundary'
 import { queryClient } from './lib/queryClient'
+
+// Lazy-loaded protected routes (code-split into separate chunks)
+const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })))
+const Plans = lazy(() => import('./pages/Plans').then(m => ({ default: m.Plans })))
+const PlanDetail = lazy(() => import('./pages/PlanDetail').then(m => ({ default: m.PlanDetail })))
+const ActivePlan = lazy(() => import('./pages/ActivePlan').then(m => ({ default: m.ActivePlan })))
+const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })))
+const Acknowledgements = lazy(() => import('./pages/Acknowledgements').then(m => ({ default: m.Acknowledgements })))
+const Feedback = lazy(() => import('./pages/Feedback').then(m => ({ default: m.Feedback })))
+const GuildHub = lazy(() => import('./pages/GuildHub').then(m => ({ default: m.GuildHub })))
+const Guild = lazy(() => import('./pages/Guild').then(m => ({ default: m.Guild })))
+const GuildJoin = lazy(() => import('./pages/GuildJoin').then(m => ({ default: m.GuildJoin })))
+
+const lazyFallback = (
+  <div className="flex justify-center pt-16">
+    <LoadingSpinner size="lg" />
+  </div>
+)
+
+function LazyRoute({ children }: { children: ReactNode }) {
+  return (
+    <RouteErrorBoundary>
+      <Suspense fallback={lazyFallback}>
+        {children}
+      </Suspense>
+    </RouteErrorBoundary>
+  )
+}
 
 /**
  * Handle tab visibility changes by invalidating stale queries.
@@ -129,16 +158,16 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/plans" element={<Plans />} />
-          <Route path="/plans/:id" element={<PlanDetail />} />
-          <Route path="/campaign/:id" element={<ActivePlan />} />
-          <Route path="/guild" element={<GuildHub />} />
-          <Route path="/guild/:id" element={<Guild />} />
-          <Route path="/guild/join/:code" element={<GuildJoin />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/acknowledgements" element={<Acknowledgements />} />
-          <Route path="/feedback" element={<Feedback />} />
+          <Route path="/dashboard" element={<LazyRoute><Dashboard /></LazyRoute>} />
+          <Route path="/plans" element={<LazyRoute><Plans /></LazyRoute>} />
+          <Route path="/plans/:id" element={<LazyRoute><PlanDetail /></LazyRoute>} />
+          <Route path="/campaign/:id" element={<LazyRoute><ActivePlan /></LazyRoute>} />
+          <Route path="/guild" element={<LazyRoute><GuildHub /></LazyRoute>} />
+          <Route path="/guild/:id" element={<LazyRoute><Guild /></LazyRoute>} />
+          <Route path="/guild/join/:code" element={<LazyRoute><GuildJoin /></LazyRoute>} />
+          <Route path="/profile" element={<LazyRoute><Profile /></LazyRoute>} />
+          <Route path="/acknowledgements" element={<LazyRoute><Acknowledgements /></LazyRoute>} />
+          <Route path="/feedback" element={<LazyRoute><Feedback /></LazyRoute>} />
         </Route>
 
         {/* Catch all - redirect appropriately */}

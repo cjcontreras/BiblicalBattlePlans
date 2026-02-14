@@ -98,6 +98,17 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'supabase-vendor': ['@supabase/supabase-js'],
+          'tanstack-vendor': ['@tanstack/react-query', '@tanstack/query-sync-storage-persister', '@tanstack/react-query-persist-client'],
+        },
+      },
+    },
+  },
   preview: {
     // Configure preview server to handle SPA routing
     port: 4173,

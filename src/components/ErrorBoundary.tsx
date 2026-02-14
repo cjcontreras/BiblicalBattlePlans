@@ -89,6 +89,71 @@ class ErrorBoundaryClass extends Component<Props, State> {
   }
 }
 
+// Detect chunk/dynamic-import load failures (stale deploys, network issues)
+function isChunkLoadError(error: Error): boolean {
+  return (
+    error.name === 'ChunkLoadError' ||
+    error.message.includes('Failed to fetch dynamically imported module') ||
+    error.message.includes('Importing a module script failed') ||
+    error.message.includes('Loading chunk') ||
+    error.message.includes('Loading CSS chunk')
+  )
+}
+
+// Error boundary for lazy-loaded routes.
+// Only handles chunk load failures with an inline reload prompt.
+// Non-chunk errors are rethrown to the app-level ErrorBoundary.
+class RouteErrorBoundaryClass extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    if (isChunkLoadError(error)) {
+      Sentry.withScope((scope) => {
+        scope.setExtra('componentStack', errorInfo.componentStack)
+        scope.setTag('boundary', 'route-chunk')
+        Sentry.captureException(error)
+      })
+    }
+  }
+
+  render() {
+    if (this.state.hasError && this.state.error) {
+      // Non-chunk errors: rethrow to the app-level ErrorBoundary
+      if (!isChunkLoadError(this.state.error)) {
+        throw this.state.error
+      }
+
+      return (
+        <div className="flex flex-col items-center justify-center gap-4 pt-16 px-4 text-center">
+          <div className="w-12 h-12 bg-danger/20 border-2 border-danger flex items-center justify-center">
+            <span className="font-pixel text-xl text-danger">!</span>
+          </div>
+          <p className="font-pixel text-[0.75rem] text-ink">
+            FAILED TO LOAD PAGE
+          </p>
+          <p className="font-pixel text-[0.625rem] text-ink-muted max-w-xs">
+            This can happen after an update. Reloading should fix it.
+          </p>
+          <Button variant="primary" onClick={() => window.location.reload()}>
+            RELOAD
+          </Button>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
+
+export const RouteErrorBoundary = RouteErrorBoundaryClass
+
 // Export both the class and a Sentry-wrapped version
 export const ErrorBoundary = ErrorBoundaryClass
 
