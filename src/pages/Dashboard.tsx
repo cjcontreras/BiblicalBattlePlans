@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { BookOpen, Swords, Trophy, Plus, Book, Play } from 'lucide-react'
+import { ReadingHeatmap } from '../components/dashboard/ReadingHeatmap'
 import { useAuth } from '../hooks/useAuth'
 import { useUserPlans, useAllTodayProgress, useProgressByDayNumber, getProgressForCurrentDay, getCurrentReadings, getTodaysReading, calculatePlanProgress, useAutoAdvanceCompletedPlans, getLocalDate, callSyncReadingStats } from '../hooks/usePlans'
 import { useStats } from '../hooks/useStats'
@@ -283,6 +284,9 @@ export function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Campaign Log - Reading Heatmap */}
+      <ReadingHeatmap />
     </div>
   )
 }
