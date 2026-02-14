@@ -723,6 +723,10 @@ export function useMarkChapterRead() {
           queryKey: ['progressByDayNumber', user.id],
           refetchType: 'none'
         })
+        queryClient.invalidateQueries({
+          queryKey: ['heatmap'],
+          refetchType: 'none'
+        })
       }
     },
   })
@@ -986,6 +990,10 @@ export function useMarkSectionComplete() {
         })
         queryClient.invalidateQueries({
           queryKey: ['progressByDayNumber', user.id],
+          refetchType: 'none'
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['heatmap'],
           refetchType: 'none'
         })
 

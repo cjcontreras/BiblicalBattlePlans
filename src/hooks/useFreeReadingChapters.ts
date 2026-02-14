@@ -360,6 +360,10 @@ export function useSyncDailyProgress() {
           queryKey: planKeys.userPlans(user.id),
           refetchType: 'none'
         })
+        queryClient.invalidateQueries({
+          queryKey: ['heatmap'],
+          refetchType: 'none'
+        })
         // Guild queries - mark stale but don't refetch until Guild page is visited
         queryClient.invalidateQueries({
           queryKey: ['guildChapterCounts'],
