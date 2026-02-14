@@ -2,15 +2,14 @@ import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query'
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import { captureError } from './errorLogger'
 import { isNetworkError } from './networkError'
+import { useSupabaseStatus } from '../hooks/useSupabaseStatus'
 
 // Global error handler for queries
 const queryCache = new QueryCache({
   onError: (error, query) => {
     // If this is a network error (after retries exhausted), report outage
     if (isNetworkError(error)) {
-      import('../hooks/useSupabaseStatus').then(({ useSupabaseStatus }) => {
-        useSupabaseStatus.getState().reportNetworkError()
-      })
+      useSupabaseStatus.getState().reportNetworkError()
     }
 
     // Only capture errors that have exhausted retries

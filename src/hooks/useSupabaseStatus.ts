@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { checkSupabaseHealth } from '../lib/networkError'
+import { queryClient } from '../lib/queryClient'
 
 interface SupabaseStatusState {
   isOutage: boolean
@@ -41,7 +42,6 @@ export const useSupabaseStatus = create<SupabaseStatusStore>((set, get) => ({
 
       // On recovery, invalidate all queries so they refetch
       if (wasOutage) {
-        const { queryClient } = await import('../lib/queryClient')
         queryClient.invalidateQueries()
       }
     } else {
